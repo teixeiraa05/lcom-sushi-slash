@@ -75,7 +75,7 @@ Date: 2026-03-02
 LCOM Project for group GRUPO_2LEIC09_05.
 Group members:
 
-Diana Oliveira (up202404022@up.pt)
-Diogo Castro (up202404297@up.pt)
-Rodrigo Teixeira (up202404802@up.pt)
-Rui Gomes (up202404805@up.pt)
+- Diana Oliveira (up202404022@up.pt)
+- Diogo Castro (up202404297@up.pt)
+- Rodrigo Teixeira (up202404802@up.pt)
+- Rui Gomes (up202404805@up.pt)
