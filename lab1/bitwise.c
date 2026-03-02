@@ -21,13 +21,11 @@ bool is_set(uint8_t msk, int pos) {
 }
 
 uint8_t lsb(uint16_t wide_msk) { 
-  uint8_t msk = 0;
-  uint8_t res = msk | wide_msk; 
-  return res;
+  return (uint8_t) wide_msk;
 }
 
 uint8_t msb(uint16_t wide_msk) { 
-  TODO; 
+  return (uint8_t) (wide_msk >> 8); 
 }
 
 uint8_t mask(int pos, ...) { 
