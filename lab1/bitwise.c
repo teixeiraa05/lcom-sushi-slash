@@ -15,7 +15,9 @@ uint8_t set(uint8_t msk, int pos) {
 }
 
 bool is_set(uint8_t msk, int pos) { 
-  TODO; 
+  uint8_t bit = 1 << pos;
+  uint8_t  f = msk & bit;
+  return f;
 }
 
 uint8_t lsb(uint16_t wide_msk) { 
