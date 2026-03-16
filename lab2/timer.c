@@ -7,9 +7,23 @@
 
 int (timer_set_frequency)(uint8_t timer, uint32_t freq) {
   /* To be implemented by the students */
-  printf("%s is not yet implemented!\n", __func__);
+  uint8_t st; 
+  if (timer_get_conf(timer, &st)) return 1;
+  st &= 0x0F; //keep only the 4 least significant bits
+  st |= TIMER_LSB_MSB;
+  st |= (TIMER_0 + timer) << 6;
 
-  return 1;
+  uint16_t div = TIMER_FREQ / freq;
+  if(sys_outb(TIMER_CTRL, st)) return 1;
+
+  uint8_t lsb, msb; 
+  if(util_get_LSB(div, &lsb)) return 1;
+  if(util_get_MSB(div, &msb)) return 1;
+
+  if(sys_outb(TIMER_0 + timer, msb)) return 1;
+  if(sys_outb(TIMER_0 + timer, lsb)) return 1;
+
+  return 0;
 }
 
 int (timer_subscribe_int)(uint8_t *bit_no) {
