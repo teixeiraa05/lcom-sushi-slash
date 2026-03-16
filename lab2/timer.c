@@ -9,19 +9,22 @@ int (timer_set_frequency)(uint8_t timer, uint32_t freq) {
   /* To be implemented by the students */
   uint8_t st; 
   if (timer_get_conf(timer, &st)) return 1;
+
+  //configure the control word
   st &= 0x0F; //keep only the 4 least significant bits
   st |= TIMER_LSB_MSB;
-  st |= (TIMER_0 + timer) << 6;
+  st |= timer << 6; 
 
+  //calculate the divisor and write it to the timer control register
   uint16_t div = TIMER_FREQ / freq;
   if(sys_outb(TIMER_CTRL, st)) return 1;
 
   uint8_t lsb, msb; 
   if(util_get_LSB(div, &lsb)) return 1;
-  if(util_get_MSB(div, &msb)) return 1;
+  if(util_get_MSB(div, &msb)) return 1;//set the timer selection bits
 
-  if(sys_outb(TIMER_0 + timer, msb)) return 1;
   if(sys_outb(TIMER_0 + timer, lsb)) return 1;
+  if(sys_outb(TIMER_0 + timer, msb)) return 1;
 
   return 0;
 }
