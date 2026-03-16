@@ -1,13 +1,16 @@
 # Build artifacts and executables
-lab1
-lab2
-*.o
+lab1/lab1
+lab2/lab2
+**/*.o
 *.a
 *.so
 *.out
 *.elf
 *.bin
 *.hex
+
+# IDE and editor files
+.vscode/
 
 # Output files
 output.txt
