@@ -3,13 +3,13 @@
 #include <stdint.h>
 
 int(util_get_LSB)(uint16_t val, uint8_t *lsb) {
-  lsb = val & 0xFF;
+  *lsb = val & 0xFF;
   return 0;
 
 }
 
 int(util_get_MSB)(uint16_t val, uint8_t *msb) {
-  msb = (uint8_t) (val >> 8); 
+  *msb = (uint8_t) (val >> 8); 
   return 0;
 }
 
