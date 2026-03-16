@@ -1,5 +1,6 @@
 #include "rtc.h"
 #include <minix/syslib.h>
+#include <lcom/lcf.h>
 
 #define TODO return -1
 
@@ -19,8 +20,12 @@ uint8_t bcd_to_bin(uint8_t bcd) {
 
 int rtc_read_date(rtc_date *date) { 
 
+  if(date == NULL) return 1;
+
+  //Wait until the clock is not being written to
   uint32_t uipA;
   do {
+    if(tickdelay(micros_to_ticks(1000))) return 1;
     if (sys_outb(RTC_ADDR_REG, RTC_REG_A)) return 1; 
     if (sys_inb(RTC_DATA_REG, &uipA)) return 1;
   } while (uipA & RTC_UIP_MSK);
@@ -37,6 +42,7 @@ int rtc_read_date(rtc_date *date) {
   if (sys_outb(RTC_ADDR_REG, RTC_REG_YEAR)) return 1;
   if (sys_inb(RTC_DATA_REG, &year)) return 1;
 
+  //Checks if the date is in BCD form, if it is turns it into binary
   uint32_t uipB;
   if (sys_outb(RTC_ADDR_REG, RTC_REG_B)) return 1; 
   if (sys_inb(RTC_DATA_REG, &uipB)) return 1;
