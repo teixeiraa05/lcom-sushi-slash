@@ -45,6 +45,8 @@ int(timer_test_time_base)(uint8_t timer, uint32_t freq) {
   return 0;
 }
 
+
+extern int int_counter;
 //Test the interrupts of the specified timer
 int(timer_test_int)(uint8_t timer) {
   /* subscribe timer interrupts */
@@ -56,17 +58,26 @@ int(timer_test_int)(uint8_t timer) {
   int r;
   int ipc_status;
   message msg;
-  while(time > 0) { /* You may want to use a different condition */
-      /* Get a request message. */
+  
+  int_counter = 0;
+  while(timer > 0) {
+      //Get a notification and handle it
       if ( (r = driver_receive(ANY, &msg, &ipc_status)) != 0 ) { 
           printf("driver_receive failed with: %d", r);
           continue;
       }
-      if (is_ipc_notify(ipc_status)) { /* received notification */
+
+      //if the message is a notification, check if it's an interrupt notification and handle it
+      if (is_ipc_notify(ipc_status)) {  /* received notification */
           switch (_ENDPOINT_P(msg.m_source)) {
               case HARDWARE: /* hardware interrupt notification */				
                   if (msg.m_notify.interrupts & irq_set) { /* subscribed interrupt */
-                      do_something();   /* process it */
+                      timer_int_handler(); //increase the counter
+
+                      if(int_counter % 60 == 0) {
+                        timer_print_elapsed_time(); //print the elapsed time every second
+                        timer--;
+                      }
                   }
                   break;
               default:
@@ -76,4 +87,7 @@ int(timer_test_int)(uint8_t timer) {
           /* no standard messages expected: do nothing */
       }
   };
+
+  if(timer_unsubscribe_int()) return 1;
+  return 0; 
 }
