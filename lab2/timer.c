@@ -5,7 +5,7 @@
 
 #include "i8254.h"
 
-//Set the frequency of the specified timer
+// ---------------------------------- TIMER FREQUENCY SETTING ----------------------------------
 int (timer_set_frequency)(uint8_t timer, uint32_t freq) {
   uint8_t st;
   if (timer_get_conf(timer, &st)) return 1;
@@ -30,7 +30,7 @@ int (timer_set_frequency)(uint8_t timer, uint32_t freq) {
 
   return 0;
 }
-
+// ---------------------------------- INTERRUPT HANDLING ----------------------------------
 int hook_id = 0;
 int (timer_subscribe_int)(uint8_t *bit_no) {
     /* 
@@ -59,7 +59,7 @@ void (timer_int_handler)() {
   int_counter++;
 }
 
-
+// ----------------------------------- TIMER CONFIGURATION ----------------------------------
 //Read the configuration of the specified timer
 int (timer_get_conf)(uint8_t timer, uint8_t *st) {
   //build the read-back command
