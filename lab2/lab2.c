@@ -29,8 +29,8 @@ int main(int argc, char *argv[]) {
   return 0;
 }
 
+//Read the configuration of the specified timer and display it
 int(timer_test_read_config)(uint8_t timer, enum timer_status_field field) {
-  /* To be implemented by the students */
   uint8_t st;
   if(timer_get_conf(timer, &st)) return 1;
   if(timer_display_conf(timer, st, field)) return 1;
@@ -38,14 +38,15 @@ int(timer_test_read_config)(uint8_t timer, enum timer_status_field field) {
   return 0;
 }
 
+//Set the frequency of the specified timer
 int(timer_test_time_base)(uint8_t timer, uint32_t freq) {
   if(timer_set_frequency(timer, freq)) return 1;
   
   return 0;
 }
 
-int(timer_test_int)(uint8_t time) {
-  /* To be implemented by the students */
+//Test the interrupts of the specified timer
+int(timer_test_int)(uint8_t timer) {
   printf("%s is not yet implemented!\n", __func__);
 
   return 1;

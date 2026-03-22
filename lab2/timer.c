@@ -5,24 +5,26 @@
 
 #include "i8254.h"
 
+//Set the frequency of the specified timer
 int (timer_set_frequency)(uint8_t timer, uint32_t freq) {
-  /* To be implemented by the students */
-  uint8_t st; 
+  uint8_t st;
   if (timer_get_conf(timer, &st)) return 1;
 
   //configure the control word
   st &= 0x0F; //keep only the 4 least significant bits
-  st |= TIMER_LSB_MSB;
-  st |= timer << 6; 
+  st |= TIMER_LSB_MSB; //set the access mode to lsb followed by msb
+  st |= timer << 6; //set the timer selection bits
 
   //calculate the divisor and write it to the timer control register
   uint16_t div = TIMER_FREQ / freq;
   if(sys_outb(TIMER_CTRL, st)) return 1;
 
+  //split the divisor into lsb and msb (in that order) 
   uint8_t lsb, msb; 
   if(util_get_LSB(div, &lsb)) return 1;
-  if(util_get_MSB(div, &msb)) return 1;//set the timer selection bits
+  if(util_get_MSB(div, &msb)) return 1;
 
+  //write the lsb and msb to the timer ports
   if(sys_outb(TIMER_0 + timer, lsb)) return 1;
   if(sys_outb(TIMER_0 + timer, msb)) return 1;
 
@@ -48,6 +50,8 @@ void (timer_int_handler)() {
   printf("%s is not yet implemented!\n", __func__);
 }
 
+
+//Read the configuration of the specified timer
 int (timer_get_conf)(uint8_t timer, uint8_t *st) {
   //build the read-back command
   uint8_t rb_cmd = TIMER_RB_CMD | TIMER_RB_COUNT_ | TIMER_RB_SEL(timer);
@@ -61,8 +65,9 @@ int (timer_get_conf)(uint8_t timer, uint8_t *st) {
   return 0;
 }
 
+
+//Display a timer configuration, depending on the selected field (status, initial mode, mode and counting base)
 int (timer_display_conf)(uint8_t timer, uint8_t st, enum timer_status_field field) {
-  /* To be implemented by the students */
   union timer_status_field_val val;
 
   switch(field) {
