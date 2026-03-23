@@ -49,10 +49,3 @@ int(kbd_test_timed_scan)(uint8_t n) {
 
   return 1;
 }
-
-void (kbc_ih)() {
-  /* To be completed by the students */
-  printf("%s is not yet implemented!\n", __func__);
-
-  return 1;
-}
