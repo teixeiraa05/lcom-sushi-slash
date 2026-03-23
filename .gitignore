@@ -1,0 +1,18 @@
+# Build artifacts and executables
+io_experiment/io_experiment
+lab1/lab1
+lab2/lab2
+**/*.o
+*.a
+*.so
+*.out
+*.elf
+*.bin
+*.hex
+
+# IDE and editor files
+.vscode/
+
+# Output files
+output.txt
+trace.txt
