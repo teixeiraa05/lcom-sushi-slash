@@ -1,4 +1,5 @@
 # Build artifacts and executables
+io_experiment/io_experiment
 lab1/lab1
 lab2/lab2
 **/*.o
