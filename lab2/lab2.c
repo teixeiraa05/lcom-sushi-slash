@@ -31,6 +31,9 @@ int main(int argc, char *argv[]) {
 
 //Read the configuration of the specified timer and display it
 int(timer_test_read_config)(uint8_t timer, enum timer_status_field field) {
+  /* Check if the timer is valid */
+  if(timer < 0 || timer > 2) return 1;
+
   uint8_t st;
   if(timer_get_conf(timer, &st)) return 1;
   if(timer_display_conf(timer, st, field)) return 1;
@@ -40,6 +43,10 @@ int(timer_test_read_config)(uint8_t timer, enum timer_status_field field) {
 
 //Set the frequency of the specified timer
 int(timer_test_time_base)(uint8_t timer, uint32_t freq) {
+
+  /* Check if the timer is valid */
+  if(timer < 0 || timer > 2) return 1;
+
   if(timer_set_frequency(timer, freq)) return 1;
   
   return 0;
@@ -49,6 +56,10 @@ int(timer_test_time_base)(uint8_t timer, uint32_t freq) {
 extern int int_counter;
 //Test the interrupts of the specified timer
 int(timer_test_int)(uint8_t timer) {
+
+  /* Check if the timer is valid */
+  if(timer < 0 || timer > 2) return 1;
+
   /* subscribe timer interrupts */
   uint8_t bit_no;
   if(timer_subscribe_int(&bit_no)) return 1;
@@ -60,6 +71,7 @@ int(timer_test_int)(uint8_t timer) {
   message msg;
   
   int_counter = 0;
+  
   while(timer > 0) {
       //Get a notification and handle it
       if ( (r = driver_receive(ANY, &msg, &ipc_status)) != 0 ) { 

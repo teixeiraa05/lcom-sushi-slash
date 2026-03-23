@@ -7,6 +7,9 @@
 
 // ---------------------------------- TIMER FREQUENCY SETTING ----------------------------------
 int (timer_set_frequency)(uint8_t timer, uint32_t freq) {
+
+  if(timer < 0 || timer > 2) return 1; //invalid timer
+  
   uint8_t st;
   if (timer_get_conf(timer, &st)) return 1;
 
@@ -60,15 +63,21 @@ void (timer_int_handler)() {
 }
 
 // ----------------------------------- TIMER CONFIGURATION ----------------------------------
+
 //Read the configuration of the specified timer
 int (timer_get_conf)(uint8_t timer, uint8_t *st) {
-  //build the read-back command
+  
+  /* Verifications */
+  if (timer < 0 || timer > 2) return 1;
+  if(st == NULL) return 1;
+  
+  /* build the read-back command */
   uint8_t rb_cmd = TIMER_RB_CMD | TIMER_RB_COUNT_ | TIMER_RB_SEL(timer);
   
-  //send the read-back command to the control register
+  /* send the read-back command to the control register */
   if(sys_outb(TIMER_CTRL, rb_cmd)) return 1;
   
-  //read the status byte from the selected timer port
+  /* read the status byte from the selected timer port */
   if(util_sys_inb(TIMER_0 + timer, st)) return 1;
 
   return 0;
@@ -77,6 +86,10 @@ int (timer_get_conf)(uint8_t timer, uint8_t *st) {
 
 //Display a timer configuration, depending on the selected field (status, initial mode, mode and counting base)
 int (timer_display_conf)(uint8_t timer, uint8_t st, enum timer_status_field field) {
+
+  /* Verifications */
+  if (timer < 0 || timer > 2) return 1;
+
   union timer_status_field_val val;
 
   switch(field) {
