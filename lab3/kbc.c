@@ -59,7 +59,6 @@ int (kbc_read_status)(uint8_t* status) {
 int (kbc_read_output)() {
 
   uint8_t status;
-
   if (kbc_read_status(&status)) return 1;
 
   //Check if output buffer is full. If so, we can read from it.
@@ -74,6 +73,8 @@ int (kbc_read_output)() {
 }
 
 int (kbc_read_command)(uint8_t *command) {
+
+  if (command == NULL) return 1;
 
   uint8_t status;
   uint8_t attemps = 30;
