@@ -2,6 +2,8 @@
 io_experiment/io_experiment
 lab1/lab1
 lab2/lab2
+lab3/lab3
+
 **/*.o
 *.a
 *.so
