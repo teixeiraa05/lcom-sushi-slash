@@ -106,7 +106,7 @@ int (kbc_write_command)(uint8_t port, uint8_t commandByte) {
 
       if (kbc_read_status(&status) != 0) return 1;
 
-      //Check if input buffer is empty. If so, we can read from it.
+      //Check if input buffer is empty. If so, we can write to it.
       if ((status & BIT(1)) == 0){
           if(sys_outb(port, commandByte)) return 1;
           return 0;
