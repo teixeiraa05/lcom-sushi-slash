@@ -98,10 +98,38 @@ int(kbd_test_scan)() {
 }
 
 int(kbd_test_poll)() {
-  /* To be completed by the students */
-  printf("%s is not yet implemented!\n", __func__);
+  
+  uint8_t scancode = kbc_get_scancode();
+  uint8_t full_scancode[2];
+  int size = 0;
+  bool make;
 
-  return 1;
+  while (scancode != ESC_BREAK_CODE) {
+
+    if(kbc_read_output()) continue;
+    scancode = kbc_get_scancode();
+    make = true;
+
+    //If it's the firts byte of a two byte code
+    if (scancode == 0xE0) {
+      full_scancode[0] = scancode;
+      size++;
+    } 
+    //If it's the second byte of a two byte  code (size = 1) or a lonely byte (size = 0) 
+    else {
+      full_scancode[size] = scancode;
+      size++;
+      //Check if it's a breakcode or a makecode
+      if ((BIT(7) & scancode) == BIT(7)) make = false;
+      kbd_print_scancode(make, size, full_scancode);
+      size = 0;
+    }
+
+  }
+
+  if(kbc_int_enable()) return 1;
+
+  return 0;
 }
 
 int(kbd_test_timed_scan)(uint8_t n) {
