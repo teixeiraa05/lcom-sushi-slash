@@ -50,8 +50,6 @@ uint8_t (kbc_has_error)() {
   return kbc_error;
 }
 
-// ------- Command ----------------
-
 int (kbc_read_status)(uint8_t* status) {
   if (status == NULL) return 1; 
   if (util_sys_inb(KBC_STAT_REG, status)) return 1;
