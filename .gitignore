@@ -12,6 +12,7 @@ lab3/lab3
 *.bin
 *.hex
 */.gdbinit
+
 # IDE and editor files
 .vscode/
 
