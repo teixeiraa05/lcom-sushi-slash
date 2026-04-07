@@ -16,6 +16,7 @@ int(kbc_unsubscribe_int)() {
   return 0;
 }
 
+
 static uint8_t scancode;
 static bool kbc_error = false;
 
@@ -49,6 +50,8 @@ uint8_t (kbc_get_scancode)() {
 uint8_t (kbc_has_error)() {
   return kbc_error;
 }
+
+// ------------ POLLING FUNCTIONS ------------
 
 int (kbc_read_status)(uint8_t* status) {
   if (status == NULL) return 1; 
