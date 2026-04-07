@@ -8,5 +8,8 @@ int(kbc_subscribe_int)(uint8_t *bit_no);
 
 int(kbc_unsubscribe_int)();
  
+uint8_t (kbc_get_scancode)();
+
+uint8_t (kbc_has_error)();
 
 #endif // __KBC_H
