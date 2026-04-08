@@ -21,7 +21,7 @@ LIB_SRCS = kbc.c utils.c										# source files to include
 LIB_OBJS = ${LIB_SRCS:.c=.o}									#The rule used to convert your .c source files in .o object files
 CLEANFILES += ${LIB_NAME} ${LIB_OBJS} 				# add the library
 
-all: lib
+all: lib ${PROG}
 lib: ${LIB_OBJS}
 	ar rcs ${LIB_NAME} ${LIB_OBJS}		# create the library file	from the object files
 
