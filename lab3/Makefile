@@ -2,7 +2,7 @@
 PROG=lab3 
 
 # source code files to be compiled
-SRCS = lab3.c kbc.c ../lab2/utils.c
+SRCS = lab3.c kbc.c 
 
 # additional compilation flags
 # "-Wall -Wextra -Werror -I . -std=c11 -Wno-unused-parameter" are already set
@@ -12,6 +12,10 @@ CFLAGS += -DLAB3 	# define the macro LAB3 to be used in the code to conditionall
 # list of library dependencies (for Lab 3, only LCF library)
 DPADD += ${LIBLCF}
 LDADD += -llcf
+
+
+LDADD += -llcf -L../lab2  # Tell the compiler to look in the lab2 directory for libraries
+LDADD += -ltimer          # Link the library named libtimers.a
 
 # include LCOM's makefile that does all the "heavy lifting"
 .include <minix.lcom.mk>
