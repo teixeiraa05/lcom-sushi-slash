@@ -37,14 +37,20 @@ int (mouse_unsubscribe_int)(void) {
   return 0;
 }
 
-int (mouse_enable_data_reporting)(void) {
-  uint8_t response;
-
+int (mouse_write) (uint8_t command) {
   if(!input_buffer_free()) return 1; //input buffer is busy, can't write to it
   if(sys_outb(KBC_CMD_REG, WRITE_TO_AUX)) return 1; //tell the KBC the byte is for the mouse
 
   if(!input_buffer_free()) return 1; //input buffer is busy, can't write to it
-  if(sys_outb(KBC_IN_BUF, ENABLE_DATA_REPORTING)) return 1; //enable data reporting
+  if(sys_outb(KBC_IN_BUF, command)) return 1; //write the command to the mouse
+
+  return 0;
+}
+
+int (mouse_enable_data_reporting)(void) {
+  uint8_t response;
+
+  if(mouse_write(ENABLE_DATA_REPORTING)) return 1; //send the command to enable data reporting
 
   if(!output_buffer_free()) return 1; //output buffer is busy, can't read the response
   if(util_sys_inb(KBC_OUT_BUF, &response)) return 1; //if response is not able return 1

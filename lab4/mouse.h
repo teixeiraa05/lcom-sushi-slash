@@ -11,6 +11,8 @@ bool (output_buffer_free)();
 int (mouse_subscribe_int)(uint8_t *bit_no);
 int (mouse_unsubscribe_int)(void);
 
+int (mouse_write) (uint8_t command); //write a command to the mouse
+
 void (mouse_ih)(void);
 int (mouse_enable_data_reporting)(void);
 
