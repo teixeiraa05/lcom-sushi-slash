@@ -37,5 +37,7 @@
 #define X_OVF BIT(6)
 #define Y_OVF BIT(7)
 
+#define IBF BIT(1) //input buffer full
+#define OBF BIT(0) //output buffer full
 
 #endif //I8042_H
