@@ -44,7 +44,7 @@ int(kbd_test_scan)() {
 
   //Variables to read scancodes
   bool is_two_byte = false;
-  uint8_t scancode[2];
+  uint8_t scancode[2] = {0};
   int scancode_size = 0; //for the print_scancode function
 
   while(scancode[0] != ESC_BREAK_CODE || is_two_byte) { //exit on ESC break code, but if it's a two byte scancode, we need to read both bytes before exiting
@@ -100,8 +100,9 @@ int(kbd_test_scan)() {
 
 int(kbd_test_poll)() {
   
-  uint8_t scancode = kbc_get_scancode();
-  uint8_t full_scancode[2];
+  uint8_t scancode = 0; //initialize to 0 to avoid undefined behavior when comparing with ESC_BREAK_CODE, which is 0x81, and to make sure we enter the loop at least once
+
+  uint8_t full_scancode[2] = {0};
   int size = 0;
   bool make;
 
