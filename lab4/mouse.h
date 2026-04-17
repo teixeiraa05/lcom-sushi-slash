@@ -3,17 +3,24 @@
 
 #include <stdint.h>
 
-//check if buffers are busy before writing/reading - true if ready, false if busy
-bool (input_buffer_free)();
-bool (output_buffer_free)();
 
 //subscribe to mouse interrupts and enable them
 int (mouse_subscribe_int)(uint8_t *bit_no);
 int (mouse_unsubscribe_int)(void);
 
-int (mouse_write) (uint8_t command); //write a command to the mouse
+int (mouse_read_byte)(uint8_t *byte); //read a byte from the mouse, with error checking
+int (mouse_read_ack) (uint8_t *ack); //read an ACK byte from the mouse, with error checking
+int (mouse_write_aux_command) (uint8_t command); //write a command to the mouse
+
+int (mouse_enable_data_report)(void);
+int (mouse_disable_data_report)(void);
+
+void (handle_packet) (uint8_t data[], struct packet *packet);
 
 void (mouse_ih)(void);
-int (mouse_enable_data_reporting)(void);
+
+//Getters for the data read from the mouse
+bool (mouse_has_error)();
+uint8_t (mouse_get_data)();
 
 #endif /* __MOUSE_H */
