@@ -15,9 +15,6 @@ int (mouse_write_aux_command) (uint8_t command); //write a command to the mouse
 int (mouse_enable_data_report)(void);
 int (mouse_disable_data_report)(void);
 
-int (mouse_start_session)(uint8_t *bit_no);
-int (mouse_stop_session)(void);
-
 void (handle_packet) (uint8_t data[], struct packet *packet);
 
 void (mouse_ih)(void);

@@ -1,12 +1,14 @@
 // IMPORTANT: you must include the following line in all your C files
 #include <lcom/lcf.h>
 #include <lcom/lab4.h>
+#include <lcom/timer.h>
 
 #include <stdint.h>
 #include <stdio.h>
 
-#include "mouse.h"
 #include "i8042.h"
+#include "mouse.h"
+#include "../lab2/timer_wrapper.h"
 
 // Any header files included below this line should have been created by you
 
@@ -34,10 +36,10 @@ int main(int argc, char *argv[]) {
   return 0;
 }
 
-
-int (mouse_test_packet)(uint32_t cnt) {
+int(mouse_test_packet)(uint32_t cnt) {
   uint8_t bit_no;
-  if (mouse_start_session(&bit_no)) return 1;
+  if(mouse_enable_data_report()) return 1;
+  if(mouse_subscribe_int(&bit_no)) return 1;
 
   uint32_t irq_set = BIT(bit_no);
   int byte_count = 0;
@@ -48,51 +50,140 @@ int (mouse_test_packet)(uint32_t cnt) {
   int ipc_status;
   message msg;
 
-  while (cnt > 0) { //exit on ESC break code, but if it's a two byte scancode, we need to read both bytes before exiting
+  while (cnt > 0) { // exit on ESC break code, but if it's a two byte scancode,
+                    // we need to read both bytes before exiting
 
-      /* Get a request message. */
-      if ( (r = driver_receive(ANY, &msg, &ipc_status)) != 0 ) { 
-          printf("driver_receive failed with: %d", r);
-          continue;
-      }
-      if (is_ipc_notify(ipc_status)) { /* received notification */
-          switch (_ENDPOINT_P(msg.m_source)) {
-              case HARDWARE: /* hardware interrupt notification */
-                  if (msg.m_notify.interrupts & irq_set) { /* subscribed interrupt */
-                      mouse_ih();
-                            if (mouse_has_error()) continue;
+    /* Get a request message. */
+    if ((r = driver_receive(ANY, &msg, &ipc_status)) != 0) {
+      printf("driver_receive failed with: %d", r);
+      continue;
+    }
+    if (is_ipc_notify(ipc_status)) { /* received notification */
+      switch (_ENDPOINT_P(msg.m_source)) {
+      case HARDWARE: /* hardware interrupt notification */
+        if (msg.m_notify.interrupts & irq_set) { /* subscribed interrupt */
+          mouse_ih();
+          if (mouse_has_error())
+            continue;
 
-                      uint8_t byte = mouse_get_data();
+          uint8_t byte = mouse_get_data();
 
-                            if (byte_count == 0) {
-                              if (!(byte & ALWAYS_1)) continue; // actually skip unsynced bytes
-                          packet_bytes[0] = byte;
-                          byte_count++;
-                      } else {
-                          packet_bytes[byte_count] = byte;
-                          byte_count++;
-                      }
-
-
-                      if (byte_count == PACKET_SIZE) { //if we have read all three bytes of the packet
-                        handle_packet(packet_bytes, &p);
-                        mouse_print_packet(&p);
-                        byte_count = 0; //reset for the next packet
-                        cnt--; //decrease the packet counter
-                      }
-                    }
-                  break;
-              default:
-                  break; /* no other notifications expected: do nothing */
+          if (byte_count == 0) {
+            if (!(byte & ALWAYS_1))
+              continue; // actually skip unsynced bytes
+            packet_bytes[0] = byte;
+            byte_count++;
+          } else {
+            packet_bytes[byte_count] = byte;
+            byte_count++;
           }
-      } else { /* received a standard message, not a notification */
-          /* no standard messages expected: do nothing */
+
+          if (byte_count ==
+              PACKET_SIZE) { // if we have read all three bytes of the packet
+            handle_packet(packet_bytes, &p);
+            mouse_print_packet(&p);
+            byte_count = 0; // reset for the next packet
+            cnt--;          // decrease the packet counter
+          }
+        }
+        break;
+      default:
+        break; /* no other notifications expected: do nothing */
       }
+    } else { /* received a standard message, not a notification */
+             /* no standard messages expected: do nothing */
+    }
   }
-  return mouse_stop_session();  
+  if (mouse_unsubscribe_int()) return 1;
+  if (mouse_disable_data_report()) return 1;
+  return 0;
 }
 
-int (mouse_test_async)(uint8_t idle_time) {
-    //TODO
+int(mouse_test_async)(uint8_t idle_time) {
+  uint8_t mouse_bit_no;
+  uint8_t timer_bit_no;
+
+  if(mouse_enable_data_report()) return 1;
+  if(mouse_subscribe_int(&mouse_bit_no)) return 1;
+  if (timer_subscribe_int(&timer_bit_no)) {
+    mouse_unsubscribe_int();
+    mouse_disable_data_report();
     return 1;
+  }
+
+  // Mouse variables
+  uint32_t mouse_irq_set = BIT(mouse_bit_no);
+  int byte_count = 0;
+  uint8_t packet_bytes[PACKET_SIZE];
+  struct packet p;
+
+  // Timer variables
+  uint8_t time = idle_time;
+  uint32_t timer_irq_set = BIT(timer_bit_no);
+  set_int_counter(0);   
+
+  int r;
+  int ipc_status;
+  message msg;
+
+  while (time > 0) { // exit on idle_time seconds without mouse activity
+
+    /* Get a request message. */
+    if ((r = driver_receive(ANY, &msg, &ipc_status)) != 0) {
+      printf("driver_receive failed with: %d", r);
+      continue;
+    }
+    if (is_ipc_notify(ipc_status)) { /* received notification */
+      switch (_ENDPOINT_P(msg.m_source)) {
+      case HARDWARE: /* hardware interrupt notification */
+        if (msg.m_notify.interrupts & mouse_irq_set) {
+          mouse_ih();
+          if (mouse_has_error())
+            continue;
+
+          uint8_t byte = mouse_get_data();
+
+          if (byte_count == 0) {
+            if (!(byte & ALWAYS_1))
+              continue; // actually skip unsynced bytes
+            packet_bytes[0] = byte;
+            byte_count++;
+          } else {
+            packet_bytes[byte_count] = byte;
+            byte_count++;
+          }
+
+          if (byte_count ==
+              PACKET_SIZE) { // if we have read all three bytes of the packet
+            handle_packet(packet_bytes, &p);
+            mouse_print_packet(&p);
+            byte_count = 0; // reset for the next packet
+
+            // Mouse activity resets the idle-time window.
+            time = idle_time;
+            set_int_counter(0);
+          }
+        }
+
+        if (msg.m_notify.interrupts & timer_irq_set) {
+            timer_int_handler(); // increase the counter
+            if (get_int_counter() % sys_hz() == 0) { // if a second has passed since the last mouse activity
+                time--; // decrease the idle time counter
+          }
+        }
+
+        break;
+      default:
+        break; /* no other notifications expected: do nothing */
+      }
+    } else { /* received a standard message, not a notification */
+             /* no standard messages expected: do nothing */
+    }
+  }
+
+  if (timer_unsubscribe_int()) return 1;
+  if (mouse_unsubscribe_int()) return 1;
+  if (mouse_disable_data_report()) return 1;
+
+  return 0;
 }
