@@ -1,14 +1,14 @@
 // IMPORTANT: you must include the following line in all your C files
-#include <lcom/lcf.h>
 #include <lcom/lab4.h>
+#include <lcom/lcf.h>
 #include <lcom/timer.h>
 
 #include <stdint.h>
 #include <stdio.h>
 
+#include "../lab2/timer_wrapper.h"
 #include "i8042.h"
 #include "mouse.h"
-#include "../lab2/timer_wrapper.h"
 
 // Any header files included below this line should have been created by you
 
@@ -38,8 +38,10 @@ int main(int argc, char *argv[]) {
 
 int(mouse_test_packet)(uint32_t cnt) {
   uint8_t bit_no;
-  if(mouse_enable_data_report()) return 1;
-  if(mouse_subscribe_int(&bit_no)) return 1;
+  if (mouse_enable_data_report())
+    return 1;
+  if (mouse_subscribe_int(&bit_no))
+    return 1;
 
   uint32_t irq_set = BIT(bit_no);
   int byte_count = 0;
@@ -94,8 +96,10 @@ int(mouse_test_packet)(uint32_t cnt) {
              /* no standard messages expected: do nothing */
     }
   }
-  if (mouse_unsubscribe_int()) return 1;
-  if (mouse_disable_data_report()) return 1;
+  if (mouse_unsubscribe_int())
+    return 1;
+  if (mouse_disable_data_report())
+    return 1;
   return 0;
 }
 
@@ -103,8 +107,10 @@ int(mouse_test_async)(uint8_t idle_time) {
   uint8_t mouse_bit_no;
   uint8_t timer_bit_no;
 
-  if(mouse_enable_data_report()) return 1;
-  if(mouse_subscribe_int(&mouse_bit_no)) return 1;
+  if (mouse_enable_data_report())
+    return 1;
+  if (mouse_subscribe_int(&mouse_bit_no))
+    return 1;
   if (timer_subscribe_int(&timer_bit_no)) {
     mouse_unsubscribe_int();
     mouse_disable_data_report();
@@ -120,7 +126,7 @@ int(mouse_test_async)(uint8_t idle_time) {
   // Timer variables
   uint8_t time = idle_time;
   uint32_t timer_irq_set = BIT(timer_bit_no);
-  set_int_counter(0);   
+  set_int_counter(0);
 
   int r;
   int ipc_status;
@@ -166,9 +172,10 @@ int(mouse_test_async)(uint8_t idle_time) {
         }
 
         if (msg.m_notify.interrupts & timer_irq_set) {
-            timer_int_handler(); // increase the counter
-            if (get_int_counter() % sys_hz() == 0) { // if a second has passed since the last mouse activity
-                time--; // decrease the idle time counter
+          timer_int_handler(); // increase the counter
+          if (get_int_counter() % sys_hz() ==
+              0) {  // if a second has passed since the last mouse activity
+            time--; // decrease the idle time counter
           }
         }
 
@@ -181,9 +188,12 @@ int(mouse_test_async)(uint8_t idle_time) {
     }
   }
 
-  if (timer_unsubscribe_int()) return 1;
-  if (mouse_unsubscribe_int()) return 1;
-  if (mouse_disable_data_report()) return 1;
+  if (timer_unsubscribe_int())
+    return 1;
+  if (mouse_unsubscribe_int())
+    return 1;
+  if (mouse_disable_data_report())
+    return 1;
 
   return 0;
 }
