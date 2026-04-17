@@ -16,5 +16,7 @@
 
 #define IBF BIT(1) //input buffer full
 #define OBF BIT(0) //output buffer full
+#define KBC_MAX_ATTEMPTS 10
+#define KBC_DELAY_US 20000
 
 #endif //I8042_H

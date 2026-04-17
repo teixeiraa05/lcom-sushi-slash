@@ -80,9 +80,9 @@ int (kbc_read_command)(uint8_t *command) {
   if (command == NULL) return 1;
 
   uint8_t status;
-  uint8_t attemps = 30;
+  uint8_t attempts = KBC_MAX_ATTEMPTS;
   
-  while (attemps) {
+  while (attempts) {
 
       if (kbc_read_status(&status)) return 1;
 
@@ -94,8 +94,8 @@ int (kbc_read_command)(uint8_t *command) {
           return 0;
       }
 
-      tickdelay(micros_to_ticks(20000));
-      attemps--;
+      tickdelay(micros_to_ticks(KBC_DELAY_US));
+      attempts--;
   }
 
   return 1;
@@ -104,9 +104,9 @@ int (kbc_read_command)(uint8_t *command) {
 int (kbc_write_command)(uint8_t port, uint8_t commandByte) {
 
   uint8_t status;
-  uint8_t attemps = 30;
+  uint8_t attempts = KBC_MAX_ATTEMPTS;
 
-  while (attemps) {
+  while (attempts) {
 
       if (kbc_read_status(&status) != 0) return 1;
 
@@ -116,8 +116,8 @@ int (kbc_write_command)(uint8_t port, uint8_t commandByte) {
           return 0;
       }
 
-      tickdelay(micros_to_ticks(20000));              
-      attemps--;
+      tickdelay(micros_to_ticks(KBC_DELAY_US));
+      attempts--;
   }
 
   return 1;
