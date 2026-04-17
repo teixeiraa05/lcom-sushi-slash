@@ -48,9 +48,8 @@ int (mouse_test_packet)(uint32_t cnt) {
   int r;
   int ipc_status;
   message msg;
-  
 
-  while(cnt > 0) { //exit on ESC break code, but if it's a two byte scancode, we need to read both bytes before exiting
+  while (cnt > 0) { //exit on ESC break code, but if it's a two byte scancode, we need to read both bytes before exiting
 
       /* Get a request message. */
       if ( (r = driver_receive(ANY, &msg, &ipc_status)) != 0 ) { 
@@ -62,12 +61,12 @@ int (mouse_test_packet)(uint32_t cnt) {
               case HARDWARE: /* hardware interrupt notification */
                   if (msg.m_notify.interrupts & irq_set) { /* subscribed interrupt */
                       mouse_ih();
-                      if(mouse_has_error()) continue;
+                            if (mouse_has_error()) continue;
 
                       uint8_t byte = mouse_get_data();
 
-                      if(byte_count == 0) {
-                          if(!(byte & ALWAYS_1)) continue; // actually skip unsynced bytes
+                            if (byte_count == 0) {
+                              if (!(byte & ALWAYS_1)) continue; // actually skip unsynced bytes
                           packet_bytes[0] = byte;
                           byte_count++;
                       } else {
