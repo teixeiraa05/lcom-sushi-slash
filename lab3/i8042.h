@@ -14,5 +14,7 @@
 
 #define ESC_BREAK_CODE 0x81
 
+#define IBF BIT(1) //input buffer full
+#define OBF BIT(0) //output buffer full
 
 #endif //I8042_H

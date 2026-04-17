@@ -65,7 +65,7 @@ int (kbc_read_output)() {
   if (kbc_read_status(&status)) return 1;
 
   //Check if output buffer is full. If so, we can read from it.
-  if ((status & BIT(0))) {
+  if ((status & OBF)) {
       if(util_sys_inb(KBC_OUT_BUF, &scancode))   return 1;
       if((status & PARITY_ERR)) return 1;
       if((status & TIMEOUT_ERR)) return 1;
@@ -87,7 +87,7 @@ int (kbc_read_command)(uint8_t *command) {
       if (kbc_read_status(&status)) return 1;
 
       //Check if output buffer is full. If so, we can read from it.
-      if ((status & BIT(0))) {
+      if ((status & OBF)) {
           if(util_sys_inb(KBC_OUT_BUF, command))   return 1;
           if((status & PARITY_ERR)) return 1;
           if((status & TIMEOUT_ERR)) return 1;
@@ -111,7 +111,7 @@ int (kbc_write_command)(uint8_t port, uint8_t commandByte) {
       if (kbc_read_status(&status) != 0) return 1;
 
       //Check if input buffer is empty. If so, we can write to it.
-      if ((status & BIT(1)) == 0){
+      if ((status & IBF) == 0){
           if(sys_outb(port, commandByte)) return 1;
           return 0;
       }
