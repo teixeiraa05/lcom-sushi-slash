@@ -1,5 +1,6 @@
 #include <lcom/lcf.h>
 #include <lcom/lab2.h>
+#include "timer_wrapper.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -53,7 +54,7 @@ int(timer_test_time_base)(uint8_t timer, uint32_t freq) {
 }
 
 
-extern int int_counter;
+
 //Test the interrupts of the specified timer
 int(timer_test_int)(uint8_t timer) {
 
@@ -70,7 +71,7 @@ int(timer_test_int)(uint8_t timer) {
   int ipc_status;
   message msg;
   
-  int_counter = 0;
+  if(set_int_counter(0)) return 1; //initialize the counter to 0
   
   while(timer > 0) {
       //Get a notification and handle it
@@ -86,7 +87,7 @@ int(timer_test_int)(uint8_t timer) {
                   if (msg.m_notify.interrupts & irq_set) { /* subscribed interrupt */
                       timer_int_handler(); //increase the counter
 
-                      if(int_counter % 60 == 0) {
+                      if(get_int_counter() % 60 == 0) {
                         timer_print_elapsed_time(); //print the elapsed time every second
                         timer--;
                       }

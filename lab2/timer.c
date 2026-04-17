@@ -1,5 +1,6 @@
 #include <lcom/lcf.h>
 #include <lcom/timer.h>
+#include "timer_wrapper.h"
 
 #include <stdint.h>
 
@@ -42,6 +43,7 @@ int (timer_subscribe_int)(uint8_t *bit_no) {
     */
 
     if(bit_no == NULL) return 1;
+    hook_id = TIMER0_IRQ; 
     *bit_no = hook_id;
 
     if(sys_irqsetpolicy(TIMER0_IRQ, IRQ_REENABLE, &hook_id)) return 1;
@@ -116,4 +118,15 @@ int (timer_display_conf)(uint8_t timer, uint8_t st, enum timer_status_field fiel
 
 
   return timer_print_config(timer, field, val);
+}
+
+// ----------------------------------- GETTERS & SETTERS ----------------------------------
+
+int get_int_counter() {
+  return int_counter;
+}
+
+int set_int_counter(int new_value) {
+  int_counter = new_value;
+  return 0;
 }
