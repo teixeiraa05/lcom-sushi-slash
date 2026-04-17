@@ -7,6 +7,9 @@
 static bool mouse_error = false;
 static int hook_id_mouse;
 static uint8_t data;
+static uint8_t packet_bytes[PACKET_SIZE];
+static int byte_count = 0;
+static struct packet p;
 
 // ============ INTERRUPT SUBSCRIPTION ============
 int mouse_write_aux_command(uint8_t command) {
@@ -85,20 +88,40 @@ int (mouse_disable_data_report)(void) {
 
 // ============ PACKET HANDLING ============
 
-void (handle_packet) (uint8_t data[], struct packet *p) {
-  p->bytes[0] = data[0];
-  p->bytes[1] = data[1];
-  p->bytes[2] = data[2];
 
-  p->lb = (data[0] & LB) != 0;
-  p->mb = (data[0] & MB) != 0;
-  p->rb = (data[0] & RB) != 0;
+int (mouse_packet_is_ready)() {
+  if (byte_count == 0) {
+    if (!(data & ALWAYS_1)) return 0; // actually skip unsynced bytes
+    packet_bytes[0] = data;
+    byte_count++;
+    return 0;
+  } else {
+    packet_bytes[byte_count] = data;
+    byte_count++;
+    if (byte_count == PACKET_SIZE) {
+      byte_count = 0; // reset for next packet
+      return 1; // packet is ready
+    }
+    return 0; // packet not ready yet
+  }
+}
 
-  p->delta_x = (data[0] & X_SIGN) ? (data[1] - 256) : data[1]; 
-  p->delta_y = (data[0] & Y_SIGN) ? (data[2] - 256) : data[2]; 
+struct packet* (handle_packet) () {
+  p.bytes[0] = packet_bytes[0];
+  p.bytes[1] = packet_bytes[1];
+  p.bytes[2] = packet_bytes[2];
 
-  p->x_ov = (data[0] & X_OVF) != 0;
-  p->y_ov = (data[0] & Y_OVF) != 0;
+  p.lb = (packet_bytes[0] & LB) != 0;
+  p.mb = (packet_bytes[0] & MB) != 0;
+  p.rb = (packet_bytes[0] & RB) != 0;
+
+  p.delta_x = (packet_bytes[0] & X_SIGN) ? (packet_bytes[1] - 256) : packet_bytes[1]; 
+  p.delta_y = (packet_bytes[0] & Y_SIGN) ? (packet_bytes[2] - 256) : packet_bytes[2]; 
+
+  p.x_ov = (packet_bytes[0] & X_OVF) != 0;
+  p.y_ov = (packet_bytes[0] & Y_OVF) != 0;
+
+  return &p;
 }
 
 // ============ INTERRUPT HANDLER ============

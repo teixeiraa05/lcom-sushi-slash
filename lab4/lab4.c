@@ -1,6 +1,6 @@
 // IMPORTANT: you must include the following line in all your C files
-#include <lcom/lab4.h>
 #include <lcom/lcf.h>
+#include <lcom/lab4.h>
 #include <lcom/timer.h>
 
 #include <stdint.h>
@@ -44,9 +44,7 @@ int(mouse_test_packet)(uint32_t cnt) {
     return 1;
 
   uint32_t irq_set = BIT(bit_no);
-  int byte_count = 0;
-  uint8_t packet_bytes[PACKET_SIZE];
-  struct packet p;
+  struct packet *p;
 
   int r;
   int ipc_status;
@@ -60,6 +58,7 @@ int(mouse_test_packet)(uint32_t cnt) {
       printf("driver_receive failed with: %d", r);
       continue;
     }
+
     if (is_ipc_notify(ipc_status)) { /* received notification */
       switch (_ENDPOINT_P(msg.m_source)) {
       case HARDWARE: /* hardware interrupt notification */
@@ -68,26 +67,13 @@ int(mouse_test_packet)(uint32_t cnt) {
           if (mouse_has_error())
             continue;
 
-          uint8_t byte = mouse_get_data();
-
-          if (byte_count == 0) {
-            if (!(byte & ALWAYS_1))
-              continue; // actually skip unsynced bytes
-            packet_bytes[0] = byte;
-            byte_count++;
-          } else {
-            packet_bytes[byte_count] = byte;
-            byte_count++;
-          }
-
-          if (byte_count ==
-              PACKET_SIZE) { // if we have read all three bytes of the packet
-            handle_packet(packet_bytes, &p);
-            mouse_print_packet(&p);
-            byte_count = 0; // reset for the next packet
-            cnt--;          // decrease the packet counter
+          if (mouse_packet_is_ready()) {
+            p = handle_packet();
+            mouse_print_packet(p);
+            cnt--; // decrease the packet counter
           }
         }
+
         break;
       default:
         break; /* no other notifications expected: do nothing */
@@ -96,6 +82,7 @@ int(mouse_test_packet)(uint32_t cnt) {
              /* no standard messages expected: do nothing */
     }
   }
+
   if (mouse_unsubscribe_int())
     return 1;
   if (mouse_disable_data_report())
@@ -119,9 +106,7 @@ int(mouse_test_async)(uint8_t idle_time) {
 
   // Mouse variables
   uint32_t mouse_irq_set = BIT(mouse_bit_no);
-  int byte_count = 0;
-  uint8_t packet_bytes[PACKET_SIZE];
-  struct packet p;
+  struct packet* p;
 
   // Timer variables
   uint8_t time = idle_time;
@@ -147,23 +132,9 @@ int(mouse_test_async)(uint8_t idle_time) {
           if (mouse_has_error())
             continue;
 
-          uint8_t byte = mouse_get_data();
-
-          if (byte_count == 0) {
-            if (!(byte & ALWAYS_1))
-              continue; // actually skip unsynced bytes
-            packet_bytes[0] = byte;
-            byte_count++;
-          } else {
-            packet_bytes[byte_count] = byte;
-            byte_count++;
-          }
-
-          if (byte_count ==
-              PACKET_SIZE) { // if we have read all three bytes of the packet
-            handle_packet(packet_bytes, &p);
-            mouse_print_packet(&p);
-            byte_count = 0; // reset for the next packet
+          if (mouse_packet_is_ready()) {
+            p = handle_packet();
+            mouse_print_packet(p);
 
             // Mouse activity resets the idle-time window.
             time = idle_time;
