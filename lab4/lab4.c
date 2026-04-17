@@ -1,8 +1,12 @@
 // IMPORTANT: you must include the following line in all your C files
 #include <lcom/lcf.h>
+#include <lcom/lab4.h>
 
 #include <stdint.h>
 #include <stdio.h>
+
+#include "mouse.h"
+#include "i8042.h"
 
 // Any header files included below this line should have been created by you
 
@@ -32,10 +36,65 @@ int main(int argc, char *argv[]) {
 
 
 int (mouse_test_packet)(uint32_t cnt) {
-    /* To be completed */
-    printf("%s(%u): under construction\n", __func__, cnt);
-    return 1;
-}
+  uint8_t bit_no;
+  if(mouse_enable_data_report()) return 1; //enable data reporting, so the mouse starts sending packets when we read from it
+  if(mouse_subscribe_int(&bit_no)) return 1;
+
+  uint32_t irq_set = BIT(bit_no);
+  int byte_count = 0;
+  uint8_t packet_bytes[PACKET_SIZE];
+  struct packet p;
+
+  int r;
+  int ipc_status;
+  message msg;
+  
+
+  while(cnt > 0) { //exit on ESC break code, but if it's a two byte scancode, we need to read both bytes before exiting
+
+      /* Get a request message. */
+      if ( (r = driver_receive(ANY, &msg, &ipc_status)) != 0 ) { 
+          printf("driver_receive failed with: %d", r);
+          continue;
+      }
+      if (is_ipc_notify(ipc_status)) { /* received notification */
+          switch (_ENDPOINT_P(msg.m_source)) {
+              case HARDWARE: /* hardware interrupt notification */
+                  if (msg.m_notify.interrupts & irq_set) { /* subscribed interrupt */
+                      mouse_ih();
+                      if(mouse_has_error()) continue;
+
+                      uint8_t byte = mouse_get_data();
+
+                      if(byte_count == 0) {
+                          if(!(byte & ALWAYS_1)) continue; // actually skip unsynced bytes
+                          packet_bytes[0] = byte;
+                          byte_count++;
+                      } else {
+                          packet_bytes[byte_count] = byte;
+                          byte_count++;
+                      }
+
+
+                      if (byte_count == PACKET_SIZE) { //if we have read all three bytes of the packet
+                        handle_packet(packet_bytes, &p);
+                        mouse_print_packet(&p);
+                        byte_count = 0; //reset for the next packet
+                        cnt--; //decrease the packet counter
+                      }
+                    }
+                  break;
+              default:
+                  break; /* no other notifications expected: do nothing */
+          }
+      } else { /* received a standard message, not a notification */
+          /* no standard messages expected: do nothing */
+      }
+  }
+  if(mouse_unsubscribe_int()) return 1;
+  if(mouse_disable_data_report()) return 1;   
+  return 0;
+} 
 
 int (mouse_test_async)(uint8_t idle_time) {
     /* To be completed */
