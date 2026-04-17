@@ -4,8 +4,8 @@
 #include "i8042.h"
 
 // ============ STATIC STATE ============
-static int hook_id_mouse = 2;
 static bool mouse_error = false;
+static int hook_id_mouse;
 static uint8_t data;
 
 // ============ INTERRUPT SUBSCRIPTION ============
@@ -17,7 +17,7 @@ int mouse_write_aux_command(uint8_t command) {
 
 int (mouse_subscribe_int)(uint8_t *bit_no) {
   if (bit_no == NULL) return 1;
-
+  hook_id_mouse = MOUSE_IRQ; 
   *bit_no = hook_id_mouse;
   if (sys_irqsetpolicy(MOUSE_IRQ, IRQ_REENABLE | IRQ_EXCLUSIVE, &hook_id_mouse)) return 1;
 
@@ -80,6 +80,23 @@ int (mouse_enable_data_report)(void) {
 
 int (mouse_disable_data_report)(void) {
   return mouse_change_data_report(DISABLE_DATA_REPORTING);
+}
+
+// =========== SESSION MANAGEMENT ============
+int (mouse_start_session)(uint8_t *bit_no) {
+  if (bit_no == NULL) return 1;
+  if (mouse_enable_data_report()) return 1;
+  if (mouse_subscribe_int(bit_no)) return 1;
+  return 0;
+}
+
+int (mouse_stop_session)(void) {
+  int error = 0;
+
+  if (mouse_disable_data_report()) error = 1;
+  if (mouse_unsubscribe_int()) error = 1;
+
+  return error;
 }
 
 // ============ PACKET HANDLING ============

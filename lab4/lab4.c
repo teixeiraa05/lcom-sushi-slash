@@ -37,8 +37,7 @@ int main(int argc, char *argv[]) {
 
 int (mouse_test_packet)(uint32_t cnt) {
   uint8_t bit_no;
-  if(mouse_enable_data_report()) return 1; //enable data reporting, so the mouse starts sending packets when we read from it
-  if(mouse_subscribe_int(&bit_no)) return 1;
+  if (mouse_start_session(&bit_no)) return 1;
 
   uint32_t irq_set = BIT(bit_no);
   int byte_count = 0;
@@ -90,13 +89,10 @@ int (mouse_test_packet)(uint32_t cnt) {
           /* no standard messages expected: do nothing */
       }
   }
-  if(mouse_unsubscribe_int()) return 1;
-  if(mouse_disable_data_report()) return 1;   
-  return 0;
-} 
+  return mouse_stop_session();  
+}
 
 int (mouse_test_async)(uint8_t idle_time) {
-    /* To be completed */
-    printf("%s(%u): under construction\n", __func__, idle_time);
+    //TODO
     return 1;
 }
