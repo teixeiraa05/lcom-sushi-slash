@@ -13,7 +13,7 @@ lab4/lab4
 *.bin
 *.hex
 */.gdbinit
-
+.minix-src/
 # IDE and editor files
 .vscode/
 
