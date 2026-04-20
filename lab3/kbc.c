@@ -2,10 +2,13 @@
 #include "kbc.h"
 #include "i8042.h"
 
-int hook_id_kb = 1;
+int hook_id_kb;
+static uint8_t scancode;
+static bool kbc_error = false;
 
 int(kbc_subscribe_int)(uint8_t *bit_no) {
   if (bit_no == NULL) return 1;
+  hook_id_kb = KBC_IRQ;
   *bit_no = hook_id_kb;
   if(sys_irqsetpolicy(KBC_IRQ, IRQ_REENABLE | IRQ_EXCLUSIVE, &hook_id_kb)) return 1;
   return 0;
@@ -15,10 +18,6 @@ int(kbc_unsubscribe_int)() {
   if (sys_irqrmpolicy(&hook_id_kb)) return 1;
   return 0;
 }
-
-
-static uint8_t scancode;
-static bool kbc_error = false;
 
 void (kbc_ih)() {
   uint8_t sr; 
