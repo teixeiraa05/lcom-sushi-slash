@@ -2,9 +2,9 @@
 #include <lcom/lab5.h>
 
 #include "vesa-bios.h"
-#include "graphics-card.h"
+#include "video_gr.h"
 
-int (graphics_card_change_mode) (uint16_t mode) {
+void* (vg_init)(uint16_t mode) {
     reg86_t reg;
     memset(&reg, 0, sizeof(reg));
 
@@ -13,11 +13,11 @@ int (graphics_card_change_mode) (uint16_t mode) {
     reg.al = AL_SET_MODE;
     reg.bx = mode | BIT(14); 
 
-
     if (sys_int86(&reg) != OK) {  
         printf("Error calling sys_int86\n");
-        return 1;
+        return NULL;
     }
 
-    return 0;
+    // The linear frame buffer address is returned in the EAX register
+    return (void*) reg.eax;
 }

@@ -2,7 +2,7 @@
 #include <lcom/lcf.h>
 
 #include <lcom/lab5.h>
-#include "graphics-card.h"
+#include "video_gr.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
 
 int(video_test_init)(uint16_t mode, uint8_t delay) {
     
-    if (graphics_card_change_mode(mode)) return 1;
+    if (vg_init(mode) == NULL) return 1;
     sleep(delay);
     vg_exit();
     return 0;
