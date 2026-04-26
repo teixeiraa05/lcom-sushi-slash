@@ -44,8 +44,8 @@ int mouse_read_byte(uint8_t *byte) {
   if (kbc_read_status(&status)) return 1;
 
   if ((status & OBF) && (status & MOUSE_DATA)) {
-    if (status & (PARITY_ERR | TIMEOUT_ERR)) return 1;
     if (util_sys_inb(KBC_OUT_BUF, byte)) return 1;
+    if (status & (PARITY_ERR | TIMEOUT_ERR)) return 1;
     return 0;
   }
 
@@ -131,14 +131,6 @@ void (mouse_ih)(void) {
 
   if (mouse_read_byte(&data) == 0) {
     return; // success, byte is in &data
-  }
-
-  // Read failed — check if we need to drain buffer due to error
-  uint8_t status;
-  if (kbc_read_status(&status) == 0) {
-    if ((status & (PARITY_ERR | TIMEOUT_ERR)) && (status & OBF)) {
-      util_sys_inb(KBC_OUT_BUF, &data); // drain stale data
-    }
   }
 
   mouse_error = true;

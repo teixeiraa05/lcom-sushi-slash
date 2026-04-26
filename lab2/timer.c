@@ -1,6 +1,6 @@
 #include <lcom/lcf.h>
 #include <lcom/timer.h>
-#include "timer_wrapper.h"
+#include "./timer.h"
 
 #include <stdint.h>
 

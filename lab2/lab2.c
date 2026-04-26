@@ -1,6 +1,6 @@
 #include <lcom/lcf.h>
 #include <lcom/lab2.h>
-#include "timer_wrapper.h"
+#include "timer.h"
 
 #include <stdbool.h>
 #include <stdint.h>

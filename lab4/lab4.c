@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "../lab2/timer_wrapper.h"
+#include "../lab2/timer.h"
 #include "i8042.h"
 #include "mouse.h"
 
