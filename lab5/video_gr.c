@@ -103,3 +103,19 @@ int (vg_draw_rectangle)(uint16_t x, uint16_t y, uint16_t width, uint16_t height,
 
     return 0;
 }
+
+int (vg_draw_xpm)(xpm_map_t xpm, uint16_t x, uint16_t y) {
+    xpm_image_t img;
+    
+    uint8_t *img_bytes;
+    if ((img_bytes = xpm_load(xpm, XPM_INDEXED, &img)) == NULL) return 1;
+
+    for (uint16_t j = 0; j < img.height; j++) {
+        for (uint16_t i = 0; i < img.width; i++) {
+            uint32_t color = img.bytes[j * img.width + i];
+            if (vg_draw_pixel(x + i, y + j, color)) return 1;
+        }
+    }
+
+    return 0;
+}
