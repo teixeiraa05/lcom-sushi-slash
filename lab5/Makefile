@@ -13,7 +13,7 @@ CFLAGS += -I../lab3
 # list of library dependencies
 DPADD += ${LIBLCF} ${LIB_NAME}
 LDADD += -llcf -L../lab3  # Tell the compiler to look in the lab3 directory for libraries
-LDADD += -lkbd -lutils -L. -L../lab2
+LDADD += -lkbd -ltimer -L. -L../lab2
 LDADD += -lgraphics
 
 
