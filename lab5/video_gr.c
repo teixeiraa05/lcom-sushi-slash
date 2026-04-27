@@ -77,15 +77,18 @@ int (vg_draw_pixel)(uint16_t x, uint16_t y, uint32_t color) {
     uint32_t pixel_offset = (y * vmi.XResolution + x) * bytes_per_pixel;
     char* pixel_addr = video_mem + pixel_offset;
 
+    //Copy the color value to the video memory
     if (memcpy(pixel_addr, &color, bytes_per_pixel) == NULL) return 1;
     
     return 0;
 }
 
 int (vg_draw_hline)(uint16_t x, uint16_t y, uint16_t len, uint32_t color) {
+    // Check if the starting point is valid and if the line fits within the screen boundaries
     if(x < 0 || y < 0) return 1;
     if (x + len > vmi.XResolution || y >= vmi.YResolution) return 1;
 
+    // Draw a horizontal line by drawing individual pixels
     for (uint16_t i = 0; i < len; i++) {
         if (vg_draw_pixel(x + i, y, color)) return 1;
     }
@@ -94,9 +97,11 @@ int (vg_draw_hline)(uint16_t x, uint16_t y, uint16_t len, uint32_t color) {
 }
 
 int (vg_draw_rectangle)(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint32_t color) {
+    // Check if the starting point is valid and if the rectangle fits within the screen boundaries
     if(x < 0 || y < 0) return 1;
     if (x + width > vmi.XResolution || y + height > vmi.YResolution) return 1;
 
+    // Draw a rectangle by drawing horizontal lines
     for (uint16_t j = 0; j < height; j++) {
         if (vg_draw_hline(x, y + j, width, color)) return 1;
     }
@@ -104,16 +109,30 @@ int (vg_draw_rectangle)(uint16_t x, uint16_t y, uint16_t width, uint16_t height,
     return 0;
 }
 
-int (vg_draw_xpm)(xpm_map_t xpm, uint16_t x, uint16_t y) {
+int (vg_draw_xpm)(xpm_map_t xpm, uint16_t x, uint16_t y, enum xpm_image_type type) {
+    // Check if the starting point is valid and if the rectangle fits within the screen boundaries
+    if(x < 0 || y < 0) return 1;
+    
     xpm_image_t img;
     
     uint8_t *img_bytes;
-    if ((img_bytes = xpm_load(xpm, XPM_INDEXED, &img)) == NULL) return 1;
-
+    if ((img_bytes = xpm_load(xpm, type, &img)) == NULL) return 1;
+    if (x + img.width > vmi.XResolution || y + img.height > vmi.YResolution) return 1;
+    
     for (uint16_t j = 0; j < img.height; j++) {
         for (uint16_t i = 0; i < img.width; i++) {
-            uint32_t color = img.bytes[j * img.width + i];
-            if (vg_draw_pixel(x + i, y + j, color)) return 1;
+            if(type == XPM_INDEXED) {
+                uint8_t color = img_bytes[j * img.width + i];
+                if (vg_draw_pixel(x + i, y + j, color)) return 1;
+            }
+            else if(type == XPM_1_5_5_5 || type == XPM_5_6_5) {
+                uint16_t color = ((uint16_t*)img_bytes)[j * img.width + i];
+                if (vg_draw_pixel(x + i, y + j, color)) return 1;
+            }
+            else {
+                uint32_t color = ((uint32_t*)img_bytes)[j * img.width + i];
+                if (vg_draw_pixel(x + i, y + j, color)) return 1;
+            }
         }
     }
 

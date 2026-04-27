@@ -126,7 +126,7 @@ int(video_test_xpm)(xpm_map_t xpm, uint16_t x, uint16_t y) {
     void* addr = vg_init(MODE_105);
     if (addr == NULL) return 1;
 
-    if(vg_draw_xpm(xpm, x, y)) {
+    if(vg_draw_xpm(xpm, x, y, XPM_INDEXED)) {
         vg_exit();
         return 1;
     }
@@ -139,7 +139,7 @@ int(video_test_xpm)(xpm_map_t xpm, uint16_t x, uint16_t y) {
 
     uint32_t irq_set = BIT(bit_no);
 
-    int r;
+    int r;  
     int ipc_status;
     message msg;
 
