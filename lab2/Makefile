@@ -22,5 +22,6 @@ CLEANFILES += ${LIB_NAME} ${LIB_OBJS} 				# add the library file and object file
 all: lib
 lib: ${LIB_OBJS}
 	ar rcs ${LIB_NAME} ${LIB_OBJS}		# create the library file from the object files
+
 # include LCOM's makefile that does all the "heavy lifting"
 .include <minix.lcom.mk>
