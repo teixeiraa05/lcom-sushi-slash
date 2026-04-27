@@ -23,14 +23,5 @@ all: lib
 lib: ${LIB_OBJS}
 	ar rcs ${LIB_NAME} ${LIB_OBJS}		# create the library file from the object files
 
-#create separate lib for utils.c, since it's shared between labs
-LIB_NAME = libutils.a
-LIB_SRCS = utils.c
-LIB_OBJS = ${LIB_SRCS:.c=.o}
-CLEANFILES += ${LIB_NAME} ${LIB_OBJS}
-
-libutils: ${LIB_OBJS}
-	ar rcs ${LIB_NAME} ${LIB_OBJS}
-
 # include LCOM's makefile that does all the "heavy lifting"
 .include <minix.lcom.mk>
