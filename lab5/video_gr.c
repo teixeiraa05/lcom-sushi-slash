@@ -70,6 +70,10 @@ int (vg_draw_pixel)(uint16_t x, uint16_t y, uint32_t color) {
     if(x < 0 || y < 0) return 1;
     if (x >= vmi.XResolution || y >= vmi.YResolution) return 1;
 
+    //ignore chroma key green pixels (used in place of transparency)
+    if(bytes_per_pixel == 3 && (color & 0x00FFFFFF) == CHROMA_KEY_GREEN_888) return 0;
+    if(bytes_per_pixel == 2 && (color & 0x0000FFFF) == CHROMA_KEY_GREEN_565) return 0;
+
     //Handle mode 0x110 where the color is represented in 15 bits
     if(vmi.BitsPerPixel == 15) color &= 0x7FFF;
 
@@ -119,6 +123,7 @@ int (vg_draw_xpm)(xpm_map_t xpm, uint16_t x, uint16_t y, enum xpm_image_type typ
     if ((img_bytes = xpm_load(xpm, type, &img)) == NULL) return 1;
     if (x + img.width > vmi.XResolution || y + img.height > vmi.YResolution) return 1;
     
+    /*
     for (uint16_t j = 0; j < img.height; j++) {
         for (uint16_t i = 0; i < img.width; i++) {
             if(type == XPM_INDEXED) {
@@ -133,6 +138,14 @@ int (vg_draw_xpm)(xpm_map_t xpm, uint16_t x, uint16_t y, enum xpm_image_type typ
                 uint32_t color = ((uint32_t*)img_bytes)[j * img.width + i];
                 if (vg_draw_pixel(x + i, y + j, color)) return 1;
             }
+        }
+    }
+    */
+
+    for (uint16_t j = 0; j < img.height; j++) {
+        for (uint16_t i = 0; i < img.width; i++) {
+            uint8_t * color = img_bytes + ((j * img.width + i) * bytes_per_pixel);
+            if (vg_draw_pixel(x + i, y + j, *(uint32_t*)color)) return 1;
         }
     }
 
