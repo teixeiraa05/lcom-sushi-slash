@@ -2,10 +2,13 @@
 #define __END_SCREEN_H
 
 #include "../../lab5/video_gr.h"
+#include "sprite.h"
 
 typedef struct end_screen {
-    xpm_map_t xpm; // Could be a different xpm for win and lose
-    int score;
+    sprite_t xpm; //win/loss xpm
+    sprite_t mascot; //mascot xpm
+    
+    sprite_t** score; //to load the font for the score  
 } end_screen_t;
 
 #endif /* __END_SCREEN_H */
