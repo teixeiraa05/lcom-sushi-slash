@@ -8,14 +8,15 @@ SRCS = main.c
 # "-Wall -Wextra -Werror -I . -std=c11 -Wno-unused-parameter" are already set
 CFLAGS += -pedantic
 CFLAGS += -I../lab1 -I../lab2 -I../lab3 -I../lab4 -I../lab5
-CFLAGS += -I. -I./controllers -I./game
+CFLAGS += -I./include -I./include/controllers -I./include/game
 
 # list of library dependencies
 DPADD += ${LIBLCF}
 LDADD += -llcf 
-LDADD += -L../lab1 -L../lab2 -L../lab3 -L../lab4 -L../lab5  # Tell the compiler to look in the lab directories for libraries
+LDADD += -L../lab1 -L../lab2 -L../lab3 -L../lab4 -L../lab5
 LDADD += -ltimer -lkbd -lmouse -lgraphics
 
+.PATH: ${.CURDIR}/src
 
 # include LCOM's makefile that does all the "heavy lifting"
 .include <minix.lcom.mk>
