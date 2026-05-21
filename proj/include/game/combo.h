@@ -2,11 +2,10 @@
 #define __COMBO_H
 
 #include "sprite.h"
-
-typedef void* queue;
+#include "queue.h"
 
 typedef struct combo {
-    queue combo; // A queue of the required moves for the combo
+    Queue combo; // A queue of the required moves for the combo
 
     sprite_t current_letter; // The current letter to be displayed on the screen
 
