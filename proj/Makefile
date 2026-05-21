@@ -2,19 +2,19 @@
 PROG=proj
 
 # source code files to be compiled
-SRCS = main.c
+SRCS = proj.c
 
 # additional compilation flags
 # "-Wall -Wextra -Werror -I . -std=c11 -Wno-unused-parameter" are already set
 CFLAGS += -pedantic
 CFLAGS += -I../lab1 -I../lab2 -I../lab3 -I../lab4 -I../lab5
-CFLAGS += -I./include -I./include/controllers -I./include/game
+CFLAGS += -I./include -I./include/devices -I./include/game
 
 # list of library dependencies
 DPADD += ${LIBLCF}
 LDADD += -llcf 
 LDADD += -L../lab1 -L../lab2 -L../lab3 -L../lab4 -L../lab5
-LDADD += -ltimer -lkbd -lmouse -lgraphics
+LDADD += -lmouse -lkbd -ltimer -lgraphics
 
 .PATH: ${.CURDIR}/src
 

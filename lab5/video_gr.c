@@ -29,7 +29,7 @@ static vbe_mode_info_t vmi;
 static unsigned bytes_per_pixel;
 
 
-void* (vg_init)(uint16_t mode) {
+void* (graphics_init)(uint16_t mode) {
 
     memset(&vmi, 0, sizeof(vmi));
     if (vbe_get_mode_info(mode, &vmi)) return NULL;

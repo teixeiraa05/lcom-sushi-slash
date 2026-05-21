@@ -46,7 +46,7 @@ int(video_test_init)(uint16_t mode, uint8_t delay) {
 
 int(video_test_rectangle)(uint16_t mode, uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint32_t color) {
 
-    void* addr = vg_init(mode);
+    void* addr = graphics_init(mode);
     if (addr == NULL) return 1;
 
     if (vg_draw_rectangle(x, y, width, height, color)) {
@@ -123,7 +123,7 @@ int(video_test_rectangle)(uint16_t mode, uint16_t x, uint16_t y, uint16_t width,
 }
 
 int(video_test_xpm)(xpm_map_t xpm, uint16_t x, uint16_t y) {
-    void* addr = vg_init(MODE_105);
+    void* addr = graphics_init(MODE_105);
     if (addr == NULL) return 1;
 
     if(vg_draw_xpm(xpm, x, y, XPM_INDEXED)) {
