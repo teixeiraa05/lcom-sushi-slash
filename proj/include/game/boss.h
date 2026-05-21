@@ -4,13 +4,13 @@
 #include <lcom/lcf.h> 
 
 #include "sprite.h"
+#include "sushi.h"
 #include "combo.h"
 
 typedef struct boss {
-    int x, y;
-    float vx, vy;
-    sprite_t xpm;
-    combo_t combo; // The combo that kills the boss, could be better to use a queue or something else
+    sushi_t sushi;
+    combo_t combo;
+    uint32_t countdown; // Time until end of the boss fight in ticks 
 } boss_t;
 
 #endif /* __BOSS_H */
