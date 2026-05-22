@@ -2,7 +2,7 @@
 PROG=proj
 
 # source code files to be compiled
-SRCS = proj.c
+SRCS = proj.c video_gr.c queue.c ui.c sprite.c
 
 # additional compilation flags
 # "-Wall -Wextra -Werror -I . -std=c11 -Wno-unused-parameter" are already set
@@ -10,9 +10,12 @@ CFLAGS += -pedantic
 CFLAGS += -I../lab1 -I../lab2 -I../lab3 -I../lab4 -I../lab5
 CFLAGS += -I./include -I./include/devices -I./include/game
 
+# Toggle debug logging globally (uncomment to enable)
+# CFLAGS += -DDEBUG_LOG
+
 # list of library dependencies
 DPADD += ${LIBLCF}
-LDADD += -llcf 
+LDADD += -llcf
 LDADD += -L../lab1 -L../lab2 -L../lab3 -L../lab4 -L../lab5
 LDADD += -lmouse -lkbd -ltimer -lgraphics
 
