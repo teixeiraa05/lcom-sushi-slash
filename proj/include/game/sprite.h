@@ -13,4 +13,7 @@ typedef struct {
     size_t num_sprites;
 } animated_sprite_t;
 
+int sprite_load(sprite_t *sprite, xpm_map_t xpm);
+void sprite_destroy(sprite_t *sprite);
+
 #endif /* __SPRITE_H */
