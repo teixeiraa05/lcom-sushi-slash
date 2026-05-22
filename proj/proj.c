@@ -5,7 +5,11 @@
 #include "../lab3/kbc.h"
 #include "../lab3/i8042.h"
 #include "include/devices/video_gr.h"
-
+#include "../lab2/timer.h" 
+#include "include/ui.h"
+#include "assets/background.xpm"
+#include "assets/title.xpm"
+#include "include/game/sprite.h"
 
 int main(int argc, char *argv[]) {
     // sets the language of LCF messages (can be either EN-US or PT-PT)
@@ -13,11 +17,11 @@ int main(int argc, char *argv[]) {
 
     // enables to log function invocations that are being "wrapped" by LCF
     // [comment this out if you don't want/need it]
-    lcf_trace_calls("/home/lcom/labs/lab5/trace.txt");
+    lcf_trace_calls("/home/lcom/labs/proj/trace.txt");
 
     // enables to save the output of printf function calls on a file
     // [comment this out if you don't want/need it]
-    lcf_log_output("/home/lcom/labs/lab5/output.txt");
+    lcf_log_output("/home/lcom/labs/proj/output.txt");
 
     // handles control over to LCF
     // [LCF handles command line arguments and invokes the right function]
@@ -35,17 +39,38 @@ int (proj_main_loop)(int argc, char *argv[]) {
     //--- TODO ----------------------------------
     // Set video mode
     
-    if(graphics_init(MODE_115) == NULL) {
-         printf("Failed to initialize graphics mode\n");
+    if(video_init_page_flipping(MODE_115) != 0) {
+         printf("Failed to initialize page-flipping\n");
          return 1;
      }
     
-    //----- KEYBOARD (this is temporary and used just for closing the program) -----
+    sprite_t background_sprite;
+    sprite_t test_sprite;
 
-    uint8_t bit_no;
-    if(kbc_subscribe_int(&bit_no)) return 1;
+    if(sprite_load(&background_sprite, (xpm_map_t)background_xpm) != 0) {
+        printf("Failed to load background sprite\n");
+        return 1;
+    }
 
-    uint32_t irq_set = BIT(bit_no);
+    if(sprite_load(&test_sprite, (xpm_map_t)title_xpm) != 0) {
+        printf("Failed to load test sprite\n");
+        return 1;
+    }
+
+     // --- END TODO -----------------------------
+
+    //Temporary stuff to test the video mode, can be removed later
+    uint8_t kbc_bit_no;
+    if(kbc_subscribe_int(&kbc_bit_no)) return 1;
+    
+    uint8_t timer_bit_no;
+    if(timer_subscribe_int(&timer_bit_no)) {
+        kbc_unsubscribe_int();
+        return 1;
+    }
+
+    uint32_t timer_irq_set = BIT(timer_bit_no);
+    uint32_t kbc_irq_set = BIT(kbc_bit_no);
 
     int r;  
     int ipc_status;
@@ -66,7 +91,7 @@ int (proj_main_loop)(int argc, char *argv[]) {
         if (is_ipc_notify(ipc_status)) { /* received notification */
             switch (_ENDPOINT_P(msg.m_source)) {
                 case HARDWARE: /* hardware interrupt notification */
-                    if (msg.m_notify.interrupts & irq_set) { /* subscribed interrupt */
+                    if (msg.m_notify.interrupts & kbc_irq_set) { /* subscribed interrupt */
                         kbc_ih();
 
                         /* If there was an error, skip the scancode processing and wait for the next interrupt */
@@ -92,6 +117,15 @@ int (proj_main_loop)(int argc, char *argv[]) {
                             scancode_size = 1;
                         }
                     }
+
+                    if (msg.m_notify.interrupts & timer_irq_set) { /* subscribed interrupt */
+                        timer_ih_proj();
+                        video_clear_page();
+                        ui_draw_background(&background_sprite);
+                        ui_draw_sprite(&test_sprite, 50, 100);
+                        video_swap_pages();
+                    }
+
                     break;
                 default:
                     break; /* no other notifications expected: do nothing */
@@ -100,10 +134,13 @@ int (proj_main_loop)(int argc, char *argv[]) {
             /* no standard messages expected: do nothing */
         }
     }
-    if(vg_exit()) return 1;
-
+    
+    if (timer_unsubscribe_int()) return 1;
     if(kbc_unsubscribe_int()) return 1;
+
     // Free any resources that were allocated
+    if(video_cleanup_page_flipping() != 0) return 1;
+    if(vg_exit()) return 1;
 
 
     // --- END TODO -----------------------------
