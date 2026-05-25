@@ -6,6 +6,7 @@
 #include "../../lab5/video_gr.h"
 #include "../include/game/button.h"
 #include "../include/game/menu.h"
+#include "../include/game/font.h"
 
 int ui_draw_sprite(const sprite_t *sprite, uint16_t x, uint16_t y) {
     if (sprite == NULL || sprite->pixmap == NULL) {
@@ -85,5 +86,31 @@ int ui_draw_game_over(const GameInfo *game) {
 
    // TODO 
 
+    return 0;
+}
+
+int ui_draw_text(const font_t *font, const char *str, uint16_t x, uint16_t y) {
+    if (font == NULL || str == NULL)
+        return 1;
+
+    uint16_t cur_x = x;
+
+
+    for (const char *p = str; *p != '\0'; p++) {
+        if (*p == ' ') {
+            cur_x += font->char_width;
+            continue;
+        }
+
+        int idx = font_glyph_index(*p);
+        if (idx < 0) {
+            cur_x += font->char_width;
+            continue;
+        }
+
+        if (ui_draw_sprite(font->sprites[idx], cur_x, y) != 0)
+            return 1;
+        cur_x += font->char_width;
+    }
     return 0;
 }

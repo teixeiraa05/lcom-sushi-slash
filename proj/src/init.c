@@ -8,6 +8,8 @@
 #include "../assets/mascote/mascote3.xpm"
 #include "../assets/mascote/mascote4.xpm"
 
+
+
 int assets_init(Assets *assets) {
     if (assets == NULL) return 1;
 
@@ -20,12 +22,19 @@ int assets_init(Assets *assets) {
         return 1;
     }
 
+    if (font_create(&assets->game_font, 16) != 0) {
+        sprite_destroy(&assets->background_sprite);
+        sprite_destroy(&assets->test_sprite);
+        return 1;
+    }
+
     for (size_t i = 0; i < 4; i++) {
         assets->mascote[i] = malloc(sizeof(sprite_t));
         if (assets->mascote[i] == NULL) {
             for (size_t j = 0; j < i; j++) {
                 free(assets->mascote[j]);
             }
+            font_destroy(&assets->game_font);
             sprite_destroy(&assets->background_sprite);
             sprite_destroy(&assets->test_sprite);
             return 1;
@@ -43,6 +52,7 @@ int assets_init(Assets *assets) {
         for (size_t i = 0; i < 4; i++) {
             free(assets->mascote[i]);
         }
+        font_destroy(&assets->game_font);
         sprite_destroy(&assets->background_sprite);
         sprite_destroy(&assets->test_sprite);
         return 1;
@@ -56,6 +66,7 @@ void assets_destroy(Assets *assets) {
 
     sprite_destroy(&assets->background_sprite);
     sprite_destroy(&assets->test_sprite);
+    font_destroy(&assets->game_font);
 
     for (size_t i = 0; i < assets->mascot_anim.num_sprites; i++) {
         sprite_destroy(assets->mascot_anim.sprites[i]);

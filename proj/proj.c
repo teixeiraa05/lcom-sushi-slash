@@ -44,6 +44,7 @@ int (proj_main_loop)(int argc, char *argv[]) {
     
     // Load assets
     Assets assets;
+    memset(&assets, 0, sizeof(assets));
     if (assets_init(&assets) != 0) {
         assets_destroy(&assets);
         video_cleanup_page_flipping();
@@ -117,6 +118,7 @@ int (proj_main_loop)(int argc, char *argv[]) {
                         video_clear_page();
                         ui_draw_background(&assets.background_sprite);
                         ui_draw_sprite(&assets.test_sprite, 50, 100);
+                        ui_draw_text(&assets.game_font, "play", 50, 50);
                         anim_draw(&assets.mascot_anim, 200, 200);
 
                         video_swap_pages();
