@@ -4,7 +4,7 @@
 #include <lcom/lcf.h>
 
 typedef struct {
-    char* pixmap;
+    uint8_t* pixmap;
     uint16_t width, height;
 } sprite_t;
 

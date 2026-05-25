@@ -3,7 +3,7 @@
 #include <string.h>
 
 #include "../include/ui.h"
-#include "../include/devices/video_gr.h"
+#include "../../lab5/video_gr.h"
 #include "../include/game/button.h"
 #include "../include/game/menu.h"
 
@@ -12,7 +12,7 @@ int ui_draw_sprite(const sprite_t *sprite, uint16_t x, uint16_t y) {
         printf("[ui] sprite or pixmap is NULL\n");
         return 1;
     }
-    return video_draw_sprite((const uint8_t *) sprite->pixmap, sprite->width, sprite->height, x, y);
+    return video_draw_sprite(sprite->pixmap, sprite->width, sprite->height, x, y);
 }
 
 int ui_draw_background(const sprite_t *background) {
@@ -20,21 +20,17 @@ int ui_draw_background(const sprite_t *background) {
         printf("[ui] background sprite or pixmap is NULL\n");
         return 1;
     }
-    return video_draw_background((const uint8_t *) background->pixmap);
+    return video_draw_background(background->pixmap);
 }
 
 int ui_draw_rectangle(int x, int y, int width, int height, uint32_t color) {
+    /* clamp negative origin: shrink dimensions accordingly */
+    if (x < 0) { width  += x; x = 0; }
+    if (y < 0) { height += y; y = 0; }
     if (width <= 0 || height <= 0) return 0;
-    
-    // Draw filled solid rectangle by plotting pixels
-    for (int row = 0; row < height; row++) {
-        for (int col = 0; col < width; col++) {
-            if (video_draw_pixel(x + col, y + row, color) != 0) {
-                return 1;
-            }
-        }
-    }
-    return 0;
+
+    return video_draw_rect((uint16_t)x, (uint16_t)y,
+                           (uint16_t)width, (uint16_t)height, color);
 }
 
 int ui_draw_button(const button_t *btn) {

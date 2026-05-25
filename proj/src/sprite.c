@@ -11,7 +11,7 @@ int sprite_load(sprite_t *sprite, xpm_map_t xpm) {
         return 1;
     }
 
-    sprite->pixmap = (char *) pixmap;
+    sprite->pixmap = pixmap;
     sprite->width = img.width;
     sprite->height = img.height;
 
