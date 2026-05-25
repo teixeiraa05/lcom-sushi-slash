@@ -5,6 +5,8 @@
 #include "../include/devices/mouse.h"
 #include "../../lab4/i8042.h"
 
+// ============ INTERRUPT (UN)SUBSCRIPTION ============
+
 int mouse_init(MouseGameState *state, int screen_width, int screen_height, uint16_t *irq_set) {
     if (state == NULL || irq_set == NULL) {
         return 1;
@@ -48,6 +50,8 @@ int mouse_cleanup(void) {
 
 }
 
+// ============ HIGH-LEVEL PACKET PROCESSING & GAME STATE UPDATE ============
+
 bool mouse_ih(MouseGameState *state, int screen_width, int screen_height) {
     if (state == NULL) {
         return false;
@@ -58,9 +62,9 @@ bool mouse_ih(MouseGameState *state, int screen_width, int screen_height) {
 
     // Check if a full packet was parsed
     if (mouse_packet_is_ready()) {
-        struct packet *pkt = handle_packet();
+        struct packet *pp = handle_packet();
 
-        mouse_update_state(&state, &pkt, screen_width, screen_height);
+        mouse_update_state(&state, &pp, screen_width, screen_height);
         
         return true; // Packet processed and state updated
     }
@@ -89,6 +93,32 @@ void mouse_update_state(MouseGameState *state, struct packet *pp, int screen_wid
 
     // Detect slash gesture
     int velocity_squared = state->dx * state->dx + state->dy * state->dy;
-    const int SLASH_THRESHOLD_SQUARED = 10000; // Example threshold for slash detection
+    const int SLASH_THRESHOLD_SQUARED = SLASH_THRESHOLD * SLASH_THRESHOLD;
     state->is_slashing = (velocity_squared > SLASH_THRESHOLD_SQUARED) && state->lb_pressed;
+}
+
+bool mouse_get_movement(MouseGameState *state, int *dx, int *dy) {
+    if (dx == NULL || dy == NULL) {
+        return false;
+    }
+    *dx = state->dx;
+    *dy = state->dy;
+    return true;
+}
+
+uint8_t mouse_get_buttons(MouseGameState *state) {
+    uint8_t buttons = 0;
+    if (state->lb_pressed) buttons |= 0x01; // Left button bit
+    if (state->mb_pressed) buttons |= 0x02; // Middle button bit
+    if (state->rb_pressed) buttons |= 0x04; // Right button bit
+    return buttons;
+}
+
+void mouse_get_position(MouseGameState *state, int *x, int *y) {
+    if (x != NULL) {
+        *x = state->x;
+    }
+    if (y != NULL) {
+        *y = state->y;
+    }
 }
