@@ -7,6 +7,7 @@
 #define AL_GET_CONTROLLER_INFO 0x00
 #define VBE_INT 0x10
 
+#define VBE_SET_DISPLAY_START 0x07
 #define CHECK_BIT_SET BIT(14) // Bit 14 must be set to indicate linear framebuffer mode
 
 /* VBE MODES */
