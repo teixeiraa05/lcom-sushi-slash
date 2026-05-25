@@ -4,12 +4,10 @@
 #include "../lab5/vesa-bios.h"
 #include "../lab3/kbc.h"
 #include "../lab3/i8042.h"
-#include "include/devices/video_gr.h"
 #include "../lab2/timer.h" 
 #include "include/ui.h"
-#include "assets/background.xpm"
-#include "assets/title.xpm"
 #include "include/game/sprite.h"
+#include "include/game/init.h"
 
 int main(int argc, char *argv[]) {
     // sets the language of LCF messages (can be either EN-US or PT-PT)
@@ -44,20 +42,14 @@ int (proj_main_loop)(int argc, char *argv[]) {
          return 1;
      }
     
-    sprite_t background_sprite;
-    sprite_t test_sprite;
-
-    if(sprite_load(&background_sprite, (xpm_map_t)background_xpm) != 0) {
-        printf("Failed to load background sprite\n");
+    // Load assets
+    Assets assets;
+    if (assets_init(&assets) != 0) {
+        assets_destroy(&assets);
+        video_cleanup_page_flipping();
         return 1;
     }
-
-    if(sprite_load(&test_sprite, (xpm_map_t)title_xpm) != 0) {
-        printf("Failed to load test sprite\n");
-        return 1;
-    }
-
-     // --- END TODO -----------------------------
+    // --- END TODO -----------------------------
 
     //Temporary stuff to test the video mode, can be removed later
     uint8_t kbc_bit_no;
@@ -120,9 +112,13 @@ int (proj_main_loop)(int argc, char *argv[]) {
 
                     if (msg.m_notify.interrupts & timer_irq_set) { /* subscribed interrupt */
                         timer_ih_proj();
+                        
+                        anim_update(&assets.mascot_anim, get_int_counter());
                         video_clear_page();
-                        ui_draw_background(&background_sprite);
-                        ui_draw_sprite(&test_sprite, 50, 100);
+                        ui_draw_background(&assets.background_sprite);
+                        ui_draw_sprite(&assets.test_sprite, 50, 100);
+                        anim_draw(&assets.mascot_anim, 200, 200);
+
                         video_swap_pages();
                     }
 
@@ -139,6 +135,7 @@ int (proj_main_loop)(int argc, char *argv[]) {
     if(kbc_unsubscribe_int()) return 1;
 
     // Free any resources that were allocated
+    assets_destroy(&assets);
     if(video_cleanup_page_flipping() != 0) return 1;
     if(vg_exit()) return 1;
 
