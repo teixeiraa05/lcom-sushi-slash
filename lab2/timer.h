@@ -10,6 +10,6 @@ int set_int_counter(int new_value);
 // Project timer functions
 void timer_ih_proj(void);
 uint32_t timer_get_ticks(void);
-bool timer_elapsed(uint32_t ms);
+bool timer_elapsed(int ms);
 
 #endif /* _LAB2_TIMER_H_ */
