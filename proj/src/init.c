@@ -1,0 +1,63 @@
+#include "../include/game/init.h"
+
+// Include XPMs for asset loading
+#include "../assets/background.xpm"
+#include "../assets/title.xpm"
+#include "../assets/mascote/mascote1.xpm"
+#include "../assets/mascote/mascote2.xpm"
+#include "../assets/mascote/mascote3.xpm"
+#include "../assets/mascote/mascote4.xpm"
+
+int assets_init(Assets *assets) {
+    if (assets == NULL) return 1;
+
+    if (sprite_load(&assets->background_sprite, (xpm_map_t)background_xpm) != 0) {
+        return 1;
+    }
+
+    if (sprite_load(&assets->test_sprite, (xpm_map_t) title_xpm) != 0) {
+        sprite_destroy(&assets->background_sprite);
+        return 1;
+    }
+
+    for (size_t i = 0; i < 4; i++) {
+        assets->mascote[i] = malloc(sizeof(sprite_t));
+        if (assets->mascote[i] == NULL) {
+            for (size_t j = 0; j < i; j++) {
+                free(assets->mascote[j]);
+            }
+            sprite_destroy(&assets->background_sprite);
+            sprite_destroy(&assets->test_sprite);
+            return 1;
+        }
+    }
+
+    xpm_map_t mascote_xpms[4] = {
+        (xpm_map_t)mascote1_xpm,
+        (xpm_map_t)mascote2_xpm,
+        (xpm_map_t)mascote3_xpm,
+        (xpm_map_t)mascote4_xpm
+    };
+
+    if (anim_sprite_load(&assets->mascot_anim, assets->mascote, 4, mascote_xpms, ANIM_NORMAL_DELAY) != 0) {
+        for (size_t i = 0; i < 4; i++) {
+            free(assets->mascote[i]);
+        }
+        sprite_destroy(&assets->background_sprite);
+        sprite_destroy(&assets->test_sprite);
+        return 1;
+    }
+
+    return 0;
+}
+
+void assets_destroy(Assets *assets) {
+    if (assets == NULL) return;
+
+    sprite_destroy(&assets->background_sprite);
+    sprite_destroy(&assets->test_sprite);
+
+    for (size_t i = 0; i < assets->mascot_anim.num_sprites; i++) {
+        sprite_destroy(assets->mascot_anim.sprites[i]);
+    }
+}
