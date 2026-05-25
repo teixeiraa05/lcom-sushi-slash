@@ -8,7 +8,7 @@
 #include "include/ui.h"
 #include "include/game/sprite.h"
 #include "include/game/init.h"
-#include "include/devices/mouse.h"
+#include "../../../lab4/mouse.h"
 
 # define SCREEN_WIDTH 800
 # define SCREEN_HEIGHT 600
