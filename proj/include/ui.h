@@ -72,4 +72,8 @@ int ui_draw_pause_screen(const GameInfo *game);
  */
 int ui_draw_game_over(const GameInfo *game);
 
+void anim_update(anim_sprite_t *anim, int current_tick);
+void anim_draw(const anim_sprite_t *anim, uint16_t x, uint16_t y);
+
+
 #endif /* __UI_PROJ_H */

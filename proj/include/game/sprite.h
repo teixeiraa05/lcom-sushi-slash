@@ -1,6 +1,10 @@
 #ifndef __SPRITE_H
 #define __SPRITE_H
 
+#define ANIM_SLOW_DELAY 20
+#define ANIM_NORMAL_DELAY 10
+#define ANIM_FAST_DELAY 5
+
 #include <lcom/lcf.h>
 
 typedef struct {
@@ -9,11 +13,17 @@ typedef struct {
 } sprite_t;
 
 typedef struct {
-    sprite_t** sprites; // An array of pointers to sprites, each pointer is a frame of the animation
+    sprite_t** sprites; // Array of pointers to sprites, each pointer is a frame
     size_t num_sprites;
-} animated_sprite_t;
+    uint8_t cur_frame;
+    uint16_t last_tick;
+    int   frame_delay;  // ticks between frames
+} anim_sprite_t;
 
 int sprite_load(sprite_t *sprite, xpm_map_t xpm);
 void sprite_destroy(sprite_t *sprite);
+
+int anim_sprite_load(anim_sprite_t *anim, sprite_t *sprites[], size_t count,
+                     xpm_map_t xpms[], int frame_delay);
 
 #endif /* __SPRITE_H */

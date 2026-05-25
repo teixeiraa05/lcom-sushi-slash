@@ -15,6 +15,17 @@ int ui_draw_sprite(const sprite_t *sprite, uint16_t x, uint16_t y) {
     return video_draw_sprite(sprite->pixmap, sprite->width, sprite->height, x, y);
 }
 
+void anim_update(anim_sprite_t *anim, int current_tick) {
+    if (current_tick - anim->last_tick >= anim->frame_delay) {
+        anim->cur_frame = (anim->cur_frame + 1) % anim->num_sprites;
+        anim->last_tick = current_tick;
+    }
+}
+
+void anim_draw(const anim_sprite_t *anim, uint16_t x, uint16_t y) {
+    ui_draw_sprite(anim->sprites[anim->cur_frame], x, y);
+}
+
 int ui_draw_background(const sprite_t *background) {
     if (background == NULL || background->pixmap == NULL) {
         printf("[ui] background sprite or pixmap is NULL\n");
