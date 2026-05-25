@@ -141,8 +141,8 @@ uint32_t timer_get_ticks(void) {
     return (uint32_t) int_counter;
 }
 
-bool timer_elapsed(uint32_t ms) {
-    uint32_t ticks_needed = (ms * 60) / 1000;
+bool timer_elapsed(int ms) {
+    int ticks_needed = (ms * 60) / 1000;
     if (ticks_needed == 0 && ms > 0) ticks_needed = 1;
-    return (uint32_t) int_counter >= ticks_needed;
+    return int_counter >= ticks_needed;
 }
