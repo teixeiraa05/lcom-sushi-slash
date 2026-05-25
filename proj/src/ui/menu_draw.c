@@ -2,21 +2,32 @@
 #include "../../include/ui/ui.h"
 #include "../../include/ui/menu_draw.h"
 
-#define MENU_BUTTON_X 250
-#define MENU_BUTTON_Y 300
+#define SCREEN_WIDTH 800
+#define SCREEN_HEIGHT 600
+#define CENTER_X(width) ((SCREEN_WIDTH - (width)) / 2)
+#define CENTER_Y(height) ((SCREEN_HEIGHT - (height)) / 2)
+
 #define MENU_BUTTON_W 300
 #define MENU_BUTTON_H 56
 #define MENU_BUTTON_GAP 14
+#define MENU_BUTTON_X CENTER_X(MENU_BUTTON_W)
+#define MENU_BUTTON_Y (SCREEN_HEIGHT / 2)
 #define MENU_BUTTON_COLOR 0x303030
 #define MENU_BUTTON_HOVER_COLOR 0x606060
 #define MENU_MASCOT_X 560
 #define MENU_MASCOT_Y 180
 
-#define PAUSE_BUTTON_X 290
-#define PAUSE_BUTTON_Y 235
+#define PAUSE_PANEL_W 400
+#define PAUSE_PANEL_H 300
+#define PAUSE_PANEL_X CENTER_X(PAUSE_PANEL_W)
+#define PAUSE_PANEL_Y CENTER_Y(PAUSE_PANEL_H)
 #define PAUSE_BUTTON_W 220
 #define PAUSE_BUTTON_H 42
 #define PAUSE_BUTTON_GAP 12
+#define PAUSE_BUTTON_COUNT 2
+#define PAUSE_BUTTONS_H (PAUSE_BUTTON_COUNT * PAUSE_BUTTON_H + (PAUSE_BUTTON_COUNT - 1) * PAUSE_BUTTON_GAP)
+#define PAUSE_BUTTON_X CENTER_X(PAUSE_BUTTON_W)
+#define PAUSE_BUTTON_Y (PAUSE_PANEL_Y + (PAUSE_PANEL_H - PAUSE_BUTTONS_H) / 2)
 #define PAUSE_MASCOT_X 500
 #define PAUSE_MASCOT_Y 250
 
@@ -159,7 +170,11 @@ int ui_menu_draw(const menu_t *menu, const Assets *assets) {
 int ui_pause_menu_draw(const pause_menu_t *menu, const Assets *assets) {
     if (menu == NULL || assets == NULL) return 1;
 
-    if (ui_draw_rectangle(200, 150, 400, 300, 0x1A1A1A) != 0) return 1;
+    if (ui_draw_rectangle(PAUSE_PANEL_X, PAUSE_PANEL_Y,
+                          PAUSE_PANEL_W, PAUSE_PANEL_H,
+                          0x1A1A1A) != 0) {
+        return 1;
+    }
     anim_draw(&assets->mascot_anim, PAUSE_MASCOT_X, PAUSE_MASCOT_Y);
 
     for (uint8_t i = 0; i < 2; i++) {
