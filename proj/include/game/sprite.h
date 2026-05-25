@@ -5,8 +5,6 @@
 #define ANIM_NORMAL_DELAY 10
 #define ANIM_FAST_DELAY 5
 
-#include <lcom/lcf.h>
-
 typedef struct {
     uint8_t* pixmap;
     uint16_t width, height;
@@ -16,7 +14,7 @@ typedef struct {
     sprite_t** sprites; // Array of pointers to sprites, each pointer is a frame
     size_t num_sprites;
     uint8_t cur_frame;
-    uint16_t last_tick;
+    uint32_t last_tick;
     int   frame_delay;  // ticks between frames
 } anim_sprite_t;
 
