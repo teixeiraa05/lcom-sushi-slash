@@ -1,4 +1,4 @@
-#include "../include/game/init.h"
+#include "../include/init.h"
 
 // Include XPMs for asset loading
 #include "../assets/background.xpm"
@@ -17,14 +17,14 @@ int assets_init(Assets *assets) {
         return 1;
     }
 
-    if (sprite_load(&assets->test_sprite, (xpm_map_t) title_xpm) != 0) {
+    if (sprite_load(&assets->name_sprite, (xpm_map_t) title_xpm) != 0) {
         sprite_destroy(&assets->background_sprite);
         return 1;
     }
 
     if (font_create(&assets->game_font, 16) != 0) {
         sprite_destroy(&assets->background_sprite);
-        sprite_destroy(&assets->test_sprite);
+        sprite_destroy(&assets->name_sprite);
         return 1;
     }
 
@@ -36,7 +36,7 @@ int assets_init(Assets *assets) {
             }
             font_destroy(&assets->game_font);
             sprite_destroy(&assets->background_sprite);
-            sprite_destroy(&assets->test_sprite);
+            sprite_destroy(&assets->name_sprite);
             return 1;
         }
     }
@@ -54,7 +54,7 @@ int assets_init(Assets *assets) {
         }
         font_destroy(&assets->game_font);
         sprite_destroy(&assets->background_sprite);
-        sprite_destroy(&assets->test_sprite);
+        sprite_destroy(&assets->name_sprite);
         return 1;
     }
 
@@ -65,7 +65,7 @@ void assets_destroy(Assets *assets) {
     if (assets == NULL) return;
 
     sprite_destroy(&assets->background_sprite);
-    sprite_destroy(&assets->test_sprite);
+    sprite_destroy(&assets->name_sprite);
     font_destroy(&assets->game_font);
 
     for (size_t i = 0; i < assets->mascot_anim.num_sprites; i++) {

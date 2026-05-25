@@ -1,11 +1,13 @@
 #ifndef __UI_PROJ_H
 #define __UI_PROJ_H
 
+#include <stdbool.h>
 #include <stdint.h>
-#include "game/sprite.h"
-#include "game/font.h"
-#include "game/game.h"
-#include "game/button.h"
+#include "../game/sprite.h"
+#include "../font.h"
+#include "button.h"
+
+int ui_draw_pixel(uint16_t x, uint16_t y, uint32_t color);
 
 /**
  * @brief Renders a standard sprite at coordinate (x, y) on the VRAM back page.
@@ -48,35 +50,12 @@ int ui_draw_rectangle(int x, int y, int width, int height, uint32_t color);
  * @return 0 on success, non-zero on failure.
  */
 int ui_draw_button(const button_t *btn);
-
-/**
- * @brief Renders the main menu layout (title, background, difficulty options).
- * 
- * @param game Pointer to the global GameInfo struct.
- * @return 0 on success, non-zero on failure.
- */
-int ui_draw_main_menu(const GameInfo *game);
-
-/**
- * @brief Renders the pause overlay (semi-transparent border or text) during gameplay.
- * 
- * @param game Pointer to the global GameInfo struct.
- * @return 0 on success, non-zero on failure.
- */
-int ui_draw_pause_screen(const GameInfo *game);
-
-/**
- * @brief Renders the final game over summary screen including final score.
- * 
- * @param game Pointer to the global GameInfo struct.
- * @return 0 on success, non-zero on failure.
- */
-int ui_draw_game_over(const GameInfo *game);
+bool ui_button_contains(const button_t *btn, int x, int y);
 
 void anim_update(anim_sprite_t *anim, int current_tick);
 void anim_draw(const anim_sprite_t *anim, uint16_t x, uint16_t y);
 
-int ui_draw_text(const font_t *font, const char *str, uint16_t x, uint16_t y);
+int ui_draw_text(const Font *font, const char *str, uint16_t x, uint16_t y);
 
 
 #endif /* __UI_PROJ_H */
