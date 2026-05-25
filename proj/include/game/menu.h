@@ -5,7 +5,7 @@
 #include "button.h"
 
 typedef struct menu {
-    sprite_t background;
+    sprite_t* background;
 
     button_t singleplayer_button;
     button_t multiplayer_button;
@@ -14,7 +14,7 @@ typedef struct menu {
 } menu_t;
 
 typedef struct {
-    sprite_t background;
+    sprite_t* background;
 
     button_t resume_button;
     button_t exit_button;
