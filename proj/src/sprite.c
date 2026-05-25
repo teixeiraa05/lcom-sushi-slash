@@ -1,4 +1,3 @@
-#include <lcom/lcf.h>
 #include "../include/game/sprite.h"
 
 int sprite_load(sprite_t *sprite, xpm_map_t xpm) {
