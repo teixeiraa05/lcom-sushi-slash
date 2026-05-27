@@ -3,6 +3,7 @@
 // Include XPMs for asset loading
 #include "../assets/background.xpm"
 #include "../assets/title.xpm"
+#include "../assets/cursor_point.xpm"
 #include "../assets/mascote/mascote1.xpm"
 #include "../assets/mascote/mascote2.xpm"
 #include "../assets/mascote/mascote3.xpm"
@@ -28,6 +29,13 @@ int assets_init(Assets *assets) {
         return 1;
     }
 
+    if (sprite_load(&assets->mouse_cursor, (xpm_map_t) cursor_point_xpm) != 0) {
+        sprite_destroy(&assets->background_sprite);
+        sprite_destroy(&assets->name_sprite);
+        font_destroy(&assets->game_font);
+        return 1;
+    }
+
     for (size_t i = 0; i < 4; i++) {
         assets->mascote[i] = malloc(sizeof(sprite_t));
         if (assets->mascote[i] == NULL) {
@@ -37,6 +45,7 @@ int assets_init(Assets *assets) {
             font_destroy(&assets->game_font);
             sprite_destroy(&assets->background_sprite);
             sprite_destroy(&assets->name_sprite);
+            sprite_destroy(&assets->mouse_cursor);
             return 1;
         }
     }
@@ -55,6 +64,7 @@ int assets_init(Assets *assets) {
         font_destroy(&assets->game_font);
         sprite_destroy(&assets->background_sprite);
         sprite_destroy(&assets->name_sprite);
+        sprite_destroy(&assets->mouse_cursor);
         return 1;
     }
 
@@ -67,6 +77,7 @@ void assets_destroy(Assets *assets) {
     sprite_destroy(&assets->background_sprite);
     sprite_destroy(&assets->name_sprite);
     font_destroy(&assets->game_font);
+    sprite_destroy(&assets->mouse_cursor);
 
     for (size_t i = 0; i < assets->mascot_anim.num_sprites; i++) {
         sprite_destroy(assets->mascot_anim.sprites[i]);

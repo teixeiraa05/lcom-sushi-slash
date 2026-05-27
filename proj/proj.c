@@ -11,6 +11,10 @@
 #include "include/init.h"
 #include "include/ui/menu_draw.h"
 #include "include/game/game.h"
+#include "../../../lab4/mouse.h"
+
+# define SCREEN_WIDTH 800
+# define SCREEN_HEIGHT 600
 
 int main(int argc, char *argv[]) {
     // sets the language of LCF messages (can be either EN-US or PT-PT)
@@ -46,7 +50,6 @@ int (proj_main_loop)(int argc, char *argv[]) {
     Assets assets;
     memset(&assets, 0, sizeof(assets));
     if (assets_init(&assets) != 0) {
-        assets_destroy(&assets);
         video_cleanup_page_flipping();
         return 1;
     }
@@ -66,8 +69,17 @@ int (proj_main_loop)(int argc, char *argv[]) {
         return 1;
     }
 
+    MouseGameState mouse_state;
+    uint8_t mouse_bit_no;
+    if (mouse_init(&mouse_state, SCREEN_WIDTH, SCREEN_HEIGHT, &mouse_bit_no) != 0) {
+        timer_unsubscribe_int();
+        kbc_unsubscribe_int();
+        return 1;
+    }
+
     uint32_t timer_irq_set = BIT(timer_bit_no);
     uint32_t kbc_irq_set = BIT(kbc_bit_no);
+    uint32_t mouse_irq_set = BIT(mouse_bit_no);
 
     int r;  
     int ipc_status;
@@ -126,8 +138,18 @@ int (proj_main_loop)(int argc, char *argv[]) {
                         else if (game.state == PAUSED) {
                             ui_pause_menu_draw(&game.data.pause_menu, &assets);
                         }
+                        ui_draw_background(&assets.background_sprite);
+                        ui_draw_sprite(&assets.test_sprite, 50, 100);
+                        anim_draw(&assets.mascot_anim, 200, 200);
+                        ui_draw_sprite(&assets.mouse_cursor, mouse_state.x, mouse_state.y);
 
                         video_swap_pages();
+                    }
+
+                    if (msg.m_notify.interrupts & mouse_irq_set) { /* subscribed interrupt */
+
+                        mouse_proj_ih(&mouse_state, SCREEN_WIDTH, SCREEN_HEIGHT);
+
                     }
 
                     break;
@@ -141,6 +163,7 @@ int (proj_main_loop)(int argc, char *argv[]) {
     
     if (timer_unsubscribe_int()) return 1;
     if(kbc_unsubscribe_int()) return 1;
+    if (mouse_cleanup()) return 1;
 
     // Free any resources that were allocated
     assets_destroy(&assets);
