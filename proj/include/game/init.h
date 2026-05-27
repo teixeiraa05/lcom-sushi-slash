@@ -8,6 +8,7 @@
 typedef struct {
   sprite_t background_sprite;
   sprite_t test_sprite;
+  sprite_t mouse_cursor;
 
   sprite_t *mascote[4]; //array of pointers to the animation frames
   anim_sprite_t mascot_anim; //animation struct for the mascot
