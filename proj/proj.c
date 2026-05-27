@@ -138,9 +138,7 @@ int (proj_main_loop)(int argc, char *argv[]) {
                         else if (game.state == PAUSED) {
                             ui_pause_menu_draw(&game.data.pause_menu, &assets);
                         }
-                        ui_draw_background(&assets.background_sprite);
-                        ui_draw_sprite(&assets.test_sprite, 50, 100);
-                        anim_draw(&assets.mascot_anim, 200, 200);
+                        
                         ui_draw_sprite(&assets.mouse_cursor, mouse_state.x, mouse_state.y);
 
                         video_swap_pages();
