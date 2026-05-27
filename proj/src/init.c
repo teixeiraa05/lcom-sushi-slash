@@ -1,4 +1,4 @@
-#include "../include/game/init.h"
+#include "../include/init.h"
 
 // Include XPMs for asset loading
 #include "../assets/background.xpm"
@@ -9,6 +9,8 @@
 #include "../assets/mascote/mascote3.xpm"
 #include "../assets/mascote/mascote4.xpm"
 
+
+
 int assets_init(Assets *assets) {
     if (assets == NULL) return 1;
 
@@ -16,14 +18,21 @@ int assets_init(Assets *assets) {
         return 1;
     }
 
-    if (sprite_load(&assets->test_sprite, (xpm_map_t) title_xpm) != 0) {
+    if (sprite_load(&assets->name_sprite, (xpm_map_t) title_xpm) != 0) {
         sprite_destroy(&assets->background_sprite);
+        return 1;
+    }
+
+    if (font_create(&assets->game_font, 16) != 0) {
+        sprite_destroy(&assets->background_sprite);
+        sprite_destroy(&assets->name_sprite);
         return 1;
     }
 
     if (sprite_load(&assets->mouse_cursor, (xpm_map_t) cursor_point_xpm) != 0) {
         sprite_destroy(&assets->background_sprite);
-        sprite_destroy(&assets->test_sprite);
+        sprite_destroy(&assets->name_sprite);
+        font_destroy(&assets->game_font);
         return 1;
     }
 
@@ -33,8 +42,9 @@ int assets_init(Assets *assets) {
             for (size_t j = 0; j < i; j++) {
                 free(assets->mascote[j]);
             }
+            font_destroy(&assets->game_font);
             sprite_destroy(&assets->background_sprite);
-            sprite_destroy(&assets->test_sprite);
+            sprite_destroy(&assets->name_sprite);
             sprite_destroy(&assets->mouse_cursor);
             return 1;
         }
@@ -51,8 +61,9 @@ int assets_init(Assets *assets) {
         for (size_t i = 0; i < 4; i++) {
             free(assets->mascote[i]);
         }
+        font_destroy(&assets->game_font);
         sprite_destroy(&assets->background_sprite);
-        sprite_destroy(&assets->test_sprite);
+        sprite_destroy(&assets->name_sprite);
         sprite_destroy(&assets->mouse_cursor);
         return 1;
     }
@@ -64,7 +75,8 @@ void assets_destroy(Assets *assets) {
     if (assets == NULL) return;
 
     sprite_destroy(&assets->background_sprite);
-    sprite_destroy(&assets->test_sprite);
+    sprite_destroy(&assets->name_sprite);
+    font_destroy(&assets->game_font);
     sprite_destroy(&assets->mouse_cursor);
 
     for (size_t i = 0; i < assets->mascot_anim.num_sprites; i++) {

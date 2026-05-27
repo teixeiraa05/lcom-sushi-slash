@@ -1,13 +1,14 @@
 #ifndef __INIT_H
 #define __INIT_H
 
-#include "sprite.h"
-#include "../ui.h"
+#include "game/sprite.h"
+#include "font.h"
 
 
 typedef struct {
   sprite_t background_sprite;
-  sprite_t test_sprite;
+  sprite_t name_sprite;
+  Font game_font;
   sprite_t mouse_cursor;
 
   sprite_t *mascote[4]; //array of pointers to the animation frames

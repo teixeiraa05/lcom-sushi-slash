@@ -1,11 +1,12 @@
 #include <lcom/lcf.h>
 #include <stdint.h>
-#include <string.h>
 
-#include "../include/ui.h"
-#include "../../lab5/video_gr.h"
-#include "../include/game/button.h"
-#include "../include/game/menu.h"
+#include "../../include/ui/ui.h"
+#include "../../../lab5/video_gr.h"
+
+int ui_draw_pixel(uint16_t x, uint16_t y, uint32_t color) {
+    return vg_draw_pixel(x, y, color);
+}
 
 int ui_draw_sprite(const sprite_t *sprite, uint16_t x, uint16_t y) {
     if (sprite == NULL || sprite->pixmap == NULL) {
@@ -48,42 +49,46 @@ int ui_draw_button(const button_t *btn) {
     if (btn == NULL) {
         return 1;
     }
-    // Determine current color based on mouse hover state
-    uint32_t draw_color = btn->hovered ? btn->hover_color : btn->color;
-    return ui_draw_rectangle(btn->x, btn->y, btn->width, btn->height, draw_color);
+
+    return ui_draw_rectangle(btn->x,
+                             btn->y,
+                             btn->width,
+                             btn->height,
+                             btn->hovered ? btn->hover_color : btn->color);
 }
 
-int ui_draw_main_menu(const GameInfo *game) {
-    if (game == NULL) {
-        return 1;
+bool ui_button_contains(const button_t *btn, int x, int y) {
+    if (btn == NULL) {
+        return false;
     }
-    //TODO
-    
-    return 0;
+
+    return x >= btn->x && x < btn->x + btn->width &&
+           y >= btn->y && y < btn->y + btn->height;
 }
 
-int ui_draw_pause_screen(const GameInfo *game) {
-    if (game == NULL) {
+int ui_draw_text(const Font *font, const char *str, uint16_t x, uint16_t y) {
+    if (font == NULL || str == NULL || font->loaded_chars < font->num_chars)
         return 1;
+
+    uint32_t cur_x = x;
+
+
+    for (const char *p = str; *p != '\0'; p++) {
+        if (*p == ' ') {
+            cur_x += font->char_width;
+            continue;
+        }
+
+        int idx = font_glyph_index(*p);
+        if (idx < 0 || (uint32_t)idx >= font->num_chars)
+            return 1;
+
+        if (cur_x > UINT16_MAX)
+            return 1;
+
+        if (ui_draw_sprite(&font->glyphs[idx], (uint16_t)cur_x, y) != 0)
+            return 1;
+        cur_x += font->char_width;
     }
-
-    // Renders the pause overlay template
-    // Draw a semi-transparent dark grey rectangle in the center of the screen
-    // (e.g. at x = 200, y = 150, width = 400, height = 300) to dim the gameplay
-    uint32_t overlay_color = 0x1A1A1A; // Dark grey
-    if (ui_draw_rectangle(200, 150, 400, 300, overlay_color) != 0) {
-        return 1;
-    }
-
-    return 0;
-}
-
-int ui_draw_game_over(const GameInfo *game) {
-    if (game == NULL) {
-        return 1;
-    }
-
-   // TODO 
-
     return 0;
 }

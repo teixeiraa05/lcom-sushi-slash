@@ -1,13 +1,16 @@
 #include <lcom/lcf.h>
+#include <string.h>
 
 #include "../lab5/video_gr.h"
 #include "../lab5/vesa-bios.h"
 #include "../lab3/kbc.h"
 #include "../lab3/i8042.h"
-#include "../lab2/timer.h" 
-#include "include/ui.h"
+#include "../lab2/timer.h"
+#include "include/ui/ui.h"
 #include "include/game/sprite.h"
-#include "include/game/init.h"
+#include "include/init.h"
+#include "include/ui/menu_draw.h"
+#include "include/game/game.h"
 #include "../../../lab4/mouse.h"
 
 # define SCREEN_WIDTH 800
@@ -38,9 +41,6 @@ int main(int argc, char *argv[]) {
 }
 
 int (proj_main_loop)(int argc, char *argv[]) {
-    //--- TODO ----------------------------------
-    // Set video mode
-    
     if(video_init_page_flipping(MODE_115) != 0) {
          printf("Failed to initialize page-flipping\n");
          return 1;
@@ -48,13 +48,18 @@ int (proj_main_loop)(int argc, char *argv[]) {
     
     // Load assets
     Assets assets;
+    memset(&assets, 0, sizeof(assets));
     if (assets_init(&assets) != 0) {
         video_cleanup_page_flipping();
         return 1;
     }
-    // --- END TODO -----------------------------
 
-    //Temporary stuff to test the video mode, can be removed later
+    GameInfo game;
+    memset(&game, 0, sizeof(game));
+    game.state = MENU;
+    menu_init(&game.data.menu);
+
+        //Temporary stuff to test the video mode, can be removed later
     uint8_t kbc_bit_no;
     if(kbc_subscribe_int(&kbc_bit_no)) return 1;
     
@@ -127,6 +132,12 @@ int (proj_main_loop)(int argc, char *argv[]) {
                         
                         anim_update(&assets.mascot_anim, get_int_counter());
                         video_clear_page();
+                        if (game.state == MENU) {
+                            ui_menu_draw(&game.data.menu, &assets);
+                        }
+                        else if (game.state == PAUSED) {
+                            ui_pause_menu_draw(&game.data.pause_menu, &assets);
+                        }
                         ui_draw_background(&assets.background_sprite);
                         ui_draw_sprite(&assets.test_sprite, 50, 100);
                         anim_draw(&assets.mascot_anim, 200, 200);
