@@ -85,12 +85,10 @@ int (proj_main_loop)(int argc, char *argv[]) {
     int ipc_status;
     message msg;
 
-    //Variables to read scancodes
-    bool is_two_byte = false;
     uint8_t scancode[2] = {0};
-    int scancode_size = 0; //for the print_scancode function
+    bool ready = keyboard_get_scancode(scancode);
 
-    while(scancode[0] != ESC_BREAK_CODE) { //exit on ESC break code, but if it's a two byte scancode, we need to read both bytes before exiting
+    while(scancode[0] != ESC_BREAK_CODE || !ready) { //exit on ESC break code, but if it's a two byte scancode, we need to read both bytes before exiting
 
         /* Get a request message. */
         if ( (r = driver_receive(ANY, &msg, &ipc_status)) != 0 ) { 
@@ -101,30 +99,8 @@ int (proj_main_loop)(int argc, char *argv[]) {
             switch (_ENDPOINT_P(msg.m_source)) {
                 case HARDWARE: /* hardware interrupt notification */
                     if (msg.m_notify.interrupts & kbc_irq_set) { /* subscribed interrupt */
-                        kbc_ih();
-
-                        /* If there was an error, skip the scancode processing and wait for the next interrupt */
-                        if(kbc_has_error()) {
-                            continue;
-                        }
-
-                        /* Process the scancode */
-                        if(is_two_byte) {
-                            scancode[1] = kbc_get_scancode();
-                            scancode_size = 2;
-                            is_two_byte = false; //reset for the next scancode
-                        }
-
-                        else {
-                            scancode[0] = kbc_get_scancode();
-                        
-                            if (scancode[0] == 0xE0) { //first byte of a two-byte scancode
-                                is_two_byte = true;
-                                continue; //wait for the next interrupt to read the second byte
-                            }
-
-                            scancode_size = 1;
-                        }
+                        keyboard_ih();
+                        ready = keyboard_get_scancode(scancode);
                     }
 
                     if (msg.m_notify.interrupts & timer_irq_set) { /* subscribed interrupt */
