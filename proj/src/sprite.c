@@ -1,4 +1,4 @@
-#include "game/sprite.h"
+#include "../include/game/sprite.h"
 
 int sprite_load(sprite_t *sprite, xpm_map_t xpm) {
     if (sprite == NULL) return 1;

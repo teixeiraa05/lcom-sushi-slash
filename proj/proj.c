@@ -11,7 +11,7 @@
 #include "include/init.h"
 #include "include/ui/menu_draw.h"
 #include "include/game/game.h"
-#include "../../../lab4/mouse.h"
+#include "../lab4/mouse.h"
 
 # define SCREEN_WIDTH 800
 # define SCREEN_HEIGHT 600

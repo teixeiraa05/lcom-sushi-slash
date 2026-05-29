@@ -1,4 +1,4 @@
-#include "game/queue.h"
+#include "../include/game/queue.h"
 
 void queue_init(Queue* q) {
     q->front = 0;
