@@ -6,15 +6,13 @@
 #include "../lab3/kbc.h"
 #include "../lab3/i8042.h"
 #include "../lab2/timer.h"
+#include "include/macros/menu.h"
 #include "include/ui/ui.h"
 #include "include/game/sprite.h"
 #include "include/init.h"
 #include "include/ui/menu_draw.h"
 #include "include/game/game.h"
 #include "../lab4/mouse.h"
-
-# define SCREEN_WIDTH 800
-# define SCREEN_HEIGHT 600
 
 int main(int argc, char *argv[]) {
     // sets the language of LCF messages (can be either EN-US or PT-PT)

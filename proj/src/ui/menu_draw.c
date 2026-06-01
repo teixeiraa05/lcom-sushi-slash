@@ -1,37 +1,7 @@
 
 #include "../../include/ui/ui.h"
 #include "../../include/ui/menu_draw.h"
-
-#define SCREEN_WIDTH 800
-#define SCREEN_HEIGHT 600
-#define CENTER_X(width) ((SCREEN_WIDTH - (width)) / 2)
-#define CENTER_Y(height) ((SCREEN_HEIGHT - (height)) / 2)
-
-#define MENU_BUTTON_W 300
-#define MENU_BUTTON_H 56
-#define MENU_BUTTON_GAP 14
-#define MENU_BUTTON_X CENTER_X(MENU_BUTTON_W)
-#define MENU_BUTTON_Y (SCREEN_HEIGHT / 2)
-#define MENU_BUTTON_COLOR 0x303030
-#define MENU_BUTTON_HOVER_COLOR 0x606060
-#define MENU_MASCOT_X 560
-#define MENU_MASCOT_Y 180
-
-#define PAUSE_PANEL_W 400
-#define PAUSE_PANEL_H 300
-#define PAUSE_PANEL_X CENTER_X(PAUSE_PANEL_W)
-#define PAUSE_PANEL_Y CENTER_Y(PAUSE_PANEL_H)
-#define PAUSE_BUTTON_W 220
-#define PAUSE_BUTTON_H 42
-#define PAUSE_BUTTON_GAP 12
-#define PAUSE_BUTTON_COUNT 3
-#define PAUSE_BUTTONS_H (PAUSE_BUTTON_COUNT * PAUSE_BUTTON_H + (PAUSE_BUTTON_COUNT - 1) * PAUSE_BUTTON_GAP)
-#define PAUSE_BUTTON_X CENTER_X(PAUSE_BUTTON_W)
-#define PAUSE_TITLE_SCALE 3
-#define PAUSE_TITLE_Y (PAUSE_PANEL_Y + 34)
-#define PAUSE_BUTTON_Y (PAUSE_PANEL_Y + 120)
-#define PAUSE_MASCOT_X 530
-#define PAUSE_MASCOT_Y 200
+#include "../../include/macros/menu.h"
 
 typedef struct {
     MenuOption option;
