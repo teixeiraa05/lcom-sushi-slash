@@ -1,4 +1,4 @@
-#include "game/menu.h"
+#include "../include/game/menu.h"
 #include <string.h>
 
 void menu_init(menu_t *menu) {

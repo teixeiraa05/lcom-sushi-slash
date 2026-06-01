@@ -11,7 +11,7 @@
 #include "include/init.h"
 #include "include/ui/menu_draw.h"
 #include "include/game/game.h"
-#include "../../../lab4/mouse.h"
+#include "../lab4/mouse.h"
 
 # define SCREEN_WIDTH 800
 # define SCREEN_HEIGHT 600
@@ -87,8 +87,10 @@ int (proj_main_loop)(int argc, char *argv[]) {
 
     uint8_t scancode[2] = {0};
     bool ready = keyboard_get_scancode(scancode);
+    bool running = true;
+    bool prev_lb_pressed = false;
 
-    while(scancode[0] != ESC_BREAK_CODE || !ready) { //exit on ESC break code, but if it's a two byte scancode, we need to read both bytes before exiting
+    while(running && (scancode[0] != ESC_BREAK_CODE || !ready)) { //exit on ESC break code, but if it's a two byte scancode, we need to read both bytes before exiting
 
         /* Get a request message. */
         if ( (r = driver_receive(ANY, &msg, &ipc_status)) != 0 ) { 
@@ -121,9 +123,48 @@ int (proj_main_loop)(int argc, char *argv[]) {
                     }
 
                     if (msg.m_notify.interrupts & mouse_irq_set) { /* subscribed interrupt */
+                        if (mouse_proj_ih(&mouse_state, SCREEN_WIDTH, SCREEN_HEIGHT)) {
+                            bool clicked = mouse_state.lb_pressed && !prev_lb_pressed;
+                            prev_lb_pressed = mouse_state.lb_pressed;
 
-                        mouse_proj_ih(&mouse_state, SCREEN_WIDTH, SCREEN_HEIGHT);
+                            if (game.state == MENU) {
+                                MenuOption hovered = ui_menu_hit_test(mouse_state.x, mouse_state.y);
+                                MenuAction action = menu_update(&game.data.menu, hovered, clicked);
 
+                                switch (action) {
+                                    case MENU_ACTION_START_SINGLEPLAYER:
+                                        game.state = SINGLEPLAYER;
+                                        break;
+                                    case MENU_ACTION_START_MULTIPLAYER:
+                                        game.state = MULTIPLAYER;
+                                        break;
+                                    case MENU_ACTION_SHOW_INSTRUCTIONS:
+                                        break;
+                                    case MENU_ACTION_EXIT:
+                                        running = false;
+                                        break;
+                                    case MENU_ACTION_NONE:
+                                    default:
+                                        break;
+                                }
+                            }
+                            else if (game.state == PAUSED) {
+                                PauseOption hovered = ui_pause_menu_hit_test(mouse_state.x, mouse_state.y);
+                                PauseAction action = pause_menu_update(&game.data.pause_menu, hovered, clicked);
+
+                                switch (action) {
+                                    case PAUSE_ACTION_RESUME:
+                                        game.state = SINGLEPLAYER;
+                                        break;
+                                    case PAUSE_ACTION_EXIT:
+                                        running = false;
+                                        break;
+                                    case PAUSE_ACTION_NONE:
+                                    default:
+                                        break;
+                                }
+                            }
+                        }
                     }
 
                     break;
