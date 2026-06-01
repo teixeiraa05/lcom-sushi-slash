@@ -24,12 +24,14 @@
 #define PAUSE_BUTTON_W 220
 #define PAUSE_BUTTON_H 42
 #define PAUSE_BUTTON_GAP 12
-#define PAUSE_BUTTON_COUNT 2
+#define PAUSE_BUTTON_COUNT 3
 #define PAUSE_BUTTONS_H (PAUSE_BUTTON_COUNT * PAUSE_BUTTON_H + (PAUSE_BUTTON_COUNT - 1) * PAUSE_BUTTON_GAP)
 #define PAUSE_BUTTON_X CENTER_X(PAUSE_BUTTON_W)
-#define PAUSE_BUTTON_Y (PAUSE_PANEL_Y + (PAUSE_PANEL_H - PAUSE_BUTTONS_H) / 2)
-#define PAUSE_MASCOT_X 500
-#define PAUSE_MASCOT_Y 250
+#define PAUSE_TITLE_SCALE 3
+#define PAUSE_TITLE_Y (PAUSE_PANEL_Y + 34)
+#define PAUSE_BUTTON_Y (PAUSE_PANEL_Y + 120)
+#define PAUSE_MASCOT_X 530
+#define PAUSE_MASCOT_Y 200
 
 typedef struct {
     MenuOption option;
@@ -54,20 +56,8 @@ static button_t make_button(uint16_t x, uint16_t y, const char *label) {
     return button;
 }
 
-static uint16_t text_width(const Font *font, const char *text) {
-    uint16_t width = 0;
-
-    if (font == NULL || text == NULL) return 0;
-
-    for (const char *p = text; *p != '\0'; p++) {
-        width += font->char_width;
-    }
-
-    return width;
-}
-
 static uint16_t button_text_x(const button_t *button, const Font *font) {
-    uint16_t width = text_width(font, button->label);
+    uint16_t width = font_text_width(font, button->label);
 
     if (width >= button->width) return button->x;
     return button->x + (button->width - width) / 2;
@@ -111,10 +101,12 @@ static MenuButtonSpec menu_button_at(uint8_t index) {
 static PauseButtonSpec pause_button_at(uint8_t index) {
     static const PauseOption options[] = {
         PAUSE_OPTION_RESUME,
+        PAUSE_OPTION_MAIN_MENU,
         PAUSE_OPTION_EXIT
     };
     static const char *labels[] = {
         "resume",
+        "main menu",
         "exit"
     };
 
@@ -139,7 +131,7 @@ MenuOption ui_menu_hit_test(int x, int y) {
 }
 
 PauseOption ui_pause_menu_hit_test(int x, int y) {
-    for (uint8_t i = 0; i < 2; i++) {
+    for (uint8_t i = 0; i < PAUSE_BUTTON_COUNT; i++) {
         PauseButtonSpec spec = pause_button_at(i);
         if (ui_button_contains(&spec.button, x, y)) {
             return spec.option;
@@ -175,9 +167,17 @@ int ui_pause_menu_draw(const pause_menu_t *menu, const Assets *assets) {
                           0x1A1A1A) != 0) {
         return 1;
     }
+    if (font_draw_scaled_text(&assets->game_font,
+                              "paused",
+                              CENTER_X(font_scaled_text_width(&assets->game_font, "paused", PAUSE_TITLE_SCALE)),
+                              PAUSE_TITLE_Y,
+                              PAUSE_TITLE_SCALE) != 0) {
+        return 1;
+    }
+
     anim_draw(&assets->mascot_anim, PAUSE_MASCOT_X, PAUSE_MASCOT_Y);
 
-    for (uint8_t i = 0; i < 2; i++) {
+    for (uint8_t i = 0; i < PAUSE_BUTTON_COUNT; i++) {
         PauseButtonSpec spec = pause_button_at(i);
         spec.button.hovered = spec.option == menu->hovered_option;
 
