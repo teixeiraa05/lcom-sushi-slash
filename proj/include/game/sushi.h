@@ -9,6 +9,7 @@ typedef struct {
   int x, y; // Position of the sushi on the screen
   int vx, vy; // Velocity of the sushi
   int score_value; // The score value of the sushi when cut
+  uint8_t type; // Index of the sushi XPM
 
   sprite_t* xpm; // The sprite representing the sushi
 } sushi_t;
@@ -23,8 +24,6 @@ void update_sushi(sushi_t* sushi);
 
 void sushi_destroy(sushi_t* sushi);
 
-void find_cut_sushi(sushi_t* sushi, int cut_x, int cut_y);
-
 typedef struct {
   int x, y; // Position of the sushi fragment on the screen
   int vx, vy; // Velocity of the sushi fragment
@@ -32,10 +31,12 @@ typedef struct {
   sprite_t* xpm; // The sprite representing the sushi fragment
 } sushi_fragment_t;
 
-#endif /* __SUSHI_H */
+int find_cut_sushi(sushi_t* sushi, int cut_x, int cut_y, sushi_fragment_t* left_fragment, sushi_fragment_t* right_fragment);
 
-void cut_sushi(sushi_t* sushi, sushi_fragment_t* left_fragment, sushi_fragment_t* right_fragment);
+int cut_sushi(sushi_t* sushi, sushi_fragment_t* left_fragment, sushi_fragment_t* right_fragment);
 
 void update_sushi_fragment(sushi_fragment_t* fragment);
 
 void sushi_fragment_destroy(sushi_fragment_t* fragment);
+
+#endif /* __SUSHI_H */

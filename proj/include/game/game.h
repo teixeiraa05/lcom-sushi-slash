@@ -52,12 +52,14 @@ typedef struct {
           sushi_t active_sushi[MAX_ACTIVE_SUSHI];
           sushi_fragment_t active_fragments[MAX_ACTIVE_FRAGMENTS];
           uint8_t num_active_sushi;
+          uint8_t num_active_fragments;
         } singleplayer;
         
         struct {
           sushi_t active_sushi[MAX_ACTIVE_SUSHI];
           sushi_fragment_t active_fragments[MAX_ACTIVE_FRAGMENTS];
           uint8_t num_active_sushi;
+          uint8_t num_active_fragments;
           uint32_t player1_score;
           uint32_t player2_score;
         } multiplayer;

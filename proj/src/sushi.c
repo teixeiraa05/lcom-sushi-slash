@@ -54,7 +54,7 @@ xpm_map_t sushi_xpms[11] = {
 };
 
 xpm_map_t sushi_left_xpms[11] = {
-    // Placeholder XPMs for different sushi types
+    // Placeholder XPMs for the left fragments of different sushi types
     (xpm_map_t)Nigiri1_left_xpm,
     (xpm_map_t)Nigiri2_left_xpm,
     (xpm_map_t)Nigiri3_left_xpm,
@@ -69,7 +69,7 @@ xpm_map_t sushi_left_xpms[11] = {
 };
 
 xpm_map_t sushi_right_xpms[11] = {
-    // Placeholder XPMs for different sushi types
+    // Placeholder XPMs for the right fragments of different sushi types
     (xpm_map_t)Nigiri1_right_xpm,
     (xpm_map_t)Nigiri2_right_xpm,
     (xpm_map_t)Nigiri3_right_xpm,
@@ -91,16 +91,25 @@ sushi_t create_sushi(int x, int y, int vx, int vy, sprite_t* xpm, int score_valu
     sushi.vy = vy;
     sushi.xpm = xpm;
     sushi.score_value = score_value;
+    sushi.type = 0;
     return sushi;
 }
 
 sushi_t create_random_sushi() {
-    sprite_t sushi_xpm_sprite;
-    if (sprite_load(&sushi_xpm_sprite, sushi_xpms[rand() % 11])) {
-        // Return a default sushi in case of failure
+    sprite_t *sprite = malloc(sizeof(sprite_t));
+    if (sprite == NULL) return create_sushi(0, 0, 0, 0, NULL, 0);
+
+    uint8_t sushi_type = rand() % 11;
+
+    if (sprite_load(sprite, sushi_xpms[sushi_type])) {
+        free(sprite);
         return create_sushi(0, 0, 0, 0, NULL, 0);
     }
-    return create_sushi(rand() % (SCREEN_WIDTH - 100) + 50, 0, rand() % 10 - 5, rand() % 10, &sushi_xpm_sprite, (rand() % 5 + 1) * 10);
+
+    sushi_t sushi = create_sushi(rand() % (SCREEN_WIDTH - 100) + 50, 0, rand() % 10 - 5, rand() % 10, sprite, (rand() % 5 + 1) * 10);
+    sushi.type = sushi_type;
+
+    return sushi;
 }
 
 void update_sushi(sushi_t* sushi) {
@@ -114,39 +123,56 @@ void update_sushi(sushi_t* sushi) {
     // Deactivate if it goes off-screen
     if (sushi->x < 0 || sushi->x > SCREEN_WIDTH ||
         sushi->y < 0 || sushi->y > SCREEN_HEIGHT) {
-          sushi_destroy(&sushi);
+          sushi_destroy(sushi);
     }
 }
 
 void sushi_destroy(sushi_t* sushi) {
     if (sushi != NULL) {
         if (sushi->xpm != NULL) {
-            sprite_destroy(&sushi->xpm);
-            sushi = NULL;
+            sprite_destroy(sushi->xpm);
+            free(sushi->xpm);
+            sushi->xpm = NULL;
         }
     }
 }
 
-void find_cut_sushi(sushi_t* sushi, int cut_x, int cut_y) {
-    if (sushi == NULL) return;
+int find_cut_sushi(sushi_t* sushi, int cut_x, int cut_y, sushi_fragment_t* left_fragment, sushi_fragment_t* right_fragment) {
+    if (sushi == NULL || sushi->xpm == NULL) return 1;
 
     // Check if the cut coordinates are within the sushi's bounding box
     if (cut_x >= sushi->x && cut_x <= sushi->x + sushi->xpm->width &&
         cut_y >= sushi->y && cut_y <= sushi->y + sushi->xpm->height) {
-          for (int i=0; i<11; i++) {
-              if (sushi->xpm->pixmap == (uint8_t*)sushi_xpms[i]) {
-                  // Found the sushi type, now cut it
-
-                  sushi_fragment_t sushi_left_fragment, sushi_right_fragment;
-                  cut_sushi(&sushi, &sushi_left_xpms[i], &sushi_right_xpms[i]);
-                  break;
-              }
-          }
+          return cut_sushi(sushi, left_fragment, right_fragment);
     }
+
+    return 1;
 }
 
-void cut_sushi(sushi_t* sushi, sushi_fragment_t* left_fragment, sushi_fragment_t* right_fragment) {
-    if (sushi == NULL || left_fragment == NULL || right_fragment == NULL) return;
+int cut_sushi(sushi_t* sushi, sushi_fragment_t* left_fragment, sushi_fragment_t* right_fragment) {
+    if (sushi == NULL || left_fragment == NULL || right_fragment == NULL || sushi->type >= 11) return 1;
+
+    sprite_t *left_sprite = malloc(sizeof(sprite_t));
+    sprite_t *right_sprite = malloc(sizeof(sprite_t));
+
+    if (left_sprite == NULL || right_sprite == NULL) {
+        free(left_sprite);
+        free(right_sprite);
+        return 1;
+    }
+
+    if (sprite_load(left_sprite, sushi_left_xpms[sushi->type])) {
+        free(left_sprite);
+        free(right_sprite);
+        return 1;
+    }
+
+    if (sprite_load(right_sprite, sushi_right_xpms[sushi->type])) {
+        sprite_destroy(left_sprite);
+        free(left_sprite);
+        free(right_sprite);
+        return 1;
+    }
 
     // Create left fragment
     *left_fragment = (sushi_fragment_t){
@@ -154,7 +180,7 @@ void cut_sushi(sushi_t* sushi, sushi_fragment_t* left_fragment, sushi_fragment_t
         .y = sushi->y,
         .vx = sushi->vx - 2, // Move left
         .vy = sushi->vy - 2, // Move down
-        .xpm = create_sprite(sushi_left_xpms[rand() % 11]) // Random left fragment XPM
+        .xpm = left_sprite
     };
 
     // Create right fragment
@@ -163,11 +189,13 @@ void cut_sushi(sushi_t* sushi, sushi_fragment_t* left_fragment, sushi_fragment_t
         .y = sushi->y,
         .vx = sushi->vx + 2, // Move right
         .vy = sushi->vy - 2, // Move down
-        .xpm = create_sprite(sushi_right_xpms[rand() % 11]) // Random right fragment XPM
+        .xpm = right_sprite
     };
 
     // Destroy the original sushi
     sushi_destroy(sushi);
+
+    return 0;
 }
 
 void update_sushi_fragment(sushi_fragment_t* fragment) {
@@ -188,8 +216,9 @@ void update_sushi_fragment(sushi_fragment_t* fragment) {
 void sushi_fragment_destroy(sushi_fragment_t* fragment) {
     if (fragment != NULL) {
         if (fragment->xpm != NULL) {
-            sprite_destroy(&fragment->xpm);
-            fragment = NULL;
+            sprite_destroy(fragment->xpm);
+            free(fragment->xpm);
+            fragment->xpm = NULL;
         }
     }
 }
