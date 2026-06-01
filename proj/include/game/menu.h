@@ -28,12 +28,14 @@ typedef struct menu {
 typedef enum {
   PAUSE_OPTION_NONE,
   PAUSE_OPTION_RESUME,
+  PAUSE_OPTION_MAIN_MENU,
   PAUSE_OPTION_EXIT
 } PauseOption;
 
 typedef enum {
   PAUSE_ACTION_NONE,
   PAUSE_ACTION_RESUME,
+  PAUSE_ACTION_MAIN_MENU,
   PAUSE_ACTION_EXIT
 } PauseAction;
 

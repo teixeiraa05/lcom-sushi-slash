@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "../include/ui/ui.h"
+
 #include "../assets/numbers/zero.xpm"
 #include "../assets/numbers/one.xpm"
 #include "../assets/numbers/two.xpm"
@@ -40,6 +42,10 @@
 #include "../assets/letters/x.xpm"
 #include "../assets/letters/y.xpm"
 #include "../assets/letters/z.xpm"
+
+#ifndef CHROMA_KEY_GREEN_888
+#define CHROMA_KEY_GREEN_888 0x00FF00
+#endif
 
 int font_create(Font *font, uint16_t char_width) {
     if (font == NULL) return 1;
@@ -98,4 +104,66 @@ int font_glyph_index(char c) {
     } else {
         return -1;
     }
+}
+
+uint16_t font_text_width(const Font *font, const char *text) {
+    uint16_t width = 0;
+
+    if (font == NULL || text == NULL) return 0;
+
+    for (const char *p = text; *p != '\0'; p++) {
+        width += font->char_width;
+    }
+
+    return width;
+}
+
+uint16_t font_scaled_text_width(const Font *font, const char *text, uint8_t scale) {
+    return font_text_width(font, text) * scale;
+}
+
+static int font_draw_scaled_glyph(const sprite_t *glyph, uint16_t x, uint16_t y, uint8_t scale) {
+    if (glyph == NULL || glyph->pixmap == NULL || scale == 0) return 1;
+
+    for (uint16_t row = 0; row < glyph->height; row++) {
+        for (uint16_t col = 0; col < glyph->width; col++) {
+            const uint8_t *src = glyph->pixmap + (row * glyph->width + col) * 3;
+            uint32_t color = src[0] | (src[1] << 8) | (src[2] << 16);
+
+            if ((color & 0x00FFFFFF) == CHROMA_KEY_GREEN_888) continue;
+
+            for (uint8_t dy = 0; dy < scale; dy++) {
+                for (uint8_t dx = 0; dx < scale; dx++) {
+                    if (ui_draw_pixel(x + col * scale + dx,
+                                      y + row * scale + dy,
+                                      color) != 0) {
+                        return 1;
+                    }
+                }
+            }
+        }
+    }
+
+    return 0;
+}
+
+int font_draw_scaled_text(const Font *font, const char *text, uint16_t x, uint16_t y, uint8_t scale) {
+    if (font == NULL || text == NULL || font->loaded_chars < font->num_chars) return 1;
+
+    uint16_t cur_x = x;
+
+    for (const char *p = text; *p != '\0'; p++) {
+        if (*p == ' ') {
+            cur_x += font->char_width * scale;
+            continue;
+        }
+
+        int idx = font_glyph_index(*p);
+        if (idx < 0 || (uint32_t)idx >= font->num_chars) return 1;
+
+        if (font_draw_scaled_glyph(&font->glyphs[idx], cur_x, y, scale) != 0) return 1;
+        cur_x += font->char_width * scale;
+    }
+
+    return 0;
 }

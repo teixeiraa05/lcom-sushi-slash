@@ -12,6 +12,7 @@
 #define MAX_ACTIVE_FRAGMENTS 16
 typedef enum {
   MENU,
+  GAME,
   SINGLEPLAYER,
   MULTIPLAYER,
   PAUSED,

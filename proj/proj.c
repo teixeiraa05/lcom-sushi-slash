@@ -6,15 +6,13 @@
 #include "../lab3/kbc.h"
 #include "../lab3/i8042.h"
 #include "../lab2/timer.h"
+#include "include/macros/menu.h"
 #include "include/ui/ui.h"
 #include "include/game/sprite.h"
 #include "include/init.h"
 #include "include/ui/menu_draw.h"
 #include "include/game/game.h"
 #include "../lab4/mouse.h"
-
-# define SCREEN_WIDTH 800
-# define SCREEN_HEIGHT 600
 
 int main(int argc, char *argv[]) {
     // sets the language of LCF messages (can be either EN-US or PT-PT)
@@ -90,7 +88,7 @@ int (proj_main_loop)(int argc, char *argv[]) {
     bool running = true;
     bool prev_lb_pressed = false;
 
-    while(running && (scancode[0] != ESC_BREAK_CODE || !ready)) { //exit on ESC break code, but if it's a two byte scancode, we need to read both bytes before exiting
+    while(running) {
 
         /* Get a request message. */
         if ( (r = driver_receive(ANY, &msg, &ipc_status)) != 0 ) { 
@@ -103,6 +101,11 @@ int (proj_main_loop)(int argc, char *argv[]) {
                     if (msg.m_notify.interrupts & kbc_irq_set) { /* subscribed interrupt */
                         keyboard_ih();
                         ready = keyboard_get_scancode(scancode);
+
+                        if (ready && scancode[0] == ESC_BREAK_CODE && game.state == GAME) {
+                            game.state = PAUSED;
+                            pause_menu_init(&game.data.pause_menu);
+                        }
                     }
 
                     if (msg.m_notify.interrupts & timer_irq_set) { /* subscribed interrupt */
@@ -113,11 +116,17 @@ int (proj_main_loop)(int argc, char *argv[]) {
                         if (game.state == MENU) {
                             ui_menu_draw(&game.data.menu, &assets);
                         }
+                        else if (game.state == GAME) {
+                            ui_draw_background(&assets.background_sprite);
+                        }
                         else if (game.state == PAUSED) {
+                            ui_draw_background(&assets.background_sprite);
                             ui_pause_menu_draw(&game.data.pause_menu, &assets);
                         }
                         
-                        ui_draw_sprite(&assets.mouse_cursor, mouse_state.x, mouse_state.y);
+                        if (game.state == MENU || game.state == GAME || game.state == PAUSED) {
+                            ui_draw_sprite(&assets.mouse_cursor, mouse_state.x, mouse_state.y);
+                        }
 
                         video_swap_pages();
                     }
@@ -133,10 +142,10 @@ int (proj_main_loop)(int argc, char *argv[]) {
 
                                 switch (action) {
                                     case MENU_ACTION_START_SINGLEPLAYER:
-                                        game.state = SINGLEPLAYER;
+                                        game.state = GAME;
                                         break;
                                     case MENU_ACTION_START_MULTIPLAYER:
-                                        game.state = MULTIPLAYER;
+                                        game.state = GAME;
                                         break;
                                     case MENU_ACTION_SHOW_INSTRUCTIONS:
                                         break;
@@ -154,7 +163,11 @@ int (proj_main_loop)(int argc, char *argv[]) {
 
                                 switch (action) {
                                     case PAUSE_ACTION_RESUME:
-                                        game.state = SINGLEPLAYER;
+                                        game.state = GAME;
+                                        break;
+                                    case PAUSE_ACTION_MAIN_MENU:
+                                        game.state = MENU;
+                                        menu_init(&game.data.menu);
                                         break;
                                     case PAUSE_ACTION_EXIT:
                                         running = false;

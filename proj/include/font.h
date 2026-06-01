@@ -19,4 +19,8 @@ int font_create(Font *font, uint16_t char_width);
 void font_destroy(Font *font);
 
 int font_glyph_index(char c);
+uint16_t font_text_width(const Font *font, const char *text);
+uint16_t font_scaled_text_width(const Font *font, const char *text, uint8_t scale);
+int font_draw_scaled_text(const Font *font, const char *text, uint16_t x, uint16_t y, uint8_t scale);
+
 #endif /* _FONT_H_ */
