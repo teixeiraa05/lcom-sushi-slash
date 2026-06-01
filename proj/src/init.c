@@ -8,7 +8,7 @@
 #include "../assets/mascote/mascote2.xpm"
 #include "../assets/mascote/mascote3.xpm"
 #include "../assets/mascote/mascote4.xpm"
-
+#include "../assets/heart.xpm"
 
 
 int assets_init(Assets *assets) {
@@ -36,6 +36,13 @@ int assets_init(Assets *assets) {
         return 1;
     }
 
+    if(sprite_load(&assets->heart, (xpm_map_t)heart_xpm) != 0) {
+        sprite_destroy(&assets->background_sprite);
+        sprite_destroy(&assets->name_sprite);
+        font_destroy(&assets->game_font);
+        return 1;
+    }
+
     for (size_t i = 0; i < 4; i++) {
         assets->mascote[i] = malloc(sizeof(sprite_t));
         if (assets->mascote[i] == NULL) {
@@ -46,6 +53,7 @@ int assets_init(Assets *assets) {
             sprite_destroy(&assets->background_sprite);
             sprite_destroy(&assets->name_sprite);
             sprite_destroy(&assets->mouse_cursor);
+            sprite_destroy(&assets->heart);
             return 1;
         }
     }
@@ -65,6 +73,7 @@ int assets_init(Assets *assets) {
         sprite_destroy(&assets->background_sprite);
         sprite_destroy(&assets->name_sprite);
         sprite_destroy(&assets->mouse_cursor);
+        sprite_destroy(&assets->heart);
         return 1;
     }
 
