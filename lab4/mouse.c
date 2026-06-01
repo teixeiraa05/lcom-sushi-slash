@@ -235,6 +235,7 @@ void mouse_update_state(MouseGameState *state, struct packet *pp, int screen_wid
     int velocity_squared = state->dx * state->dx + state->dy * state->dy;
     const int SLASH_THRESHOLD_SQUARED = SLASH_THRESHOLD * SLASH_THRESHOLD;
     state->is_slashing = (velocity_squared > SLASH_THRESHOLD_SQUARED) && state->lb_pressed;
+
 }
 
 // ============ GETTERS ============

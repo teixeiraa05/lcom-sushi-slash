@@ -35,7 +35,7 @@ uint8_t (mouse_get_data)();
 /**
  * @brief Represents the processed high-level mouse state.
  */
-typedef struct {
+typedef struct MouseGameState {
   int x, y;          /**< Absolute cursor coordinates on the screen. */
   int dx, dy;        /**< Relative movement deltas from the last packet. */
   bool lb_pressed;   /**< True if Left Button is pressed. */
@@ -89,6 +89,14 @@ bool mouse_proj_ih(MouseGameState *state, int screen_width, int screen_height);
  */
 void mouse_update_state(MouseGameState *state, struct packet *pp, int screen_width, int screen_height);
 
+/**
+ * @brief Adds the current cursor position to the trail history.
+ *
+ * Keeps the newest point at index 0 and discards the oldest point once the
+ * fixed-size trail buffer is full.
+ *
+ * @param state Pointer to the MouseGameState structure to be updated.
+ */
 /**
  * @brief Retrieves the latest accumulated X and Y movement deltas from the mouse.
  *

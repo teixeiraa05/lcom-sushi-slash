@@ -8,6 +8,7 @@
 #include "../lab2/timer.h"
 #include "include/macros/menu.h"
 #include "include/ui/ui.h"
+#include "include/ui/mouse_trail.h"
 #include "include/game/sprite.h"
 #include "include/init.h"
 #include "include/ui/menu_draw.h"
@@ -125,6 +126,9 @@ int (proj_main_loop)(int argc, char *argv[]) {
                         }
                         
                         if (game.state == MENU || game.state == GAME || game.state == PAUSED) {
+                            if (game.state == GAME) {
+                                mouse_trail_draw(&mouse_state);
+                            }
                             ui_draw_sprite(&assets.mouse_cursor, mouse_state.x, mouse_state.y);
                         }
 
@@ -133,6 +137,8 @@ int (proj_main_loop)(int argc, char *argv[]) {
 
                     if (msg.m_notify.interrupts & mouse_irq_set) { /* subscribed interrupt */
                         if (mouse_proj_ih(&mouse_state, SCREEN_WIDTH, SCREEN_HEIGHT)) {
+                            mouse_trail_update(&mouse_state);
+
                             bool clicked = mouse_state.lb_pressed && !prev_lb_pressed;
                             prev_lb_pressed = mouse_state.lb_pressed;
 
