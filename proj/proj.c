@@ -57,6 +57,9 @@ int (proj_main_loop)(int argc, char *argv[]) {
     game.state = MENU;
     menu_init(&game.data.menu);
 
+    game.score = 0;
+    game.lives = 3;
+
         //Temporary stuff to test the video mode, can be removed later
     uint8_t kbc_bit_no;
     if(kbc_subscribe_int(&kbc_bit_no)) return 1;
@@ -118,6 +121,7 @@ int (proj_main_loop)(int argc, char *argv[]) {
                         }
                         else if (game.state == GAME) {
                             ui_draw_background(&assets.background_sprite);
+                            hud_draw(&assets.game_font, game.score, game.lives, &assets.heart);
                         }
                         else if (game.state == PAUSED) {
                             ui_draw_background(&assets.background_sprite);
