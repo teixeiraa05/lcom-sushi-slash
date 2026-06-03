@@ -3,6 +3,7 @@
 
 #include "../../include/ui/ui.h"
 #include "../../../lab5/video_gr.h"
+#include "../../include/macros/global.h"
 
 int ui_draw_pixel(uint16_t x, uint16_t y, uint32_t color) {
     return vg_draw_pixel(x, y, color);
@@ -91,4 +92,20 @@ int ui_draw_text(const Font *font, const char *str, uint16_t x, uint16_t y) {
         cur_x += font->char_width;
     }
     return 0;
+}
+
+void hud_draw(const Font *font, uint32_t score, uint8_t lives, const sprite_t * heart) {
+    char score_str[20] = "Score ";
+    char score_val[20];
+    snprintf(score_val, sizeof(score_val), "%u", score);
+    
+    ui_draw_text(font, score_str, 10, 10);
+    ui_draw_text(font, score_val, 10 + strlen(score_str) * font->char_width, 10);
+
+    char lives_str[20] = "Lives ";
+    
+    ui_draw_text(font, lives_str, SCREEN_WIDTH - 10 - (strlen(lives_str) * font->char_width) - (3 * 16) - 16, 10);
+    for (int i = 0; i < lives; i++) {
+        ui_draw_sprite(heart, SCREEN_WIDTH - 10 - ((4-i) * 16) + (i * 8), 10);
+    }
 }
