@@ -6,10 +6,22 @@
 #include "difficulty.h"
 #include "menu.h"
 #include "sprite.h"
+#include "../../../lab4/mouse.h"
 
 #define LIVES 3
 #define MAX_ACTIVE_SUSHI 8
 #define MAX_ACTIVE_FRAGMENTS 16
+#define TEST_SUSHI_SPAWN_TICKS 70
+#define GAME_SPEED_1 32
+#define GAME_SPEED_2 33
+#define GAME_SPEED_3 34
+#define GAME_SPEED_4 35
+#define GAME_SPEED_5 36
+#define GAME_SPEED_2_SCORE 15
+#define GAME_SPEED_3_SCORE 30
+#define GAME_SPEED_4_SCORE 50
+#define GAME_SPEED_5_SCORE 80
+
 typedef enum {
   MENU,
   GAME,
@@ -74,5 +86,10 @@ typedef struct {
 
 int game_loop();
 
+void gameplay_clear(GameInfo *game);
+void gameplay_start(GameInfo *game);
+void gameplay_update(GameInfo *game, int current_tick, int *last_spawn_tick);
+void gameplay_draw(const GameInfo *game);
+void gameplay_handle_cut(GameInfo *game, MouseGameState *mouse_state);
 
 #endif /* __GAME_H */

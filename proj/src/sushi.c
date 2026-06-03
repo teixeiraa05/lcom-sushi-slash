@@ -1,4 +1,6 @@
 
+#include <stdbool.h>
+
 #include "../include/game/sushi.h"
 
 #include "../assets/sushi_pieces/Nigiri1.xpm"
@@ -36,7 +38,6 @@
 #include "../assets/sushi_pieces/SushiRoll4_right.xpm"
 #include "../assets/sushi_pieces/SushiRoll5_right.xpm"
 #include "../assets/sushi_pieces/SushiRoll6_right.xpm"
-
 
 xpm_map_t sushi_xpms[11] = {
     // Placeholder XPMs for different sushi types
@@ -95,7 +96,17 @@ sushi_t create_sushi(int x, int y, int vx, int vy, sprite_t* xpm, int score_valu
     return sushi;
 }
 
-sushi_t create_random_sushi() {
+static int sushi_horizontal_velocity(int x, const sprite_t *sprite, int speed) {
+    int sushi_center = x + sprite->width / 2;
+    int screen_center = SCREEN_WIDTH / 2;
+    int direction = sushi_center < screen_center ? 1 : -1;
+    int velocity = speed / 10;
+
+    if (velocity < 1) velocity = 1;
+    return direction * velocity;
+}
+
+sushi_t create_random_sushi(int speed) {
     sprite_t *sprite = malloc(sizeof(sprite_t));
     if (sprite == NULL) return create_sushi(0, 0, 0, 0, NULL, 0);
 
@@ -106,7 +117,16 @@ sushi_t create_random_sushi() {
         return create_sushi(0, 0, 0, 0, NULL, 0);
     }
 
-    sushi_t sushi = create_sushi(rand() % (SCREEN_WIDTH - 100) + 50, 0, rand() % 10 - 5, rand() % 10, sprite, (rand() % 5 + 1) * 10);
+    int max_x = SCREEN_WIDTH - sprite->width;
+    if (max_x < 1) max_x = 1;
+    int x = rand() % max_x;
+
+    sushi_t sushi = create_sushi(x,
+                                 SCREEN_HEIGHT + SUSHI_SPAWN_Y_OFFSET,
+                                 sushi_horizontal_velocity(x, sprite, speed),
+                                 -speed,
+                                 sprite,
+                                 SUSHI_SCORE_VALUE);
     sushi.type = sushi_type;
 
     return sushi;
@@ -117,12 +137,12 @@ void update_sushi(sushi_t* sushi) {
 
     sushi->x += sushi->vx;
     sushi->y += sushi->vy;
-
-    sushi->vy -= 1; // Simulate gravity
+    sushi->vy += SUSHI_GRAVITY;
 
     // Deactivate if it goes off-screen
-    if (sushi->x < 0 || sushi->x > SCREEN_WIDTH ||
-        sushi->y < 0 || sushi->y > SCREEN_HEIGHT) {
+    if (sushi->xpm != NULL &&
+        (sushi->x + sushi->xpm->width < 0 || sushi->x > SCREEN_WIDTH ||
+         (sushi->y > SCREEN_HEIGHT && sushi->vy > 0))) {
           sushi_destroy(sushi);
     }
 }
@@ -137,12 +157,83 @@ void sushi_destroy(sushi_t* sushi) {
     }
 }
 
+static bool point_inside_sushi_bounds(const sushi_t* sushi, int x, int y, int padding) {
+    return x >= sushi->x - padding &&
+           x <= sushi->x + sushi->xpm->width + padding &&
+           y >= sushi->y - padding &&
+           y <= sushi->y + sushi->xpm->height + padding;
+}
+
+static int orientation(int ax, int ay, int bx, int by, int cx, int cy) {
+    long value = (long)(by - ay) * (cx - bx) - (long)(bx - ax) * (cy - by);
+
+    if (value == 0) return 0;
+    return value > 0 ? 1 : 2;
+}
+
+static bool point_on_segment(int ax, int ay, int bx, int by, int px, int py) {
+    return px >= (ax < bx ? ax : bx) && px <= (ax > bx ? ax : bx) &&
+           py >= (ay < by ? ay : by) && py <= (ay > by ? ay : by);
+}
+
+static bool segments_intersect(int ax, int ay, int bx, int by, int cx, int cy, int dx, int dy) {
+    int o1 = orientation(ax, ay, bx, by, cx, cy);
+    int o2 = orientation(ax, ay, bx, by, dx, dy);
+    int o3 = orientation(cx, cy, dx, dy, ax, ay);
+    int o4 = orientation(cx, cy, dx, dy, bx, by);
+
+    if (o1 != o2 && o3 != o4) return true;
+
+    if (o1 == 0 && point_on_segment(ax, ay, bx, by, cx, cy)) return true;
+    if (o2 == 0 && point_on_segment(ax, ay, bx, by, dx, dy)) return true;
+    if (o3 == 0 && point_on_segment(cx, cy, dx, dy, ax, ay)) return true;
+    if (o4 == 0 && point_on_segment(cx, cy, dx, dy, bx, by)) return true;
+
+    return false;
+}
+
+static bool segment_intersects_sushi_bounds(const sushi_t* sushi, int x0, int y0, int x1, int y1, int padding) {
+    int left = sushi->x - padding;
+    int right = sushi->x + sushi->xpm->width + padding;
+    int top = sushi->y - padding;
+    int bottom = sushi->y + sushi->xpm->height + padding;
+
+    if (point_inside_sushi_bounds(sushi, x0, y0, padding) ||
+        point_inside_sushi_bounds(sushi, x1, y1, padding)) {
+        return true;
+    }
+
+    return segments_intersect(x0, y0, x1, y1, left, top, right, top) ||
+           segments_intersect(x0, y0, x1, y1, right, top, right, bottom) ||
+           segments_intersect(x0, y0, x1, y1, right, bottom, left, bottom) ||
+           segments_intersect(x0, y0, x1, y1, left, bottom, left, top);
+}
+
 int find_cut_sushi(sushi_t* sushi, int cut_x, int cut_y, sushi_fragment_t* left_fragment, sushi_fragment_t* right_fragment) {
     if (sushi == NULL || sushi->xpm == NULL) return 1;
 
     // Check if the cut coordinates are within the sushi's bounding box
-    if (cut_x >= sushi->x && cut_x <= sushi->x + sushi->xpm->width &&
-        cut_y >= sushi->y && cut_y <= sushi->y + sushi->xpm->height) {
+    if (point_inside_sushi_bounds(sushi, cut_x, cut_y, 0)) {
+          return cut_sushi(sushi, left_fragment, right_fragment);
+    }
+
+    return 1;
+}
+
+int find_cut_sushi_area(sushi_t* sushi, int cut_x, int cut_y, int radius, sushi_fragment_t* left_fragment, sushi_fragment_t* right_fragment) {
+    if (sushi == NULL || sushi->xpm == NULL) return 1;
+
+    if (point_inside_sushi_bounds(sushi, cut_x, cut_y, radius)) {
+          return cut_sushi(sushi, left_fragment, right_fragment);
+    }
+
+    return 1;
+}
+
+int find_cut_sushi_segment_area(sushi_t* sushi, int cut_x0, int cut_y0, int cut_x1, int cut_y1, int radius, sushi_fragment_t* left_fragment, sushi_fragment_t* right_fragment) {
+    if (sushi == NULL || sushi->xpm == NULL) return 1;
+
+    if (segment_intersects_sushi_bounds(sushi, cut_x0, cut_y0, cut_x1, cut_y1, radius)) {
           return cut_sushi(sushi, left_fragment, right_fragment);
     }
 
@@ -176,19 +267,19 @@ int cut_sushi(sushi_t* sushi, sushi_fragment_t* left_fragment, sushi_fragment_t*
 
     // Create left fragment
     *left_fragment = (sushi_fragment_t){
-        .x = sushi->x,
-        .y = sushi->y,
+        .x = sushi->x - 2, // Move left
+        .y = sushi->y ,
         .vx = sushi->vx - 2, // Move left
-        .vy = sushi->vy - 2, // Move down
+        .vy = sushi->vy - 2,
         .xpm = left_sprite
     };
 
     // Create right fragment
     *right_fragment = (sushi_fragment_t){
-        .x = sushi->x,
+        .x = sushi->x + 2, // Move right
         .y = sushi->y,
         .vx = sushi->vx + 2, // Move right
-        .vy = sushi->vy - 2, // Move down
+        .vy = sushi->vy - 2,
         .xpm = right_sprite
     };
 
@@ -203,12 +294,12 @@ void update_sushi_fragment(sushi_fragment_t* fragment) {
 
     fragment->x += fragment->vx;
     fragment->y += fragment->vy;
-
-    fragment->vy -= 1; // Simulate gravity
+    fragment->vy += SUSHI_GRAVITY;
 
     // Deactivate if it goes off-screen
-    if (fragment->x < 0 || fragment->x > SCREEN_WIDTH ||
-        fragment->y < 0 || fragment->y > SCREEN_HEIGHT) {
+    if (fragment->xpm != NULL &&
+        (fragment->x + fragment->xpm->width < 0 || fragment->x > SCREEN_WIDTH ||
+         fragment->y > SCREEN_HEIGHT)) {
           sushi_fragment_destroy(fragment);
     }
 }
