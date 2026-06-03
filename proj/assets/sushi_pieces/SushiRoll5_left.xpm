@@ -1,5 +1,5 @@
 /* XPM */
-static char * SushiRoll5_left_xpm_xpm[] = {
+static char * SushiRoll5_left_xpm[] = {
 "40 90 10 1",
 " 	c None",
 ".	c #E5CABE",

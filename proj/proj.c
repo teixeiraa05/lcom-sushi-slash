@@ -91,6 +91,8 @@ int (proj_main_loop)(int argc, char *argv[]) {
     bool ready = keyboard_get_scancode(scancode);
     bool running = true;
     bool prev_lb_pressed = false;
+    bool gameplay_active = false;
+    int last_sushi_spawn_tick = 0;
 
     while(running) {
 
@@ -107,6 +109,8 @@ int (proj_main_loop)(int argc, char *argv[]) {
                         ready = keyboard_get_scancode(scancode);
 
                         if (ready && scancode[0] == ESC_BREAK_CODE && game.state == GAME) {
+                            gameplay_clear(&game);
+                            gameplay_active = false;
                             game.state = PAUSED;
                             pause_menu_init(&game.data.pause_menu);
                         }
@@ -121,7 +125,15 @@ int (proj_main_loop)(int argc, char *argv[]) {
                             ui_menu_draw(&game.data.menu, &assets);
                         }
                         else if (game.state == GAME) {
+                            if (!gameplay_active) {
+                                gameplay_start(&game);
+                                gameplay_active = true;
+                                last_sushi_spawn_tick = get_int_counter();
+                            }
+                            gameplay_update(&game, get_int_counter(), &last_sushi_spawn_tick);
+                            gameplay_handle_cut(&game, &mouse_state);
                             ui_draw_background(&assets.background_sprite);
+                            gameplay_draw(&game);
                             hud_draw(&assets.game_font, game.score, game.lives, &assets.heart);
                         }
                         else if (game.state == PAUSED) {
@@ -152,14 +164,24 @@ int (proj_main_loop)(int argc, char *argv[]) {
 
                                 switch (action) {
                                     case MENU_ACTION_START_SINGLEPLAYER:
+                                        gameplay_start(&game);
+                                        gameplay_active = true;
+                                        last_sushi_spawn_tick = get_int_counter();
                                         game.state = GAME;
                                         break;
                                     case MENU_ACTION_START_MULTIPLAYER:
+                                        gameplay_start(&game);
+                                        gameplay_active = true;
+                                        last_sushi_spawn_tick = get_int_counter();
                                         game.state = GAME;
                                         break;
                                     case MENU_ACTION_SHOW_INSTRUCTIONS:
                                         break;
                                     case MENU_ACTION_EXIT:
+                                        if (gameplay_active) {
+                                            gameplay_clear(&game);
+                                            gameplay_active = false;
+                                        }
                                         running = false;
                                         break;
                                     case MENU_ACTION_NONE:
@@ -167,19 +189,27 @@ int (proj_main_loop)(int argc, char *argv[]) {
                                         break;
                                 }
                             }
+                            else if (game.state == GAME) {
+                                gameplay_handle_cut(&game, &mouse_state);
+                            }
                             else if (game.state == PAUSED) {
                                 PauseOption hovered = ui_pause_menu_hit_test(mouse_state.x, mouse_state.y);
                                 PauseAction action = pause_menu_update(&game.data.pause_menu, hovered, clicked);
 
                                 switch (action) {
                                     case PAUSE_ACTION_RESUME:
+                                        gameplay_start(&game);
+                                        gameplay_active = true;
+                                        last_sushi_spawn_tick = get_int_counter();
                                         game.state = GAME;
                                         break;
                                     case PAUSE_ACTION_MAIN_MENU:
+                                        gameplay_active = false;
                                         game.state = MENU;
                                         menu_init(&game.data.menu);
                                         break;
                                     case PAUSE_ACTION_EXIT:
+                                        gameplay_active = false;
                                         running = false;
                                         break;
                                     case PAUSE_ACTION_NONE:
@@ -202,6 +232,10 @@ int (proj_main_loop)(int argc, char *argv[]) {
     if (timer_unsubscribe_int()) return 1;
     if(kbc_unsubscribe_int()) return 1;
     if (mouse_cleanup()) return 1;
+
+    if (gameplay_active) {
+        gameplay_clear(&game);
+    }
 
     // Free any resources that were allocated
     assets_destroy(&assets);

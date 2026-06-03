@@ -156,6 +156,8 @@ int mouse_init(MouseGameState *state, int screen_width, int screen_height, uint8
     memset(state, 0, sizeof(MouseGameState));
     state->x = screen_width / 2; // Start in the middle of the screen
     state->y = screen_height / 2;
+    state->prev_x = state->x;
+    state->prev_y = state->y;
 
     // Subscribe to mouse interrupts
     if (mouse_subscribe_int(bit_no)) {
@@ -213,6 +215,9 @@ bool mouse_proj_ih(MouseGameState *state, int screen_width, int screen_height) {
 }
 
 void mouse_update_state(MouseGameState *state, struct packet *pp, int screen_width, int screen_height) {
+    state->prev_x = state->x;
+    state->prev_y = state->y;
+
     // Update button states
     state->lb_pressed = pp->lb;
     state->mb_pressed = pp->mb;
