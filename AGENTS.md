@@ -1,0 +1,11 @@
+## SushiSlash
+
+- Description: SushiSlash is an action arcade game inspired on Fruit Ninja. Sushi pieces are launched across the screen and the player uses the mouse to slash through them before they fly off. Not all sushi is created equal, alongside regular pieces, the game features special sushi types that each behave differently. The game also introduces Boss Sushi, oversized, elaborate pieces that appear periodically and can only be defeated by successfully typing a displayed key sequence within a short countdown window, as if performing the precise knife technique required for a complex cut. The game tracks the player's score and remaining lives on the HUD, displays a real-time clock, and progressively increases the speed and variety of incoming pieces as the player advances.
+
+## Devices: 
+- Graphics Card - Core rendering of all visual elements: the background, animated fruits flying across the screen, slash trail effects, the HUD (score, lives, timer), and Boss Fruit UI overlays with the key sequence prompt. 
+- Mouse - The primary interaction device. The player moves the mouse to aim and performs slashing gestures to cut regular fruits. Mouse position and movement delta are used to detect swipe direction and speed, determining whether a fruit is successfully sliced.
+- Keyboard - Used for the Boss Fruit mechanic: when a Boss Fruit spawns, the player must input a displayed key sequence within a countdown window. Also used for navigating menus (start, pause, quit) and potentially for accessibility controls.
+- Timer - Drives the game loop at a consistent tick rate, controls fruit spawn intervals, manages the countdown timer for Boss Fruit sequences, and handles difficulty scaling as the game progresses.
+- RTC (Real-Time Clock) - Displays the current real-world time on the HUD, and can be used to seed randomness for fruit spawn patterns and key sequence generation, ensuring variety across sessions. (Possibly use it for boss generation, relating to the real time or use it for daily high-scores)
+- Serial Port (possibly) - Enables a two-player mode where a second machine can send inputs or compete for high scores, with game state or score data exchanged between the two LCOM instances over serial communication.
