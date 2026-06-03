@@ -30,13 +30,14 @@ uint8_t (mouse_get_data)();
 /**
  * @brief Velocity threshold in pixels per tick above which movement is a slash.
  */
-#define SLASH_THRESHOLD 15
+#define SLASH_THRESHOLD 12
 
 /**
  * @brief Represents the processed high-level mouse state.
  */
 typedef struct MouseGameState {
   int x, y;          /**< Absolute cursor coordinates on the screen. */
+  int prev_x, prev_y;/**< Previous absolute cursor coordinates on the screen. */
   int dx, dy;        /**< Relative movement deltas from the last packet. */
   bool lb_pressed;   /**< True if Left Button is pressed. */
   bool rb_pressed;   /**< True if Right Button is pressed. */
