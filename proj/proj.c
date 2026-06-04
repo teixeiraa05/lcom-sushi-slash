@@ -13,7 +13,12 @@
 #include "include/init.h"
 #include "include/ui/menu_draw.h"
 #include "include/ui/pause_menu_draw.h"
+<<<<<<< proj/proj.c
+#include "include/ui/session_timer.h"
 #include "include/ui/game_over_draw.h"
+=======
+#include "include/ui/game_over_draw.h"
+>>>>>>> proj/proj.c
 #include "include/game/game.h"
 #include "../lab1/rtc.h"
 #include "../lab4/mouse.h"
@@ -96,6 +101,8 @@ int (proj_main_loop)(int argc, char *argv[]) {
     bool prev_lb_pressed = false;
     bool gameplay_active = false;
     int last_sushi_spawn_tick = 0;
+    GameSessionTimer session_timer;
+    session_timer_reset(&session_timer, get_int_counter());
 
     uint32_t current_fps = 0;
     uint32_t frames_since_fps_update = 0;
@@ -122,6 +129,7 @@ int (proj_main_loop)(int argc, char *argv[]) {
                         ready = keyboard_get_scancode(scancode);
 
                         if (ready && scancode[0] == ESC_BREAK_CODE && game.state == GAME) {
+                            session_timer_pause(&session_timer, get_int_counter());
                             game.state = PAUSED;
                             pause_menu_init(&game.data.pause_menu);
                         }
@@ -164,9 +172,13 @@ int (proj_main_loop)(int argc, char *argv[]) {
                                 gameplay_start(&game);
                                 gameplay_active = true;
                                 last_sushi_spawn_tick = current_tick;
+                                session_timer_reset(&session_timer, current_tick);
+                                session_timer_start(&session_timer, current_tick);
                             }
+                            session_timer_update(&session_timer, current_tick);
                             gameplay_update(&game, current_tick, &last_sushi_spawn_tick);
                             if (game.state != GAME) {
+                                session_timer_pause(&session_timer, current_tick);
                                 gameplay_active = false;
                                 if (game.state == GAME_OVER) {
                                     assets.mascot_lose_anim.cur_frame = 0;
@@ -179,6 +191,7 @@ int (proj_main_loop)(int argc, char *argv[]) {
                                 ui_draw_background(&assets.background_sprite);
                                 gameplay_draw(&game);
                                 hud_draw(&assets.game_font, game.score, game.lives, &assets.heart);
+                                ui_session_timer_draw(&assets, &session_timer);
                             }
                         }
                         else if (game.state == PAUSED) {
@@ -215,18 +228,23 @@ int (proj_main_loop)(int argc, char *argv[]) {
                                         gameplay_start(&game);
                                         gameplay_active = true;
                                         last_sushi_spawn_tick = get_int_counter();
+                                        session_timer_reset(&session_timer, last_sushi_spawn_tick);
+                                        session_timer_start(&session_timer, last_sushi_spawn_tick);
                                         game.state = GAME;
                                         break;
                                     case MENU_ACTION_START_MULTIPLAYER:
                                         gameplay_start(&game);
                                         gameplay_active = true;
                                         last_sushi_spawn_tick = get_int_counter();
+                                        session_timer_reset(&session_timer, last_sushi_spawn_tick);
+                                        session_timer_start(&session_timer, last_sushi_spawn_tick);
                                         game.state = GAME;
                                         break;
                                     case MENU_ACTION_SHOW_INSTRUCTIONS:
                                         break;
                                     case MENU_ACTION_EXIT:
                                         if (gameplay_active) {
+                                            session_timer_pause(&session_timer, get_int_counter());
                                             gameplay_clear(&game);
                                             gameplay_active = false;
                                         }
@@ -248,6 +266,7 @@ int (proj_main_loop)(int argc, char *argv[]) {
                                     case PAUSE_ACTION_RESUME:
                                         gameplay_active = true;
                                         last_sushi_spawn_tick = get_int_counter();
+                                        session_timer_start(&session_timer, last_sushi_spawn_tick);
                                         game.state = GAME;
                                         break;
                                     case PAUSE_ACTION_MAIN_MENU:
