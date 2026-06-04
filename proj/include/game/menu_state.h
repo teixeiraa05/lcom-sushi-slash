@@ -1,5 +1,5 @@
-#ifndef _MENU_H_
-#define _MENU_H_
+#ifndef _MENU_STATE_H_
+#define _MENU_STATE_H_
 
 #include <stdbool.h>
 #include "difficulty.h"
@@ -20,33 +20,12 @@ typedef enum {
   MENU_ACTION_EXIT
 } MenuAction;
 
-typedef struct menu {
+typedef struct {
   MenuOption hovered_option;
   difficulty_t selected_difficulty;
 } menu_t;
 
-typedef enum {
-  PAUSE_OPTION_NONE,
-  PAUSE_OPTION_RESUME,
-  PAUSE_OPTION_MAIN_MENU,
-  PAUSE_OPTION_EXIT
-} PauseOption;
-
-typedef enum {
-  PAUSE_ACTION_NONE,
-  PAUSE_ACTION_RESUME,
-  PAUSE_ACTION_MAIN_MENU,
-  PAUSE_ACTION_EXIT
-} PauseAction;
-
-typedef struct {
-  PauseOption hovered_option;
-} pause_menu_t;
-
 void menu_init(menu_t *menu);
 MenuAction menu_update(menu_t *menu, MenuOption hovered_option, bool clicked);
 
-void pause_menu_init(pause_menu_t *menu);
-PauseAction pause_menu_update(pause_menu_t *menu, PauseOption hovered_option, bool clicked);
-
-#endif /* _MENU_H_ */
+#endif /* _MENU_STATE_H_ */

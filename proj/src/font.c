@@ -1,5 +1,6 @@
 #include "../include/font.h"
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -42,10 +43,10 @@
 #include "../assets/letters/x.xpm"
 #include "../assets/letters/y.xpm"
 #include "../assets/letters/z.xpm"
+#include "../assets/letters/colon.xpm"
+#include "../assets/letters/slash.xpm"
 
-#ifndef CHROMA_KEY_GREEN_888
-#define CHROMA_KEY_GREEN_888 0x00FF00
-#endif
+#define FONT_GLYPH_WHITE_888 0xFFFFFF
 
 int font_create(Font *font, uint16_t char_width) {
     if (font == NULL) return 1;
@@ -66,6 +67,8 @@ int font_create(Font *font, uint16_t char_width) {
         (xpm_map_t)q_xpm, (xpm_map_t)r_xpm, (xpm_map_t)s_xpm, (xpm_map_t)t_xpm,
         (xpm_map_t)u_xpm, (xpm_map_t)v_xpm, (xpm_map_t)w_xpm, (xpm_map_t)x_xpm,
         (xpm_map_t)y_xpm, (xpm_map_t)z_xpm,
+        (xpm_map_t)colon_xpm,
+        (xpm_map_t)slash_xpm,
     };
 
     for (uint32_t i = 0; i < font->num_chars; i++) {
@@ -101,6 +104,10 @@ int font_glyph_index(char c) {
         return FONT_NUM_DIGITS + (c - 'a');
     } else if (c >= 'A' && c <= 'Z') {
         return FONT_NUM_DIGITS + (c - 'A');
+    } else if (c == ':') {
+        return FONT_COLON_INDEX;
+    } else if (c == '/') {
+        return FONT_SLASH_INDEX;
     } else {
         return -1;
     }
@@ -122,6 +129,10 @@ uint16_t font_scaled_text_width(const Font *font, const char *text, uint8_t scal
     return font_text_width(font, text) * scale;
 }
 
+uint16_t font_half_text_width(const Font *font, const char *text) {
+    return font_text_width(font, text) / 2;
+}
+
 static int font_draw_scaled_glyph(const sprite_t *glyph, uint16_t x, uint16_t y, uint8_t scale) {
     if (glyph == NULL || glyph->pixmap == NULL || scale == 0) return 1;
 
@@ -130,7 +141,7 @@ static int font_draw_scaled_glyph(const sprite_t *glyph, uint16_t x, uint16_t y,
             const uint8_t *src = glyph->pixmap + (row * glyph->width + col) * 3;
             uint32_t color = src[0] | (src[1] << 8) | (src[2] << 16);
 
-            if ((color & 0x00FFFFFF) == CHROMA_KEY_GREEN_888) continue;
+            if ((color & 0x00FFFFFF) != FONT_GLYPH_WHITE_888) continue;
 
             for (uint8_t dy = 0; dy < scale; dy++) {
                 for (uint8_t dx = 0; dx < scale; dx++) {
@@ -140,6 +151,59 @@ static int font_draw_scaled_glyph(const sprite_t *glyph, uint16_t x, uint16_t y,
                         return 1;
                     }
                 }
+            }
+        }
+    }
+
+    return 0;
+}
+
+static int font_draw_scaled_glyph_color(const sprite_t *glyph, uint16_t x, uint16_t y, uint8_t scale, uint32_t target_color) {
+    if (glyph == NULL || glyph->pixmap == NULL || scale == 0) return 1;
+
+    for (uint16_t row = 0; row < glyph->height; row++) {
+        for (uint16_t col = 0; col < glyph->width; col++) {
+            const uint8_t *src = glyph->pixmap + (row * glyph->width + col) * 3;
+            uint32_t color = src[0] | (src[1] << 8) | (src[2] << 16);
+
+            if ((color & 0x00FFFFFF) != FONT_GLYPH_WHITE_888) continue;
+
+            for (uint8_t dy = 0; dy < scale; dy++) {
+                for (uint8_t dx = 0; dx < scale; dx++) {
+                    if (ui_draw_pixel(x + col * scale + dx,
+                                      y + row * scale + dy,
+                                      target_color) != 0) {
+                        return 1;
+                    }
+                }
+            }
+        }
+    }
+
+    return 0;
+}
+
+static int font_draw_half_glyph_color(const sprite_t *glyph, uint16_t x, uint16_t y, uint32_t target_color) {
+    if (glyph == NULL || glyph->pixmap == NULL) return 1;
+
+    for (uint16_t row = 0; row < glyph->height; row += 2) {
+        for (uint16_t col = 0; col < glyph->width; col += 2) {
+            bool draw_pixel = false;
+
+            for (uint16_t src_row = row; src_row < row + 2 && src_row < glyph->height; src_row++) {
+                for (uint16_t src_col = col; src_col < col + 2 && src_col < glyph->width; src_col++) {
+                    const uint8_t *src = glyph->pixmap + (src_row * glyph->width + src_col) * 3;
+                    uint32_t color = src[0] | (src[1] << 8) | (src[2] << 16);
+
+                    if ((color & 0x00FFFFFF) == FONT_GLYPH_WHITE_888) {
+                        draw_pixel = true;
+                    }
+                }
+            }
+
+            if (draw_pixel &&
+                ui_draw_pixel(x + col / 2, y + row / 2, target_color) != 0) {
+                return 1;
             }
         }
     }
@@ -163,6 +227,49 @@ int font_draw_scaled_text(const Font *font, const char *text, uint16_t x, uint16
 
         if (font_draw_scaled_glyph(&font->glyphs[idx], cur_x, y, scale) != 0) return 1;
         cur_x += font->char_width * scale;
+    }
+
+    return 0;
+}
+
+int font_draw_scaled_text_color(const Font *font, const char *text, uint16_t x, uint16_t y, uint8_t scale, uint32_t color) {
+    if (font == NULL || text == NULL || font->loaded_chars < font->num_chars) return 1;
+
+    uint16_t cur_x = x;
+
+    for (const char *p = text; *p != '\0'; p++) {
+        if (*p == ' ') {
+            cur_x += font->char_width * scale;
+            continue;
+        }
+
+        int idx = font_glyph_index(*p);
+        if (idx < 0 || (uint32_t)idx >= font->num_chars) return 1;
+
+        if (font_draw_scaled_glyph_color(&font->glyphs[idx], cur_x, y, scale, color) != 0) return 1;
+        cur_x += font->char_width * scale;
+    }
+
+    return 0;
+}
+
+int font_draw_half_text_color(const Font *font, const char *text, uint16_t x, uint16_t y, uint32_t color) {
+    if (font == NULL || text == NULL || font->loaded_chars < font->num_chars) return 1;
+
+    uint16_t cur_x = x;
+    uint16_t char_width = font->char_width / 2;
+
+    for (const char *p = text; *p != '\0'; p++) {
+        if (*p == ' ') {
+            cur_x += char_width;
+            continue;
+        }
+
+        int idx = font_glyph_index(*p);
+        if (idx < 0 || (uint32_t)idx >= font->num_chars) return 1;
+
+        if (font_draw_half_glyph_color(&font->glyphs[idx], cur_x, y, color) != 0) return 1;
+        cur_x += char_width;
     }
 
     return 0;
