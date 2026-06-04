@@ -162,10 +162,18 @@ int (proj_main_loop)(int argc, char *argv[]) {
                                 last_sushi_spawn_tick = current_tick;
                             }
                             gameplay_update(&game, current_tick, &last_sushi_spawn_tick);
-                            gameplay_handle_cut(&game, &mouse_state);
-                            ui_draw_background(&assets.background_sprite);
-                            gameplay_draw(&game);
-                            hud_draw(&assets.game_font, game.score, game.lives, &assets.heart);
+                            if (game.state != GAME) {
+                                gameplay_active = false;
+                                if (game.state == MENU) {
+                                    ui_menu_draw(&game.data.menu, &assets, &status);
+                                }
+                            }
+                            else {
+                                gameplay_handle_cut(&game, &mouse_state);
+                                ui_draw_background(&assets.background_sprite);
+                                gameplay_draw(&game);
+                                hud_draw(&assets.game_font, game.score, game.lives, &assets.heart);
+                            }
                         }
                         else if (game.state == PAUSED) {
                             ui_draw_background(&assets.background_sprite);

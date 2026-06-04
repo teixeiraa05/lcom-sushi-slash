@@ -143,8 +143,7 @@ void update_sushi(sushi_t* sushi) {
 
     // Deactivate if it goes off-screen
     if (sushi->xpm != NULL &&
-        (sushi_screen_x(sushi) + sushi->xpm->width < 0 || sushi_screen_x(sushi) > SCREEN_WIDTH ||
-         (sushi_screen_y(sushi) > SCREEN_HEIGHT && sushi->vy > 0))) {
+        (sushi_screen_x(sushi) + sushi->xpm->width < 0 || sushi_screen_x(sushi) > SCREEN_WIDTH)) {
           sushi_destroy(sushi);
     }
 }

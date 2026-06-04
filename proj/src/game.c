@@ -1,4 +1,5 @@
 #include <lcom/lcf.h>
+#include <stdbool.h>
 #include <string.h>
 
 #include "../include/game/game.h"
@@ -75,6 +76,30 @@ static void gameplay_spawn_sushi(GameInfo *game) {
     game->singleplayer.active_sushi[game->singleplayer.num_active_sushi++] = sushi;
 }
 
+static bool sushi_missed_lower_bound(const sushi_t *sushi) {
+    return sushi != NULL &&
+           sushi->xpm != NULL &&
+           sushi_screen_y(sushi) > SCREEN_HEIGHT + SUSHI_MISS_Y_OFFSET &&
+           sushi->vy > 0;
+}
+
+static void gameplay_handle_missed_sushi(GameInfo *game, uint8_t index) {
+    if (game == NULL || index >= game->singleplayer.num_active_sushi) return;
+
+    sushi_destroy(&game->singleplayer.active_sushi[index]);
+    gameplay_remove_sushi(game, index);
+
+    if (game->lives > 0) {
+        game->lives--;
+    }
+
+    if (game->lives == 0) {
+        gameplay_clear(game);
+        game->state = MENU;
+        menu_init(&game->data.menu);
+    }
+}
+
 void gameplay_update(GameInfo *game, int current_tick, int *last_spawn_tick) {
     if (game == NULL || last_spawn_tick == NULL) return;
 
@@ -86,7 +111,12 @@ void gameplay_update(GameInfo *game, int current_tick, int *last_spawn_tick) {
     uint8_t i = 0;
     while (i < game->singleplayer.num_active_sushi) {
         update_sushi(&game->singleplayer.active_sushi[i]);
-        if (game->singleplayer.active_sushi[i].xpm == NULL) {
+
+        if (sushi_missed_lower_bound(&game->singleplayer.active_sushi[i])) {
+            gameplay_handle_missed_sushi(game, i);
+            if (game->state != GAME) return;
+        }
+        else if (game->singleplayer.active_sushi[i].xpm == NULL) {
             gameplay_remove_sushi(game, i);
         }
         else {
