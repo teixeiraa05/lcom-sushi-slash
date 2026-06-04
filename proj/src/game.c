@@ -51,20 +51,25 @@ static void gameplay_spawn_sushi(GameInfo *game) {
     if (game == NULL || game->data.singleplayer.num_active_sushi >= MAX_ACTIVE_SUSHI) return;
 
     int speed = GAME_SPEED_1;
+    int gravity = GAME_GRAVITY_1;
     if (game->score >= GAME_SPEED_5_SCORE) {
         speed = GAME_SPEED_5;
+        gravity = GAME_GRAVITY_5;
     }
     else if (game->score >= GAME_SPEED_4_SCORE) {
         speed = GAME_SPEED_4;
+        gravity = GAME_GRAVITY_4;
     }
     else if (game->score >= GAME_SPEED_3_SCORE) {
         speed = GAME_SPEED_3;
+        gravity = GAME_GRAVITY_3;
     }
     else if (game->score >= GAME_SPEED_2_SCORE) {
         speed = GAME_SPEED_2;
+        gravity = GAME_GRAVITY_2;
     }
 
-    sushi_t sushi = create_random_sushi(speed);
+    sushi_t sushi = create_random_sushi(speed, gravity);
     if (sushi.xpm == NULL) return;
 
     game->data.singleplayer.active_sushi[game->data.singleplayer.num_active_sushi++] = sushi;
@@ -106,15 +111,19 @@ void gameplay_draw(const GameInfo *game) {
 
     for (uint8_t i = 0; i < game->data.singleplayer.num_active_sushi; i++) {
         const sushi_t *sushi = &game->data.singleplayer.active_sushi[i];
-        if (sushi->xpm != NULL && sushi->x >= 0 && sushi->y >= 0) {
-            ui_draw_sprite(sushi->xpm, (uint16_t)sushi->x, (uint16_t)sushi->y);
+        int x = sushi_screen_x(sushi);
+        int y = sushi_screen_y(sushi);
+        if (sushi->xpm != NULL && x >= 0 && y >= 0) {
+            ui_draw_sprite(sushi->xpm, (uint16_t)x, (uint16_t)y);
         }
     }
 
     for (uint8_t i = 0; i < game->data.singleplayer.num_active_fragments; i++) {
         const sushi_fragment_t *fragment = &game->data.singleplayer.active_fragments[i];
-        if (fragment->xpm != NULL && fragment->x >= 0 && fragment->y >= 0) {
-            ui_draw_sprite(fragment->xpm, (uint16_t)fragment->x, (uint16_t)fragment->y);
+        int x = sushi_fragment_screen_x(fragment);
+        int y = sushi_fragment_screen_y(fragment);
+        if (fragment->xpm != NULL && x >= 0 && y >= 0) {
+            ui_draw_sprite(fragment->xpm, (uint16_t)x, (uint16_t)y);
         }
     }
 }

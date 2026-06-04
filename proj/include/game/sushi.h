@@ -3,15 +3,16 @@
 
 #include <stdlib.h>
 #include "../macros/global.h"
+#include "../macros/physics.h"
 #include "sprite.h"
 
-#define SUSHI_SPAWN_Y_OFFSET 80
-#define SUSHI_GRAVITY 1
+#define SUSHI_SPAWN_Y_OFFSET 30
 #define SUSHI_SCORE_VALUE 1
 
 typedef struct {
-  int x, y; // Position of the sushi on the screen
-  int vx, vy; // Velocity of the sushi
+  int x, y; // Fixed-point position of the sushi on the screen
+  int vx, vy; // Fixed-point velocity of the sushi
+  int gravity; // Fixed-point gravity applied every tick
   int score_value; // The score value of the sushi when cut
   uint8_t type; // Index of the sushi XPM
 
@@ -20,17 +21,21 @@ typedef struct {
 
 //LR fragments after cut
 
-sushi_t create_sushi(int x, int y, int vx, int vy, sprite_t* xpm, int score_value);
+sushi_t create_sushi(int x, int y, int vx, int vy, int gravity, sprite_t* xpm, int score_value);
 
-sushi_t create_random_sushi(int speed);
+sushi_t create_random_sushi(int speed, int gravity);
 
 void update_sushi(sushi_t* sushi);
+
+int sushi_screen_x(const sushi_t* sushi);
+int sushi_screen_y(const sushi_t* sushi);
 
 void sushi_destroy(sushi_t* sushi);
 
 typedef struct {
-  int x, y; // Position of the sushi fragment on the screen
-  int vx, vy; // Velocity of the sushi fragment
+  int x, y; // Fixed-point position of the sushi fragment on the screen
+  int vx, vy; // Fixed-point velocity of the sushi fragment
+  int gravity; // Fixed-point gravity applied every tick
 
   sprite_t* xpm; // The sprite representing the sushi fragment
 } sushi_fragment_t;
@@ -44,6 +49,9 @@ int find_cut_sushi_segment_area(sushi_t* sushi, int cut_x0, int cut_y0, int cut_
 int cut_sushi(sushi_t* sushi, sushi_fragment_t* left_fragment, sushi_fragment_t* right_fragment);
 
 void update_sushi_fragment(sushi_fragment_t* fragment);
+
+int sushi_fragment_screen_x(const sushi_fragment_t* fragment);
+int sushi_fragment_screen_y(const sushi_fragment_t* fragment);
 
 void sushi_fragment_destroy(sushi_fragment_t* fragment);
 
