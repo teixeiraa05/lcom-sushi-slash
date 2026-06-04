@@ -54,11 +54,19 @@ typedef enum {
 } Device;
 
 typedef struct {
+    sushi_t active_sushi[MAX_ACTIVE_SUSHI];
+    sushi_fragment_t active_fragments[MAX_ACTIVE_FRAGMENTS];
+    uint8_t num_active_sushi;
+    uint8_t num_active_fragments;
+} gameplay_data_t;
+
+typedef struct {
     GameState state;
     uint32_t score;
     uint8_t lives;
     sprite_t background;
     difficulty_t difficulty;
+    gameplay_data_t singleplayer;
 
     union {
         menu_t menu;
@@ -70,13 +78,6 @@ typedef struct {
           uint32_t final_score;
         } game_over_sp; 
 
-        struct {
-          sushi_t active_sushi[MAX_ACTIVE_SUSHI];
-          sushi_fragment_t active_fragments[MAX_ACTIVE_FRAGMENTS];
-          uint8_t num_active_sushi;
-          uint8_t num_active_fragments;
-        } singleplayer;
-        
         struct {
           sushi_t active_sushi[MAX_ACTIVE_SUSHI];
           sushi_fragment_t active_fragments[MAX_ACTIVE_FRAGMENTS];

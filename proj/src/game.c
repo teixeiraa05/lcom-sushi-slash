@@ -9,46 +9,46 @@
 void gameplay_clear(GameInfo *game) {
     if (game == NULL) return;
 
-    for (uint8_t i = 0; i < game->data.singleplayer.num_active_sushi; i++) {
-        sushi_destroy(&game->data.singleplayer.active_sushi[i]);
+    for (uint8_t i = 0; i < game->singleplayer.num_active_sushi; i++) {
+        sushi_destroy(&game->singleplayer.active_sushi[i]);
     }
 
-    for (uint8_t i = 0; i < game->data.singleplayer.num_active_fragments; i++) {
-        sushi_fragment_destroy(&game->data.singleplayer.active_fragments[i]);
+    for (uint8_t i = 0; i < game->singleplayer.num_active_fragments; i++) {
+        sushi_fragment_destroy(&game->singleplayer.active_fragments[i]);
     }
 
-    game->data.singleplayer.num_active_sushi = 0;
-    game->data.singleplayer.num_active_fragments = 0;
+    game->singleplayer.num_active_sushi = 0;
+    game->singleplayer.num_active_fragments = 0;
 }
 
 void gameplay_start(GameInfo *game) {
     if (game == NULL) return;
 
-    memset(&game->data.singleplayer, 0, sizeof(game->data.singleplayer));
+    memset(&game->singleplayer, 0, sizeof(game->singleplayer));
     game->score = 0;
     game->lives = LIVES;
 }
 
 static void gameplay_remove_sushi(GameInfo *game, uint8_t index) {
-    if (game == NULL || index >= game->data.singleplayer.num_active_sushi) return;
+    if (game == NULL || index >= game->singleplayer.num_active_sushi) return;
 
-    for (uint8_t i = index; i + 1 < game->data.singleplayer.num_active_sushi; i++) {
-        game->data.singleplayer.active_sushi[i] = game->data.singleplayer.active_sushi[i + 1];
+    for (uint8_t i = index; i + 1 < game->singleplayer.num_active_sushi; i++) {
+        game->singleplayer.active_sushi[i] = game->singleplayer.active_sushi[i + 1];
     }
-    game->data.singleplayer.num_active_sushi--;
+    game->singleplayer.num_active_sushi--;
 }
 
 static void gameplay_remove_fragment(GameInfo *game, uint8_t index) {
-    if (game == NULL || index >= game->data.singleplayer.num_active_fragments) return;
+    if (game == NULL || index >= game->singleplayer.num_active_fragments) return;
 
-    for (uint8_t i = index; i + 1 < game->data.singleplayer.num_active_fragments; i++) {
-        game->data.singleplayer.active_fragments[i] = game->data.singleplayer.active_fragments[i + 1];
+    for (uint8_t i = index; i + 1 < game->singleplayer.num_active_fragments; i++) {
+        game->singleplayer.active_fragments[i] = game->singleplayer.active_fragments[i + 1];
     }
-    game->data.singleplayer.num_active_fragments--;
+    game->singleplayer.num_active_fragments--;
 }
 
 static void gameplay_spawn_sushi(GameInfo *game) {
-    if (game == NULL || game->data.singleplayer.num_active_sushi >= MAX_ACTIVE_SUSHI) return;
+    if (game == NULL || game->singleplayer.num_active_sushi >= MAX_ACTIVE_SUSHI) return;
 
     int speed = GAME_SPEED_1;
     int gravity = GAME_GRAVITY_1;
@@ -72,7 +72,7 @@ static void gameplay_spawn_sushi(GameInfo *game) {
     sushi_t sushi = create_random_sushi(speed, gravity);
     if (sushi.xpm == NULL) return;
 
-    game->data.singleplayer.active_sushi[game->data.singleplayer.num_active_sushi++] = sushi;
+    game->singleplayer.active_sushi[game->singleplayer.num_active_sushi++] = sushi;
 }
 
 void gameplay_update(GameInfo *game, int current_tick, int *last_spawn_tick) {
@@ -84,9 +84,9 @@ void gameplay_update(GameInfo *game, int current_tick, int *last_spawn_tick) {
     }
 
     uint8_t i = 0;
-    while (i < game->data.singleplayer.num_active_sushi) {
-        update_sushi(&game->data.singleplayer.active_sushi[i]);
-        if (game->data.singleplayer.active_sushi[i].xpm == NULL) {
+    while (i < game->singleplayer.num_active_sushi) {
+        update_sushi(&game->singleplayer.active_sushi[i]);
+        if (game->singleplayer.active_sushi[i].xpm == NULL) {
             gameplay_remove_sushi(game, i);
         }
         else {
@@ -95,9 +95,9 @@ void gameplay_update(GameInfo *game, int current_tick, int *last_spawn_tick) {
     }
 
     i = 0;
-    while (i < game->data.singleplayer.num_active_fragments) {
-        update_sushi_fragment(&game->data.singleplayer.active_fragments[i]);
-        if (game->data.singleplayer.active_fragments[i].xpm == NULL) {
+    while (i < game->singleplayer.num_active_fragments) {
+        update_sushi_fragment(&game->singleplayer.active_fragments[i]);
+        if (game->singleplayer.active_fragments[i].xpm == NULL) {
             gameplay_remove_fragment(game, i);
         }
         else {
@@ -109,8 +109,8 @@ void gameplay_update(GameInfo *game, int current_tick, int *last_spawn_tick) {
 void gameplay_draw(const GameInfo *game) {
     if (game == NULL) return;
 
-    for (uint8_t i = 0; i < game->data.singleplayer.num_active_sushi; i++) {
-        const sushi_t *sushi = &game->data.singleplayer.active_sushi[i];
+    for (uint8_t i = 0; i < game->singleplayer.num_active_sushi; i++) {
+        const sushi_t *sushi = &game->singleplayer.active_sushi[i];
         int x = sushi_screen_x(sushi);
         int y = sushi_screen_y(sushi);
         if (sushi->xpm != NULL && x >= 0 && y >= 0) {
@@ -118,8 +118,8 @@ void gameplay_draw(const GameInfo *game) {
         }
     }
 
-    for (uint8_t i = 0; i < game->data.singleplayer.num_active_fragments; i++) {
-        const sushi_fragment_t *fragment = &game->data.singleplayer.active_fragments[i];
+    for (uint8_t i = 0; i < game->singleplayer.num_active_fragments; i++) {
+        const sushi_fragment_t *fragment = &game->singleplayer.active_fragments[i];
         int x = sushi_fragment_screen_x(fragment);
         int y = sushi_fragment_screen_y(fragment);
         if (fragment->xpm != NULL && x >= 0 && y >= 0) {
@@ -146,12 +146,12 @@ void gameplay_handle_cut(GameInfo *game, MouseGameState *mouse_state) {
     mouse_state->prev_y = mouse_state->y;
 
     uint8_t i = 0;
-    while (i < game->data.singleplayer.num_active_sushi) {
-        if (game->data.singleplayer.num_active_fragments + 2 > MAX_ACTIVE_FRAGMENTS) return;
+    while (i < game->singleplayer.num_active_sushi) {
+        if (game->singleplayer.num_active_fragments + 2 > MAX_ACTIVE_FRAGMENTS) return;
 
         sushi_fragment_t left_fragment;
         sushi_fragment_t right_fragment;
-        if (find_cut_sushi_segment_area(&game->data.singleplayer.active_sushi[i],
+        if (find_cut_sushi_segment_area(&game->singleplayer.active_sushi[i],
                                         prev_cut_x,
                                         prev_cut_y,
                                         cut_x,
@@ -159,9 +159,9 @@ void gameplay_handle_cut(GameInfo *game, MouseGameState *mouse_state) {
                                         MOUSE_SLASH_HIT_RADIUS,
                                         &left_fragment,
                                         &right_fragment) == 0) {
-            game->score += game->data.singleplayer.active_sushi[i].score_value;
-            game->data.singleplayer.active_fragments[game->data.singleplayer.num_active_fragments++] = left_fragment;
-            game->data.singleplayer.active_fragments[game->data.singleplayer.num_active_fragments++] = right_fragment;
+            game->score += game->singleplayer.active_sushi[i].score_value;
+            game->singleplayer.active_fragments[game->singleplayer.num_active_fragments++] = left_fragment;
+            game->singleplayer.active_fragments[game->singleplayer.num_active_fragments++] = right_fragment;
             gameplay_remove_sushi(game, i);
         }
         else {

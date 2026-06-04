@@ -121,8 +121,6 @@ int (proj_main_loop)(int argc, char *argv[]) {
                         ready = keyboard_get_scancode(scancode);
 
                         if (ready && scancode[0] == ESC_BREAK_CODE && game.state == GAME) {
-                            gameplay_clear(&game);
-                            gameplay_active = false;
                             game.state = PAUSED;
                             pause_menu_init(&game.data.pause_menu);
                         }
@@ -231,17 +229,18 @@ int (proj_main_loop)(int argc, char *argv[]) {
 
                                 switch (action) {
                                     case PAUSE_ACTION_RESUME:
-                                        gameplay_start(&game);
                                         gameplay_active = true;
                                         last_sushi_spawn_tick = get_int_counter();
                                         game.state = GAME;
                                         break;
                                     case PAUSE_ACTION_MAIN_MENU:
+                                        gameplay_clear(&game);
                                         gameplay_active = false;
                                         game.state = MENU;
                                         menu_init(&game.data.menu);
                                         break;
                                     case PAUSE_ACTION_EXIT:
+                                        gameplay_clear(&game);
                                         gameplay_active = false;
                                         running = false;
                                         break;
