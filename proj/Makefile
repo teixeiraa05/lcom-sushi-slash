@@ -3,7 +3,7 @@ PROG=proj
 
 # source code files to be compiled
 
-SRCS = proj.c queue.c ui.c sprite.c init.c font.c menu_state.c pause_menu_state.c menu_draw.c pause_menu_draw.c status_bar.c mouse_trail.c sushi.c game.c rtc.c
+SRCS = proj.c queue.c ui.c sprite.c init.c font.c menu_state.c pause_menu_state.c menu_draw.c pause_menu_draw.c status_bar.c session_timer.c mouse_trail.c sushi.c game.c rtc.c
 
 # additional compilation flags
 # "-Wall -Wextra -Werror -I . -std=c11 -Wno-unused-parameter" are already set
