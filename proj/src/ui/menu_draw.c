@@ -3,6 +3,8 @@
 #include "../../include/ui/menu_draw.h"
 #include "../../include/macros/menu.h"
 
+#include <stdio.h>
+
 typedef struct {
     MenuOption option;
     button_t button;
@@ -110,7 +112,40 @@ PauseOption ui_pause_menu_hit_test(int x, int y) {
     return PAUSE_OPTION_NONE;
 }
 
-int ui_menu_draw(const menu_t *menu, const Assets *assets) {
+static int draw_status_bar(const Assets *assets, const rtc_date *date, const rtc_time_t *time, uint32_t fps) {
+    if (assets == NULL || date == NULL || time == NULL) return 1;
+
+    char time_status[20];
+    char fps_status[16];
+
+    snprintf(time_status, sizeof(time_status), "%02u/%02u/%02u %02u:%02u:%02u",
+             (unsigned) date->day,
+             (unsigned) date->month,
+             (unsigned) date->year,
+             (unsigned) time->hours,
+             (unsigned) time->minutes,
+             (unsigned) time->seconds);
+    snprintf(fps_status, sizeof(fps_status), "fps %u", fps);
+
+    uint16_t fps_width = font_half_text_width(&assets->game_font, fps_status);
+    uint16_t fps_x = SCREEN_WIDTH - MENU_STATUS_RIGHT_MARGIN - fps_width;
+
+    if (font_draw_half_text_color(&assets->game_font,
+                                  time_status,
+                                  MENU_STATUS_X,
+                                  MENU_STATUS_Y,
+                                  MENU_STATUS_COLOR) != 0) {
+        return 1;
+    }
+
+    return font_draw_half_text_color(&assets->game_font,
+                                     fps_status,
+                                     fps_x,
+                                     MENU_STATUS_Y,
+                                     MENU_STATUS_COLOR);
+}
+
+int ui_menu_draw(const menu_t *menu, const Assets *assets, const rtc_date *date, const rtc_time_t *time, uint32_t fps) {
     if (menu == NULL || assets == NULL) return 1;
 
     if (ui_draw_background(&assets->background_sprite) != 0) return 1;
@@ -126,10 +161,14 @@ int ui_menu_draw(const menu_t *menu, const Assets *assets) {
         }
     }
 
+    if (date != NULL && time != NULL) {
+        if (draw_status_bar(assets, date, time, fps) != 0) return 1;
+    }
+
     return 0;
 }
 
-int ui_pause_menu_draw(const pause_menu_t *menu, const Assets *assets) {
+int ui_pause_menu_draw(const pause_menu_t *menu, const Assets *assets, const rtc_date *date, const rtc_time_t *time, uint32_t fps) {
     if (menu == NULL || assets == NULL) return 1;
 
     if (ui_draw_rectangle(PAUSE_PANEL_X, PAUSE_PANEL_Y,
@@ -154,6 +193,10 @@ int ui_pause_menu_draw(const pause_menu_t *menu, const Assets *assets) {
         if (draw_button_with_label(&spec.button, &assets->game_font) != 0) {
             return 1;
         }
+    }
+
+    if (date != NULL && time != NULL) {
+        if (draw_status_bar(assets, date, time, fps) != 0) return 1;
     }
 
     return 0;

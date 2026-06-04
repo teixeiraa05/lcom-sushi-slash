@@ -3,7 +3,7 @@ PROG=proj
 
 # source code files to be compiled
 
-SRCS = proj.c queue.c ui.c sprite.c init.c font.c menu.c menu_draw.c mouse_trail.c sushi.c game.c
+SRCS = proj.c queue.c ui.c sprite.c init.c font.c menu.c menu_draw.c mouse_trail.c sushi.c game.c rtc.c
 
 # additional compilation flags
 # "-Wall -Wextra -Werror -I . -std=c11 -Wno-unused-parameter" are already set
@@ -20,7 +20,7 @@ LDADD += -llcf
 LDADD += -L../lab1 -L../lab2 -L../lab3 -L../lab4 -L../lab5
 LDADD += -lmouse -lkbd -ltimer -lgraphics
 
-.PATH: ${.CURDIR}/src ${.CURDIR}/src/ui
+.PATH: ${.CURDIR}/src ${.CURDIR}/src/ui ${.CURDIR}/../lab1
 
 # include LCOM's makefile that does all the "heavy lifting"
 .include <minix.lcom.mk>

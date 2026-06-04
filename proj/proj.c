@@ -13,6 +13,7 @@
 #include "include/init.h"
 #include "include/ui/menu_draw.h"
 #include "include/game/game.h"
+#include "../lab1/rtc.h"
 #include "../lab4/mouse.h"
 
 int main(int argc, char *argv[]) {
@@ -94,6 +95,16 @@ int (proj_main_loop)(int argc, char *argv[]) {
     bool gameplay_active = false;
     int last_sushi_spawn_tick = 0;
 
+    uint32_t current_fps = 0;
+    uint32_t frames_since_fps_update = 0;
+    int last_fps_tick = get_int_counter();
+    int last_rtc_tick = get_int_counter();
+
+    rtc_date status_date = {0, 0, 0};
+    rtc_time_t status_time = {0, 0, 0};
+    rtc_read_date(&status_date);
+    rtc_read_time(&status_time);
+
     while(running) {
 
         /* Get a request message. */
@@ -118,19 +129,33 @@ int (proj_main_loop)(int argc, char *argv[]) {
 
                     if (msg.m_notify.interrupts & timer_irq_set) { /* subscribed interrupt */
                         timer_ih_proj();
+                        int current_tick = get_int_counter();
+                        frames_since_fps_update++;
+
+                        if (current_tick - last_fps_tick >= 60) {
+                            current_fps = (frames_since_fps_update * 60) / (current_tick - last_fps_tick);
+                            frames_since_fps_update = 0;
+                            last_fps_tick = current_tick;
+                        }
+
+                        if ((game.state == MENU || game.state == PAUSED) && current_tick - last_rtc_tick >= 60) {
+                            rtc_read_date(&status_date);
+                            rtc_read_time(&status_time);
+                            last_rtc_tick = current_tick;
+                        }
                         
-                        anim_update(&assets.mascot_anim, get_int_counter());
+                        anim_update(&assets.mascot_anim, current_tick);
                         video_clear_page();
                         if (game.state == MENU) {
-                            ui_menu_draw(&game.data.menu, &assets);
+                            ui_menu_draw(&game.data.menu, &assets, &status_date, &status_time, current_fps);
                         }
                         else if (game.state == GAME) {
                             if (!gameplay_active) {
                                 gameplay_start(&game);
                                 gameplay_active = true;
-                                last_sushi_spawn_tick = get_int_counter();
+                                last_sushi_spawn_tick = current_tick;
                             }
-                            gameplay_update(&game, get_int_counter(), &last_sushi_spawn_tick);
+                            gameplay_update(&game, current_tick, &last_sushi_spawn_tick);
                             gameplay_handle_cut(&game, &mouse_state);
                             ui_draw_background(&assets.background_sprite);
                             gameplay_draw(&game);
@@ -138,7 +163,7 @@ int (proj_main_loop)(int argc, char *argv[]) {
                         }
                         else if (game.state == PAUSED) {
                             ui_draw_background(&assets.background_sprite);
-                            ui_pause_menu_draw(&game.data.pause_menu, &assets);
+                            ui_pause_menu_draw(&game.data.pause_menu, &assets, &status_date, &status_time, current_fps);
                         }
                         
                         if (game.state == MENU || game.state == GAME || game.state == PAUSED) {
