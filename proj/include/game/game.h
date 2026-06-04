@@ -4,7 +4,8 @@
 #include "boss.h"
 #include "sushi.h"
 #include "difficulty.h"
-#include "menu.h"
+#include "menu_state.h"
+#include "pause_menu_state.h"
 #include "sprite.h"
 #include "../../../lab4/mouse.h"
 

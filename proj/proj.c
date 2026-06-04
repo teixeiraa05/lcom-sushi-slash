@@ -12,6 +12,7 @@
 #include "include/game/sprite.h"
 #include "include/init.h"
 #include "include/ui/menu_draw.h"
+#include "include/ui/pause_menu_draw.h"
 #include "include/game/game.h"
 #include "../lab1/rtc.h"
 #include "../lab4/mouse.h"
@@ -146,8 +147,15 @@ int (proj_main_loop)(int argc, char *argv[]) {
                         
                         anim_update(&assets.mascot_anim, current_tick);
                         video_clear_page();
+
+                        StatusBarInfo status = {
+                            .date = &status_date,
+                            .time = &status_time,
+                            .fps = current_fps
+                        };
+
                         if (game.state == MENU) {
-                            ui_menu_draw(&game.data.menu, &assets, &status_date, &status_time, current_fps);
+                            ui_menu_draw(&game.data.menu, &assets, &status);
                         }
                         else if (game.state == GAME) {
                             if (!gameplay_active) {
@@ -163,7 +171,7 @@ int (proj_main_loop)(int argc, char *argv[]) {
                         }
                         else if (game.state == PAUSED) {
                             ui_draw_background(&assets.background_sprite);
-                            ui_pause_menu_draw(&game.data.pause_menu, &assets, &status_date, &status_time, current_fps);
+                            ui_pause_menu_draw(&game.data.pause_menu, &assets, &status);
                         }
                         
                         if (game.state == MENU || game.state == GAME || game.state == PAUSED) {

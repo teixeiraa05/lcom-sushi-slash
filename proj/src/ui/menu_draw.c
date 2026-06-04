@@ -1,21 +1,14 @@
-
-#include "../../include/ui/ui.h"
 #include "../../include/ui/menu_draw.h"
-#include "../../include/macros/menu.h"
 
-#include <stdio.h>
+#include "../../include/macros/menu.h"
+#include "../../include/ui/ui.h"
 
 typedef struct {
     MenuOption option;
     button_t button;
 } MenuButtonSpec;
 
-typedef struct {
-    PauseOption option;
-    button_t button;
-} PauseButtonSpec;
-
-static button_t make_button(uint16_t x, uint16_t y, const char *label) {
+static button_t make_menu_button(uint16_t x, uint16_t y, const char *label) {
     button_t button;
     button.x = x;
     button.y = y;
@@ -64,31 +57,9 @@ static MenuButtonSpec menu_button_at(uint8_t index) {
 
     MenuButtonSpec spec;
     spec.option = options[index];
-    spec.button = make_button(MENU_BUTTON_X,
-                              MENU_BUTTON_Y + index * (MENU_BUTTON_H + MENU_BUTTON_GAP),
-                              labels[index]);
-    return spec;
-}
-
-static PauseButtonSpec pause_button_at(uint8_t index) {
-    static const PauseOption options[] = {
-        PAUSE_OPTION_RESUME,
-        PAUSE_OPTION_MAIN_MENU,
-        PAUSE_OPTION_EXIT
-    };
-    static const char *labels[] = {
-        "resume",
-        "main menu",
-        "exit"
-    };
-
-    PauseButtonSpec spec;
-    spec.option = options[index];
-    spec.button = make_button(PAUSE_BUTTON_X,
-                              PAUSE_BUTTON_Y + index * (PAUSE_BUTTON_H + PAUSE_BUTTON_GAP),
-                              labels[index]);
-    spec.button.width = PAUSE_BUTTON_W;
-    spec.button.height = PAUSE_BUTTON_H;
+    spec.button = make_menu_button(MENU_BUTTON_X,
+                                   MENU_BUTTON_Y + index * (MENU_BUTTON_H + MENU_BUTTON_GAP),
+                                   labels[index]);
     return spec;
 }
 
@@ -102,50 +73,7 @@ MenuOption ui_menu_hit_test(int x, int y) {
     return MENU_OPTION_NONE;
 }
 
-PauseOption ui_pause_menu_hit_test(int x, int y) {
-    for (uint8_t i = 0; i < PAUSE_BUTTON_COUNT; i++) {
-        PauseButtonSpec spec = pause_button_at(i);
-        if (ui_button_contains(&spec.button, x, y)) {
-            return spec.option;
-        }
-    }
-    return PAUSE_OPTION_NONE;
-}
-
-static int draw_status_bar(const Assets *assets, const rtc_date *date, const rtc_time_t *time, uint32_t fps) {
-    if (assets == NULL || date == NULL || time == NULL) return 1;
-
-    char time_status[20];
-    char fps_status[16];
-
-    snprintf(time_status, sizeof(time_status), "%02u/%02u/%02u %02u:%02u:%02u",
-             (unsigned) date->day,
-             (unsigned) date->month,
-             (unsigned) date->year,
-             (unsigned) time->hours,
-             (unsigned) time->minutes,
-             (unsigned) time->seconds);
-    snprintf(fps_status, sizeof(fps_status), "fps %u", fps);
-
-    uint16_t fps_width = font_half_text_width(&assets->game_font, fps_status);
-    uint16_t fps_x = SCREEN_WIDTH - MENU_STATUS_RIGHT_MARGIN - fps_width;
-
-    if (font_draw_half_text_color(&assets->game_font,
-                                  time_status,
-                                  MENU_STATUS_X,
-                                  MENU_STATUS_Y,
-                                  MENU_STATUS_COLOR) != 0) {
-        return 1;
-    }
-
-    return font_draw_half_text_color(&assets->game_font,
-                                     fps_status,
-                                     fps_x,
-                                     MENU_STATUS_Y,
-                                     MENU_STATUS_COLOR);
-}
-
-int ui_menu_draw(const menu_t *menu, const Assets *assets, const rtc_date *date, const rtc_time_t *time, uint32_t fps) {
+int ui_menu_draw(const menu_t *menu, const Assets *assets, const StatusBarInfo *status) {
     if (menu == NULL || assets == NULL) return 1;
 
     if (ui_draw_background(&assets->background_sprite) != 0) return 1;
@@ -161,42 +89,8 @@ int ui_menu_draw(const menu_t *menu, const Assets *assets, const rtc_date *date,
         }
     }
 
-    if (date != NULL && time != NULL) {
-        if (draw_status_bar(assets, date, time, fps) != 0) return 1;
-    }
-
-    return 0;
-}
-
-int ui_pause_menu_draw(const pause_menu_t *menu, const Assets *assets, const rtc_date *date, const rtc_time_t *time, uint32_t fps) {
-    if (menu == NULL || assets == NULL) return 1;
-
-    if (ui_draw_rectangle(PAUSE_PANEL_X, PAUSE_PANEL_Y,
-                          PAUSE_PANEL_W, PAUSE_PANEL_H,
-                          0x1A1A1A) != 0) {
-        return 1;
-    }
-    if (font_draw_scaled_text(&assets->game_font,
-                              "paused",
-                              CENTER_X(font_scaled_text_width(&assets->game_font, "paused", PAUSE_TITLE_SCALE)),
-                              PAUSE_TITLE_Y,
-                              PAUSE_TITLE_SCALE) != 0) {
-        return 1;
-    }
-
-    anim_draw(&assets->mascot_anim, PAUSE_MASCOT_X, PAUSE_MASCOT_Y);
-
-    for (uint8_t i = 0; i < PAUSE_BUTTON_COUNT; i++) {
-        PauseButtonSpec spec = pause_button_at(i);
-        spec.button.hovered = spec.option == menu->hovered_option;
-
-        if (draw_button_with_label(&spec.button, &assets->game_font) != 0) {
-            return 1;
-        }
-    }
-
-    if (date != NULL && time != NULL) {
-        if (draw_status_bar(assets, date, time, fps) != 0) return 1;
+    if (status != NULL && status->date != NULL && status->time != NULL) {
+        if (ui_status_bar_draw(assets, status) != 0) return 1;
     }
 
     return 0;
