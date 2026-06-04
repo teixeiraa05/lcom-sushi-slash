@@ -7,6 +7,7 @@
 #include "sprite.h"
 
 #define SUSHI_SPAWN_Y_OFFSET 30
+#define SUSHI_MISS_Y_OFFSET 80
 #define SUSHI_SCORE_VALUE 1
 
 typedef struct {
