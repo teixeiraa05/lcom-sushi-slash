@@ -44,6 +44,7 @@
 #include "../assets/letters/y.xpm"
 #include "../assets/letters/z.xpm"
 #include "../assets/letters/colon.xpm"
+#include "../assets/letters/slash.xpm"
 
 #define FONT_GLYPH_WHITE_888 0xFFFFFF
 
@@ -67,6 +68,7 @@ int font_create(Font *font, uint16_t char_width) {
         (xpm_map_t)u_xpm, (xpm_map_t)v_xpm, (xpm_map_t)w_xpm, (xpm_map_t)x_xpm,
         (xpm_map_t)y_xpm, (xpm_map_t)z_xpm,
         (xpm_map_t)colon_xpm,
+        (xpm_map_t)slash_xpm,
     };
 
     for (uint32_t i = 0; i < font->num_chars; i++) {
@@ -104,6 +106,8 @@ int font_glyph_index(char c) {
         return FONT_NUM_DIGITS + (c - 'A');
     } else if (c == ':') {
         return FONT_COLON_INDEX;
+    } else if (c == '/') {
+        return FONT_SLASH_INDEX;
     } else {
         return -1;
     }
