@@ -57,6 +57,6 @@ void anim_draw(const anim_sprite_t *anim, uint16_t x, uint16_t y);
 
 int ui_draw_text(const Font *font, const char *str, uint16_t x, uint16_t y);
 
-void hud_draw(const Font *font, uint32_t score, uint8_t lives, const sprite_t * heart);
+void hud_draw(const Font *font, uint32_t score, uint8_t lives, const sprite_t * heart, uint32_t session_seconds);
 
 #endif /* __UI_PROJ_H */

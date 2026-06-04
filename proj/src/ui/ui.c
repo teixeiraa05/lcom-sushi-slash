@@ -94,7 +94,7 @@ int ui_draw_text(const Font *font, const char *str, uint16_t x, uint16_t y) {
     return 0;
 }
 
-void hud_draw(const Font *font, uint32_t score, uint8_t lives, const sprite_t * heart) {
+void hud_draw(const Font *font, uint32_t score, uint8_t lives, const sprite_t * heart, uint32_t session_seconds) {
     char score_str[20] = "Score ";
     char score_val[20];
     snprintf(score_val, sizeof(score_val), "%u", score);
@@ -108,4 +108,11 @@ void hud_draw(const Font *font, uint32_t score, uint8_t lives, const sprite_t * 
     for (int i = 0; i < lives; i++) {
         ui_draw_sprite(heart, SCREEN_WIDTH - 10 - ((4-i) * 16) + (i * 8), 10);
     }
+
+    uint32_t minutes = session_seconds / 60;
+    uint32_t seconds = session_seconds % 60;
+    char timer_text[8];
+    snprintf(timer_text, sizeof(timer_text), "%02u:%02u", (unsigned) minutes, (unsigned) seconds);
+
+    ui_draw_text(font, timer_text, CENTER_X(font_text_width(font, timer_text)), 10);
 }

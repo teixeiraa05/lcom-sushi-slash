@@ -13,12 +13,8 @@
 #include "include/init.h"
 #include "include/ui/menu_draw.h"
 #include "include/ui/pause_menu_draw.h"
-<<<<<<< proj/proj.c
 #include "include/ui/session_timer.h"
 #include "include/ui/game_over_draw.h"
-=======
-#include "include/ui/game_over_draw.h"
->>>>>>> proj/proj.c
 #include "include/game/game.h"
 #include "../lab1/rtc.h"
 #include "../lab4/mouse.h"
@@ -190,8 +186,11 @@ int (proj_main_loop)(int argc, char *argv[]) {
                                 gameplay_handle_cut(&game, &mouse_state);
                                 ui_draw_background(&assets.background_sprite);
                                 gameplay_draw(&game);
-                                hud_draw(&assets.game_font, game.score, game.lives, &assets.heart);
-                                ui_session_timer_draw(&assets, &session_timer);
+                                hud_draw(&assets.game_font,
+                                         game.score,
+                                         game.lives,
+                                         &assets.heart,
+                                         session_timer_seconds(&session_timer));
                             }
                         }
                         else if (game.state == PAUSED) {
