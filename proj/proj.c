@@ -13,6 +13,7 @@
 #include "include/init.h"
 #include "include/ui/menu_draw.h"
 #include "include/ui/pause_menu_draw.h"
+#include "include/ui/game_over_draw.h"
 #include "include/game/game.h"
 #include "../lab1/rtc.h"
 #include "../lab4/mouse.h"
@@ -144,6 +145,9 @@ int (proj_main_loop)(int argc, char *argv[]) {
                         }
                         
                         anim_update(&assets.mascot_anim, current_tick);
+                        if (game.state == GAME_OVER) {
+                            anim_update(&assets.mascot_lose_anim, current_tick);
+                        }
                         video_clear_page();
 
                         StatusBarInfo status = {
@@ -164,8 +168,10 @@ int (proj_main_loop)(int argc, char *argv[]) {
                             gameplay_update(&game, current_tick, &last_sushi_spawn_tick);
                             if (game.state != GAME) {
                                 gameplay_active = false;
-                                if (game.state == MENU) {
-                                    ui_menu_draw(&game.data.menu, &assets, &status);
+                                if (game.state == GAME_OVER) {
+                                    assets.mascot_lose_anim.cur_frame = 0;
+                                    assets.mascot_lose_anim.last_tick = current_tick;
+                                    ui_game_over_draw(&game.data.game_over, &assets);
                                 }
                             }
                             else {
@@ -179,8 +185,11 @@ int (proj_main_loop)(int argc, char *argv[]) {
                             ui_draw_background(&assets.background_sprite);
                             ui_pause_menu_draw(&game.data.pause_menu, &assets, &status);
                         }
+                        else if (game.state == GAME_OVER) {
+                            ui_game_over_draw(&game.data.game_over, &assets);
+                        }
                         
-                        if (game.state == MENU || game.state == GAME || game.state == PAUSED) {
+                        if (game.state == MENU || game.state == GAME || game.state == PAUSED || game.state == GAME_OVER) {
                             if (game.state == GAME) {
                                 mouse_trail_draw(&mouse_state);
                             }
@@ -253,6 +262,20 @@ int (proj_main_loop)(int argc, char *argv[]) {
                                         running = false;
                                         break;
                                     case PAUSE_ACTION_NONE:
+                                    default:
+                                        break;
+                                }
+                            }
+                            else if (game.state == GAME_OVER) {
+                                GameOverOption hovered = ui_game_over_hit_test(mouse_state.x, mouse_state.y);
+                                GameOverAction action = game_over_update(&game.data.game_over, hovered, clicked);
+
+                                switch (action) {
+                                    case GAME_OVER_ACTION_MAIN_MENU:
+                                        game.state = MENU;
+                                        menu_init(&game.data.menu);
+                                        break;
+                                    case GAME_OVER_ACTION_NONE:
                                     default:
                                         break;
                                 }

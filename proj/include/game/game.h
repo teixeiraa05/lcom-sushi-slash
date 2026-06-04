@@ -6,6 +6,7 @@
 #include "difficulty.h"
 #include "menu_state.h"
 #include "pause_menu_state.h"
+#include "game_over.h"
 #include "sprite.h"
 #include "../../../lab4/mouse.h"
 
@@ -73,10 +74,7 @@ typedef struct {
 
         pause_menu_t pause_menu;
         
-        struct {
-          sprite_t game_over_background;
-          uint32_t final_score;
-        } game_over_sp; 
+        game_over_t game_over;
 
         struct {
           sushi_t active_sushi[MAX_ACTIVE_SUSHI];
