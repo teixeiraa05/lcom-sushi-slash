@@ -174,9 +174,10 @@ static void gameplay_handle_missed_sushi(GameInfo *game, uint8_t index) {
     }
 
     if (game->lives == 0) {
+        uint32_t final_score = game->score;
         gameplay_clear(game);
-        game->state = MENU;
-        menu_init(&game->data.menu);
+        game->state = GAME_OVER;
+        game_over_init(&game->data.game_over, final_score);
     }
 }
 
