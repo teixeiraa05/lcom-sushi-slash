@@ -223,27 +223,6 @@ static bool segment_intersects_sushi_bounds(const sushi_t* sushi, int x0, int y0
            segments_intersect(x0, y0, x1, y1, left, bottom, left, top);
 }
 
-int find_cut_sushi(sushi_t* sushi, int cut_x, int cut_y, sushi_fragment_t* left_fragment, sushi_fragment_t* right_fragment) {
-    if (sushi == NULL || sushi->xpm == NULL) return 1;
-
-    // Check if the cut coordinates are within the sushi's bounding box
-    if (point_inside_sushi_bounds(sushi, cut_x, cut_y, 0)) {
-          return cut_sushi(sushi, left_fragment, right_fragment);
-    }
-
-    return 1;
-}
-
-int find_cut_sushi_area(sushi_t* sushi, int cut_x, int cut_y, int radius, sushi_fragment_t* left_fragment, sushi_fragment_t* right_fragment) {
-    if (sushi == NULL || sushi->xpm == NULL) return 1;
-
-    if (point_inside_sushi_bounds(sushi, cut_x, cut_y, radius)) {
-          return cut_sushi(sushi, left_fragment, right_fragment);
-    }
-
-    return 1;
-}
-
 int find_cut_sushi_segment_area(sushi_t* sushi, int cut_x0, int cut_y0, int cut_x1, int cut_y1, int radius, sushi_fragment_t* left_fragment, sushi_fragment_t* right_fragment) {
     if (sushi == NULL || sushi->xpm == NULL) return 1;
 
