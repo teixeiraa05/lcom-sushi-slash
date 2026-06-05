@@ -1,6 +1,8 @@
 #ifndef __GAME_H
 #define __GAME_H
 
+#include <stdbool.h>
+
 #include "boss.h"
 #include "sushi.h"
 #include "menu_state.h"
@@ -38,6 +40,21 @@
 /** @brief Score threshold at which hard difficulty starts. */
 #define GAME_HARD_SCORE 100
 
+/** @brief First score milestone that starts a boss encounter. */
+#define GAME_BOSS_FIRST_SCORE 50
+
+/** @brief Score gap between boss encounter milestones. */
+#define GAME_BOSS_SCORE_STEP 50
+
+/** @brief Number of keys in the first boss sequence. */
+#define GAME_BOSS_FIRST_SEQUENCE_LENGTH 5
+
+/** @brief Number of extra keys added by each later boss. */
+#define GAME_BOSS_SEQUENCE_STEP 2
+
+/** @brief Duration of the boss reward popup, in gameplay ticks. */
+#define GAME_BOSS_REWARD_POPUP_TICKS 60
+
 /**
  * @brief High-level state of the application.
  */
@@ -59,9 +76,6 @@ typedef enum {
 
   /** @brief Game is waiting for another event or player. */
   WAITING,
-
-  /** @brief Boss encounter is active. */
-  BOSS,
 
   /** @brief Game-over screen is active. */
   GAME_OVER,
@@ -123,6 +137,24 @@ typedef struct {
 
     /** @brief Session statistics accumulated for the game-over screen. */
     game_over_stats_t stats;
+
+    /** @brief Currently active boss wave, if boss_active is true. */
+    boss_t active_boss;
+
+    /** @brief Whether a boss wave is currently active during gameplay. */
+    bool boss_active;
+
+    /** @brief Next displayed score milestone that should spawn a boss. */
+    uint32_t next_boss_score;
+
+    /** @brief Number of boss encounters started in this session. */
+    uint32_t boss_count;
+
+    /** @brief Points shown by the pending boss reward popup. */
+    uint32_t pending_boss_score_popup;
+
+    /** @brief Remaining ticks for the boss reward popup. */
+    uint8_t boss_score_popup_ticks;
 } gameplay_data_t;
 
 /**
@@ -144,7 +176,7 @@ typedef struct {
     /** @brief Singleplayer gameplay runtime data. */
     gameplay_data_t singleplayer;
 
-    /** @brief State-specific data for menus, multiplayer, and boss fights. */
+    /** @brief State-specific data for menus and multiplayer screens. */
     union {
         /** @brief Main menu runtime state. */
         menu_t menu;
@@ -175,18 +207,6 @@ typedef struct {
           /** @brief Current score for player 2. */
           uint32_t player2_score;
         } multiplayer;
-
-        /** @brief Boss fight runtime state. */
-        struct {
-          /** @brief Active boss encounter data. */
-          boss_t boss;
-
-          /** @brief Active fragments created during the boss fight. */
-          sushi_fragment_t active_fragments[MAX_ACTIVE_FRAGMENTS];
-
-          /** @brief Number of active boss-fight fragments. */
-          uint8_t num_active_fragments;
-        } boss_fight;
     } data;
 } GameInfo;
 
@@ -228,8 +248,9 @@ void gameplay_update(GameInfo *game, int current_tick, int *last_spawn_tick);
  *
  * @param game Game state to draw.
  * @param assets Shared assets used for drawing UI effects.
+ * @param current_tick Current gameplay/session tick used for boss UI timers.
  */
-void gameplay_draw(const GameInfo *game, const Assets *assets);
+void gameplay_draw(const GameInfo *game, const Assets *assets, uint32_t current_tick);
 
 /**
  * @brief Process the current mouse slash against active gameplay items.
@@ -242,5 +263,22 @@ void gameplay_draw(const GameInfo *game, const Assets *assets);
  * @param current_tick Current gameplay/session tick.
  */
 void gameplay_handle_cut(GameInfo *game, MouseGameState *mouse_state, uint32_t current_tick);
+
+/**
+ * @brief Process one keyboard character against the active boss sequence.
+ *
+ * @param game Game state to mutate.
+ * @param input Uppercase or lowercase input character.
+ * @param current_tick Current gameplay/session tick.
+ */
+void gameplay_handle_boss_key(GameInfo *game, char input, uint32_t current_tick);
+
+/**
+ * @brief Check whether a boss wave is currently active.
+ *
+ * @param game Game state to inspect.
+ * @return true if a boss wave is active, false otherwise.
+ */
+bool gameplay_boss_active(const GameInfo *game);
 
 #endif /* __GAME_H */

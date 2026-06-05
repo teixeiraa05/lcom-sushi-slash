@@ -550,3 +550,10 @@ const wave_t *waves_get_predefined(wave_pattern_t pattern) {
 const motion_profile_t *waves_get_difficulty_motion(difficulty_t difficulty) {
   return &get_profile(difficulty)->motion;
 }
+
+void waves_pause_tick(wave_runtime_t *runtime) {
+  if (runtime == NULL) return;
+
+  runtime->wave_start_tick++;
+  runtime->next_wave_start_tick++;
+}

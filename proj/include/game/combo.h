@@ -26,8 +26,14 @@ typedef struct combo {
     /** @brief Vertical coordinate where letters appear on screen. */
     uint16_t y;
     
-    uint8_t total_letters; // Total number of letters in the combo
-    uint8_t completed; // Number of letters already completed
+    /** @brief Total number of letters in the combo. */
+    uint8_t total_letters;
+
+    /** @brief Number of letters already completed. */
+    uint8_t completed;
+
+    /** @brief Original string sequence of the combo. */
+    char original_sequence[MAX_QUEUE_SIZE + 1];
     
 } combo_t;
 
@@ -61,5 +67,28 @@ int combo_is_complete(const combo_t* combo);
  * @return The current letter, or 0 if combo is empty or complete.
  */
 char combo_get_current(const combo_t* combo);
+
+/**
+ * @brief Move the displayed current-key prompt.
+ *
+ * @param combo Combo whose prompt position should change.
+ * @param x New horizontal coordinate.
+ * @param y New vertical coordinate.
+ */
+void combo_set_position(combo_t* combo, uint16_t x, uint16_t y);
+
+/**
+ * @brief Release resources owned by a combo prompt.
+ *
+ * @param combo Combo whose loaded letter sprite should be destroyed.
+ */
+void combo_destroy(combo_t* combo);
+
+/**
+ * @brief Reset the combo sequence progress back to the beginning.
+ *
+ * @param combo Combo to reset.
+ */
+void combo_reset(combo_t* combo);
 
 #endif /* __COMBO_H */

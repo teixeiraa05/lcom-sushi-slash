@@ -4,7 +4,7 @@
 #include <lcom/lcf.h>
 
 /** @brief Maximum number of bytes stored by a Queue. */
-#define MAX_QUEUE_SIZE 16
+#define MAX_QUEUE_SIZE 32
 
 /**
  * @brief Fixed-size circular queue of byte-sized values.

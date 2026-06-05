@@ -129,10 +129,7 @@ typedef enum {
   WAVE_SPAWN_REGULAR,
 
   /** @brief Request a bomb hazard. */
-  WAVE_SPAWN_BOMB,
-
-  /** @brief Request a boss encounter. Reserved for future use. */
-  WAVE_SPAWN_BOSS
+  WAVE_SPAWN_BOMB
 } wave_spawn_kind_t;
 
 /**
@@ -287,5 +284,12 @@ const wave_t *waves_get_predefined(wave_pattern_t pattern);
  * @return Pointer to a static motion profile. Invalid values fall back to easy.
  */
 const motion_profile_t *waves_get_difficulty_motion(difficulty_t difficulty);
+
+/**
+ * @brief Pauses the wave scheduler by shifting its start ticks forward by 1.
+ *
+ * @param runtime Wave scheduler runtime to pause.
+ */
+void waves_pause_tick(wave_runtime_t *runtime);
 
 #endif /* __WAVES_H */

@@ -1,4 +1,6 @@
 #include "../include/game/combo.h"
+#include <stdlib.h>
+#include <string.h>
 #include "../assets/keyboard/KeyA.xpm"
 #include "../assets/keyboard/KeyB.xpm"
 #include "../assets/keyboard/KeyC.xpm"
@@ -75,9 +77,15 @@ xpm_map_t char_to_keyboard_xpm(char c) {
 
 combo_t combo_init(const char* sequence, uint16_t x, uint16_t y) {
     combo_t combo;
+    memset(&combo, 0, sizeof(combo));
+
     Queue q;
     queue_init(&q);
-    size_t seq_len = strlen(sequence);
+    size_t seq_len = sequence == NULL ? 0 : strlen(sequence);
+    if (seq_len > MAX_QUEUE_SIZE) {
+        seq_len = MAX_QUEUE_SIZE;
+    }
+
     for (size_t i = 0; i < seq_len; i++) {
         queue_push(&q, sequence[i]);
     }
@@ -87,19 +95,34 @@ combo_t combo_init(const char* sequence, uint16_t x, uint16_t y) {
     combo.total_letters = seq_len;
     combo.completed = 0;
 
-    char current_letter;
+    if (sequence != NULL) {
+        strncpy(combo.original_sequence, sequence, seq_len);
+        combo.original_sequence[seq_len] = '\0';
+    } else {
+        combo.original_sequence[0] = '\0';
+    }
+
+    char current_letter = 0;
     queue_top(&combo.combo, &current_letter);
     if (current_letter == 0) {
         current_letter = 'A'; // Default to 'A' for an empty combo
     }
     xpm_map_t xpm = char_to_keyboard_xpm(current_letter);
-    sprite_load(&combo.current_letter, xpm);
+    if (xpm != NULL) {
+        sprite_load(&combo.current_letter, xpm);
+    }
     return combo;
 }
 
 combo_t create_random_combo(uint8_t length, uint16_t x, uint16_t y) {
     combo_t combo;
+    memset(&combo, 0, sizeof(combo));
+
     char* sequence = malloc(length + 1);
+    if (sequence == NULL) {
+        return combo;
+    }
+
     for (uint8_t i = 0; i < length; i++) {
         sequence[i] = 'A' + (rand() % 26); // Random uppercase letter
     }
@@ -122,7 +145,13 @@ int combo_advance(combo_t* combo) {
     if (!queue_is_empty(&combo->combo)) {
         queue_top(&combo->combo, &current);
         xpm_map_t xpm = char_to_keyboard_xpm(current);
-        sprite_load(&combo->current_letter, xpm);
+        sprite_destroy(&combo->current_letter);
+        if (xpm != NULL) {
+            sprite_load(&combo->current_letter, xpm);
+        }
+    }
+    else {
+        sprite_destroy(&combo->current_letter);
     }
     
     return 0;
@@ -142,4 +171,34 @@ char combo_get_current(const combo_t* combo) {
         return current;
     }
     return 0;
+}
+
+void combo_set_position(combo_t* combo, uint16_t x, uint16_t y) {
+    if (combo == NULL) return;
+
+    combo->x = x;
+    combo->y = y;
+}
+
+void combo_destroy(combo_t* combo) {
+    if (combo == NULL) return;
+
+    sprite_destroy(&combo->current_letter);
+    queue_init(&combo->combo);
+}
+
+void combo_reset(combo_t* combo) {
+    if (combo == NULL) return;
+
+    queue_init(&combo->combo);
+    for (uint8_t i = 0; i < combo->total_letters; i++) {
+        queue_push(&combo->combo, combo->original_sequence[i]);
+    }
+    combo->completed = 0;
+
+    sprite_destroy(&combo->current_letter);
+    xpm_map_t xpm = char_to_keyboard_xpm(combo->original_sequence[0]);
+    if (xpm != NULL) {
+        sprite_load(&combo->current_letter, xpm);
+    }
 }
