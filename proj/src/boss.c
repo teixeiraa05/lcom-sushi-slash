@@ -48,6 +48,15 @@ void boss_update(boss_t* boss) {
     if (boss->countdown > 0) {
         boss->countdown--;
     }
+
+    if (combo_is_complete(&boss->combo)) {
+      boss_destroy(boss);
+    }
+
+    // Deactivate if it goes off-screen
+    if (boss->sushi.xpm != NULL && sushi_screen_y(&boss->sushi) > SCREEN_HEIGHT) {
+          boss_destroy(boss);
+    }
 }
 
 void boss_destroy(boss_t* boss) {
