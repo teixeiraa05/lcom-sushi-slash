@@ -9,7 +9,7 @@ boss_t boss_init(combo_t combo, uint32_t countdown_ticks) {
     
     // Choose a random side (left or right)
     int side = rand() % 2;
-    int x = (side == 0) ? -100 : 800; // Spawn outside screen
+    int x = (side == 0) ? -100 : 900; // Spawn outside screen
     int vx = (side == 0) ? 2 : -2;    // Move toward center
     
     // Use slow-motion gravity (20x slower than normal)
