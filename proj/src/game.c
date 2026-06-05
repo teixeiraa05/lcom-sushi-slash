@@ -5,6 +5,7 @@
 
 #include "../include/game/game.h"
 #include "../include/macros/mouse.h"
+#include "../include/ui/slash_combo_popup.h"
 #include "../include/ui/ui.h"
 
 // 1. Sushi management
@@ -146,6 +147,7 @@ void gameplay_clear(GameInfo *game) {
 
     game->singleplayer.num_active_sushi = 0;
     game->singleplayer.num_active_fragments = 0;
+    slash_combo_reset(&game->singleplayer.slash_combo);
 }
 
 static void gameplay_end_game(GameInfo *game) {
@@ -192,6 +194,8 @@ void gameplay_update(GameInfo *game, int current_tick, int *last_spawn_tick) {
     if (game == NULL || last_spawn_tick == NULL) return;
 
     gameplay_update_difficulty(game);
+    game->score += slash_combo_update(&game->singleplayer.slash_combo,
+                                      (uint32_t)current_tick);
 
     wave_spawn_request_t request;
     bool has_request;
@@ -239,7 +243,7 @@ void gameplay_update(GameInfo *game, int current_tick, int *last_spawn_tick) {
     }
 }
 
-void gameplay_draw(const GameInfo *game) {
+void gameplay_draw(const GameInfo *game, const Assets *assets) {
     if (game == NULL) return;
 
     for (uint8_t i = 0; i < game->singleplayer.num_active_sushi; i++) {
@@ -259,11 +263,13 @@ void gameplay_draw(const GameInfo *game) {
             ui_draw_sprite(fragment->xpm, (uint16_t)x, (uint16_t)y);
         }
     }
+
+    ui_combo_popup_draw(&game->singleplayer.slash_combo, assets);
 }
 
 // 4. Cutting
 
-void gameplay_handle_cut(GameInfo *game, MouseGameState *mouse_state) {
+void gameplay_handle_cut(GameInfo *game, MouseGameState *mouse_state, uint32_t current_tick) {
     if (game == NULL || mouse_state == NULL) return;
 
     if (!mouse_state->lb_pressed || !mouse_state->is_slashing) {
@@ -311,7 +317,16 @@ void gameplay_handle_cut(GameInfo *game, MouseGameState *mouse_state) {
                 continue;
             }
 
-            game->score += sushi->score_value;
+            int impact_x = (prev_cut_x + cut_x) / 2;
+            int impact_y = (prev_cut_y + cut_y) / 2;
+            uint32_t score_value = (uint32_t)sushi->score_value;
+
+            game->score += score_value;
+            game->score += slash_combo_register_cut(&game->singleplayer.slash_combo,
+                                                    current_tick,
+                                                    score_value,
+                                                    impact_x,
+                                                    impact_y);
             game->singleplayer.active_fragments[game->singleplayer.num_active_fragments++] = left_fragment;
             game->singleplayer.active_fragments[game->singleplayer.num_active_fragments++] = right_fragment;
             gameplay_remove_sushi(game, i);

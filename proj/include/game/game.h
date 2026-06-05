@@ -8,6 +8,8 @@
 #include "game_over.h"
 #include "sprite.h"
 #include "waves.h"
+#include "slash_combo.h"
+#include "../init.h"
 #include "../../../lab4/mouse.h"
 
 /**
@@ -115,6 +117,9 @@ typedef struct {
 
     /** @brief Number of active entries in active_fragments. */
     uint8_t num_active_fragments;
+
+    /** @brief Quick-slash combo runtime state and popup data. */
+    slash_combo_t slash_combo;
 } gameplay_data_t;
 
 /**
@@ -216,11 +221,12 @@ void gameplay_start(GameInfo *game);
 void gameplay_update(GameInfo *game, int current_tick, int *last_spawn_tick);
 
 /**
- * @brief Draw active gameplay items and fragments.
+ * @brief Draw active gameplay items, fragments, and UI effects.
  *
  * @param game Game state to draw.
+ * @param assets Shared assets used for drawing UI effects.
  */
-void gameplay_draw(const GameInfo *game);
+void gameplay_draw(const GameInfo *game, const Assets *assets);
 
 /**
  * @brief Process the current mouse slash against active gameplay items.
@@ -230,7 +236,8 @@ void gameplay_draw(const GameInfo *game);
  *
  * @param game Game state to mutate.
  * @param mouse_state Current mouse gameplay input state.
+ * @param current_tick Current gameplay/session tick.
  */
-void gameplay_handle_cut(GameInfo *game, MouseGameState *mouse_state);
+void gameplay_handle_cut(GameInfo *game, MouseGameState *mouse_state, uint32_t current_tick);
 
 #endif /* __GAME_H */

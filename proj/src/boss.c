@@ -1,8 +1,8 @@
 #include "../include/game/boss.h"
 #include "../include/macros/physics.h"
-#include "../assets/sushi_pieces/sushiRoll4.xpm"
-#include "../assets/sushi_pieces/sushiRoll4_left.xpm"
-#include "../assets/sushi_pieces/sushiRoll4_right.xpm"
+#include "../assets/sushi_pieces/SushiRoll4.xpm"
+#include "../assets/sushi_pieces/SushiRoll4_left.xpm"
+#include "../assets/sushi_pieces/SushiRoll4_right.xpm"
 
 boss_t boss_init(combo_t combo, uint32_t countdown_ticks) {
     boss_t boss;
