@@ -24,11 +24,17 @@
 /** @brief Maximum number of active cut fragments on screen. */
 #define MAX_ACTIVE_FRAGMENTS 16
 
-/** @brief Score threshold at which normal difficulty starts. */
-#define GAME_NORMAL_SCORE 15
+/** @brief Score threshold at which easy-mid difficulty starts. */
+#define GAME_EASY_MID_SCORE 15
+
+/** @brief Score threshold at which mid difficulty starts. */
+#define GAME_MID_SCORE 30
+
+/** @brief Score threshold at which mid-hard difficulty starts. */
+#define GAME_MID_HARD_SCORE 45
 
 /** @brief Score threshold at which hard difficulty starts. */
-#define GAME_HARD_SCORE 50
+#define GAME_HARD_SCORE 100
 
 /**
  * @brief High-level state of the application.
