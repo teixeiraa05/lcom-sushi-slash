@@ -33,7 +33,10 @@ typedef enum {
   SUSHI_REGULAR,
 
   /** @brief Bomb hazard that should be avoided. */
-  SUSHI_BOMB
+  SUSHI_BOMB,
+
+  /** @brief Boss encounter. */
+  SUSHI_BOSS
 } sushi_kind_t;
 
 /**
@@ -103,6 +106,11 @@ sushi_t create_bomb(int x, int y, int vx, int vy, int gravity, sprite_t* xpm);
  *
  * @return Initialized regular sushi item, or an item with a NULL sprite on failure.
  */
+
+sushi_t create_sushi_boss(int x, int y, int vx, int vy, int gravity, sprite_t* xpm, int score_value);
+
+sushi_t create_random_sushi_boss(int speed, int gravity);
+
 sushi_t create_random_sushi(int speed, int gravity);
 
 /**

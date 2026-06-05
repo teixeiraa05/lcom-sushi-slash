@@ -41,7 +41,7 @@
 
 #include "../assets/sushi_pieces/bomb.xpm"
 
-xpm_map_t sushi_xpms[11] = {
+xpm_map_t sushi_xpms[10] = {
     // Placeholder XPMs for different sushi types
     (xpm_map_t)Nigiri1_xpm,
     (xpm_map_t)Nigiri2_xpm,
@@ -51,12 +51,11 @@ xpm_map_t sushi_xpms[11] = {
     (xpm_map_t)SushiRoll1_xpm,
     (xpm_map_t)SushiRoll2_xpm,
     (xpm_map_t)SushiRoll3_xpm,
-    (xpm_map_t)SushiRoll4_xpm,
     (xpm_map_t)SushiRoll5_xpm,
     (xpm_map_t)SushiRoll6_xpm
 };
 
-xpm_map_t sushi_left_xpms[11] = {
+xpm_map_t sushi_left_xpms[10] = {
     // Placeholder XPMs for the left fragments of different sushi types
     (xpm_map_t)Nigiri1_left_xpm,
     (xpm_map_t)Nigiri2_left_xpm,
@@ -66,12 +65,11 @@ xpm_map_t sushi_left_xpms[11] = {
     (xpm_map_t)SushiRoll1_left_xpm,
     (xpm_map_t)SushiRoll2_left_xpm,
     (xpm_map_t)SushiRoll3_left_xpm,
-    (xpm_map_t)SushiRoll4_left_xpm,
     (xpm_map_t)SushiRoll5_left_xpm,
     (xpm_map_t)SushiRoll6_left_xpm
 };
 
-xpm_map_t sushi_right_xpms[11] = {
+xpm_map_t sushi_right_xpms[10] = {
     // Placeholder XPMs for the right fragments of different sushi types
     (xpm_map_t)Nigiri1_right_xpm,
     (xpm_map_t)Nigiri2_right_xpm,
@@ -81,7 +79,6 @@ xpm_map_t sushi_right_xpms[11] = {
     (xpm_map_t)SushiRoll1_right_xpm,
     (xpm_map_t)SushiRoll2_right_xpm,
     (xpm_map_t)SushiRoll3_right_xpm,
-    (xpm_map_t)SushiRoll4_right_xpm,
     (xpm_map_t)SushiRoll5_right_xpm,
     (xpm_map_t)SushiRoll6_right_xpm
 };
@@ -100,10 +97,24 @@ sushi_t create_sushi(int x, int y, int vx, int vy, int gravity, sprite_t* xpm, i
     return sushi;
 }
 
+
+
 sushi_t create_bomb(int x, int y, int vx, int vy, int gravity, sprite_t* xpm) {
     sushi_t bomb = create_sushi(x, y, vx, vy, gravity, xpm, 0);
     bomb.kind = SUSHI_BOMB;
     return bomb;
+}
+
+
+
+sushi_t create_sushi_boss(int x, int y, int vx, int vy, int gravity, sprite_t* xpm, int score_value) {
+    sushi_t boss = create_sushi(x, y, vx, vy, gravity, xpm, score_value);
+    boss.kind = SUSHI_BOSS;
+    return boss;
+}
+
+sushi_t create_random_sushi_boss(int speed, int gravity) {
+    
 }
 
 static int sushi_horizontal_velocity(int x, const sprite_t *sprite, int speed) {
@@ -120,7 +131,7 @@ sushi_t create_random_sushi(int speed, int gravity) {
     sprite_t *sprite = malloc(sizeof(sprite_t));
     if (sprite == NULL) return create_sushi(0, 0, 0, 0, gravity, NULL, 0);
 
-    uint8_t sushi_type = rand() % 11;
+    uint8_t sushi_type = rand() % 10;
 
     if (sprite_load(sprite, sushi_xpms[sushi_type])) {
         free(sprite);

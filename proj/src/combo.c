@@ -77,10 +77,15 @@ combo_t combo_init(const char* sequence, uint16_t x, uint16_t y) {
     combo_t combo;
     Queue q;
     queue_init(&q);
-    for (size_t i = 0; i < strlen(sequence); i++) {
+    size_t seq_len = strlen(sequence);
+    for (size_t i = 0; i < seq_len; i++) {
         queue_push(&q, sequence[i]);
     }
     combo.combo = q;
+    combo.x = x;
+    combo.y = y;
+    combo.total_letters = seq_len;
+    combo.completed = 0;
 
     char current_letter;
     queue_top(&combo.combo, &current_letter);
@@ -103,4 +108,38 @@ combo_t create_random_combo(uint8_t length, uint16_t x, uint16_t y) {
     combo = combo_init(sequence, x, y);
     free(sequence);
     return combo;
+}
+
+int combo_advance(combo_t* combo) {
+    if (combo_is_complete(combo)) {
+        return 1; // Already complete
+    }
+    
+    uint8_t current;
+    queue_pop(&combo->combo, &current);
+    combo->completed++;
+    
+    if (!queue_is_empty(&combo->combo)) {
+        queue_top(&combo->combo, &current);
+        xpm_map_t xpm = char_to_keyboard_xpm(current);
+        sprite_load(&combo->current_letter, xpm);
+    }
+    
+    return 0;
+}
+
+int combo_is_complete(const combo_t* combo) {
+    return combo->completed >= combo->total_letters;
+}
+
+char combo_get_current(const combo_t* combo) {
+    if (combo_is_complete(combo)) {
+        return 0;
+    }
+    
+    uint8_t current;
+    if (queue_top((Queue*)&combo->combo, &current)) {
+        return (char)current;
+    }
+    return 0;
 }
