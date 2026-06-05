@@ -1,18 +1,116 @@
 #include <lcom/lcf.h>
 #include <stdbool.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "../include/game/game.h"
 #include "../include/macros/mouse.h"
 #include "../include/ui/ui.h"
 
-static void gameplay_remove_sushi(GameInfo *game, uint8_t index);
-static void gameplay_remove_fragment(GameInfo *game, uint8_t index);
-static void gameplay_spawn_sushi(GameInfo *game);
-static bool sushi_missed_lower_bound(const sushi_t *sushi);
-static void gameplay_handle_missed_sushi(GameInfo *game, uint8_t index);
+// 1. Sushi management
 
-// 1. Gameplay
+static void gameplay_remove_sushi(GameInfo *game, uint8_t index) {
+    if (game == NULL || index >= game->singleplayer.num_active_sushi) return;
+
+    for (uint8_t i = index; i + 1 < game->singleplayer.num_active_sushi; i++) {
+        game->singleplayer.active_sushi[i] = game->singleplayer.active_sushi[i + 1];
+    }
+    game->singleplayer.num_active_sushi--;
+}
+
+static void gameplay_remove_fragment(GameInfo *game, uint8_t index) {
+    if (game == NULL || index >= game->singleplayer.num_active_fragments) return;
+
+    for (uint8_t i = index; i + 1 < game->singleplayer.num_active_fragments; i++) {
+        game->singleplayer.active_fragments[i] = game->singleplayer.active_fragments[i + 1];
+    }
+    game->singleplayer.num_active_fragments--;
+}
+
+// 2. Wave and difficulty handling
+
+static difficulty_t gameplay_difficulty_for_score(uint32_t score) {
+    if (score >= GAME_HARD_SCORE) return HARD;
+    if (score >= GAME_NORMAL_SCORE) return NORMAL;
+    return EASY;
+}
+
+static void gameplay_apply_difficulty(GameInfo *game, difficulty_t difficulty) {
+    if (game == NULL) return;
+
+    game->singleplayer.current_difficulty = difficulty;
+    waves_apply_difficulty(game->singleplayer.waves, WAVE_PATTERN_COUNT, difficulty);
+}
+
+static void gameplay_load_waves(GameInfo *game) {
+    if (game == NULL) return;
+
+    for (uint8_t i = 0; i < WAVE_PATTERN_COUNT; i++) {
+        const wave_t *wave = waves_get_predefined((wave_pattern_t)i);
+        if (wave != NULL) {
+            game->singleplayer.waves[i] = *wave;
+        }
+    }
+
+    gameplay_apply_difficulty(game, EASY);
+}
+
+static void gameplay_update_difficulty(GameInfo *game) {
+    if (game == NULL) return;
+
+    difficulty_t difficulty = gameplay_difficulty_for_score(game->score);
+    if (difficulty != game->singleplayer.current_difficulty) {
+        gameplay_apply_difficulty(game, difficulty);
+    }
+}
+
+static void gameplay_get_difficulty_physics(const GameInfo *game, int *speed, int *gravity) {
+    if (speed == NULL || gravity == NULL) return;
+
+    difficulty_t difficulty = game == NULL ? EASY : game->singleplayer.current_difficulty;
+    const motion_profile_t *motion = waves_get_difficulty_motion(difficulty);
+    int min_speed = PHYSICS_TO_PIXELS(-motion->max_vy);
+    int max_speed = PHYSICS_TO_PIXELS(-motion->min_vy);
+
+    if (max_speed < min_speed) {
+        max_speed = min_speed;
+    }
+
+    *speed = min_speed + rand() % (max_speed - min_speed + 1);
+    *gravity = motion->gravity;
+}
+
+static void gameplay_spawn_sushi(GameInfo *game, int speed, int gravity, int score_value) {
+    if (game == NULL || game->singleplayer.num_active_sushi >= MAX_ACTIVE_SUSHI) return;
+
+    sushi_t sushi = create_random_sushi(speed, gravity);
+    if (sushi.xpm == NULL) return;
+
+    sushi.score_value = score_value;
+    game->singleplayer.active_sushi[game->singleplayer.num_active_sushi++] = sushi;
+}
+
+static void gameplay_handle_wave_spawn(GameInfo *game, const wave_spawn_request_t *request) {
+    if (game == NULL || request == NULL) return;
+
+    if (request->kind != WAVE_SPAWN_REGULAR) return;
+
+    for (uint8_t i = 0; i < request->amount; i++) {
+        int speed = 0;
+        int gravity = 0;
+        gameplay_get_difficulty_physics(game, &speed, &gravity);
+        gameplay_spawn_sushi(game, speed, gravity, (int)request->score_value);
+    }
+}
+
+// 3. Gameplay state
+
+static bool sushi_missed_lower_bound(const sushi_t *sushi) {
+    return sushi != NULL &&
+           sushi->xpm != NULL &&
+           sushi_screen_y(sushi) > SCREEN_HEIGHT + SUSHI_MISS_Y_OFFSET &&
+           sushi->vy > 0;
+}
 
 void gameplay_clear(GameInfo *game) {
     if (game == NULL) return;
@@ -29,10 +127,30 @@ void gameplay_clear(GameInfo *game) {
     game->singleplayer.num_active_fragments = 0;
 }
 
+static void gameplay_handle_missed_sushi(GameInfo *game, uint8_t index) {
+    if (game == NULL || index >= game->singleplayer.num_active_sushi) return;
+
+    sushi_destroy(&game->singleplayer.active_sushi[index]);
+    gameplay_remove_sushi(game, index);
+
+    if (game->lives > 0) {
+        game->lives--;
+    }
+
+    if (game->lives == 0) {
+        uint32_t final_score = game->score;
+        gameplay_clear(game);
+        game->state = GAME_OVER;
+        game_over_init(&game->data.game_over, final_score);
+    }
+}
+
 void gameplay_start(GameInfo *game) {
     if (game == NULL) return;
 
     memset(&game->singleplayer, 0, sizeof(game->singleplayer));
+    gameplay_load_waves(game);
+    waves_init(&game->singleplayer.wave_runtime, 0);
     game->score = 0;
     game->lives = LIVES;
 }
@@ -40,10 +158,24 @@ void gameplay_start(GameInfo *game) {
 void gameplay_update(GameInfo *game, int current_tick, int *last_spawn_tick) {
     if (game == NULL || last_spawn_tick == NULL) return;
 
-    if (current_tick - *last_spawn_tick >= TEST_SUSHI_SPAWN_TICKS) {
-        gameplay_spawn_sushi(game);
-        *last_spawn_tick = current_tick;
+    gameplay_update_difficulty(game);
+
+    wave_spawn_request_t request;
+    bool has_request;
+    wave_status_t wave_status;
+    do {
+        wave_status = waves_update(&game->singleplayer.wave_runtime,
+                                   game->singleplayer.waves,
+                                   WAVE_PATTERN_COUNT,
+                                   (uint32_t)current_tick,
+                                   &request,
+                                   &has_request);
+        if (has_request) {
+            gameplay_handle_wave_spawn(game, &request);
+            *last_spawn_tick = current_tick;
+        }
     }
+    while (has_request && wave_status == WAVE_STATUS_RUNNING);
 
     uint8_t i = 0;
     while (i < game->singleplayer.num_active_sushi) {
@@ -92,92 +224,6 @@ void gameplay_draw(const GameInfo *game) {
         if (fragment->xpm != NULL && x >= 0 && y >= 0) {
             ui_draw_sprite(fragment->xpm, (uint16_t)x, (uint16_t)y);
         }
-    }
-}
-
-// 2. Sushi management
-
-static void gameplay_remove_sushi(GameInfo *game, uint8_t index) {
-    if (game == NULL || index >= game->singleplayer.num_active_sushi) return;
-
-    for (uint8_t i = index; i + 1 < game->singleplayer.num_active_sushi; i++) {
-        game->singleplayer.active_sushi[i] = game->singleplayer.active_sushi[i + 1];
-    }
-    game->singleplayer.num_active_sushi--;
-}
-
-static void gameplay_remove_fragment(GameInfo *game, uint8_t index) {
-    if (game == NULL || index >= game->singleplayer.num_active_fragments) return;
-
-    for (uint8_t i = index; i + 1 < game->singleplayer.num_active_fragments; i++) {
-        game->singleplayer.active_fragments[i] = game->singleplayer.active_fragments[i + 1];
-    }
-    game->singleplayer.num_active_fragments--;
-}
-
-// 3. Difficulty handling
-
-static void gameplay_get_difficulty_physics(const GameInfo *game, int *speed, int *gravity) {
-    if (speed == NULL || gravity == NULL) return;
-
-    *speed = GAME_SPEED_1;
-    *gravity = GAME_GRAVITY_1;
-
-    if (game == NULL) return;
-
-    if (game->score >= GAME_SPEED_5_SCORE) {
-        *speed = GAME_SPEED_5;
-        *gravity = GAME_GRAVITY_5;
-    }
-    else if (game->score >= GAME_SPEED_4_SCORE) {
-        *speed = GAME_SPEED_4;
-        *gravity = GAME_GRAVITY_4;
-    }
-    else if (game->score >= GAME_SPEED_3_SCORE) {
-        *speed = GAME_SPEED_3;
-        *gravity = GAME_GRAVITY_3;
-    }
-    else if (game->score >= GAME_SPEED_2_SCORE) {
-        *speed = GAME_SPEED_2;
-        *gravity = GAME_GRAVITY_2;
-    }
-}
-
-static void gameplay_spawn_sushi(GameInfo *game) {
-    if (game == NULL || game->singleplayer.num_active_sushi >= MAX_ACTIVE_SUSHI) return;
-
-    int speed;
-    int gravity;
-    gameplay_get_difficulty_physics(game, &speed, &gravity);
-
-    sushi_t sushi = create_random_sushi(speed, gravity);
-    if (sushi.xpm == NULL) return;
-
-    game->singleplayer.active_sushi[game->singleplayer.num_active_sushi++] = sushi;
-}
-
-static bool sushi_missed_lower_bound(const sushi_t *sushi) {
-    return sushi != NULL &&
-           sushi->xpm != NULL &&
-           sushi_screen_y(sushi) > SCREEN_HEIGHT + SUSHI_MISS_Y_OFFSET &&
-           sushi->vy > 0;
-}
-
-static void gameplay_handle_missed_sushi(GameInfo *game, uint8_t index) {
-    if (game == NULL || index >= game->singleplayer.num_active_sushi) return;
-
-    sushi_destroy(&game->singleplayer.active_sushi[index]);
-    gameplay_remove_sushi(game, index);
-
-    if (game->lives > 0) {
-        game->lives--;
-    }
-
-    if (game->lives == 0) {
-        uint32_t final_score = game->score;
-        gameplay_clear(game);
-        game->state = GAME_OVER;
-        game_over_init(&game->data.game_over, final_score);
     }
 }
 

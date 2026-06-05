@@ -16,17 +16,23 @@
 /** @brief Repeat count value meaning that a wave should repeat forever. */
 #define WAVE_FOREVER 0
 
-/** @brief Maximum number of input characters shown during a boss wave. */
-#define WAVE_MAX_BOSS_SEQUENCE 8
-
 /** @brief Sushi type value meaning that gameplay should choose the type. */
 #define WAVE_RANDOM_SUSHI_TYPE 0xFF
+
+/**
+ * @brief Runtime difficulty used for gameplay wave pacing and motion.
+ */
+typedef enum difficulty {
+  EASY,
+  NORMAL,
+  HARD
+} difficulty_t;
 
 /**
  * @brief Identifies a predefined wave pattern.
  *
  * Pattern names describe the structure of the wave. The concrete events for
- * each pattern are stored in PREDEFINED_WAVES and interpreted by
+ * each pattern are provided by the wave implementation and interpreted by
  * waves_update().
  */
 typedef enum {
@@ -51,7 +57,7 @@ typedef enum {
  * @brief Type of spawn requested by a wave event.
  *
  * This only describes what gameplay should spawn. It does not create or own any
- * sushi, bomb, boss, sprite, or gameplay object.
+ * sushi, bomb, sprite, or gameplay object.
  */
 typedef enum {
   /** @brief Request a regular sushi piece. */
@@ -60,30 +66,29 @@ typedef enum {
   /** @brief Request a bomb hazard. */
   WAVE_SPAWN_BOMB,
 
-  /** @brief Request a boss encounter. */
+  /** @brief Request a boss encounter. Reserved for future use. */
   WAVE_SPAWN_BOSS
 } wave_spawn_kind_t;
 
 /**
  * @brief Motion limits requested for spawned objects.
  *
- * Values are intentionally kept as plain integers so gameplay can decide how to
- * translate them into its physics representation.
+ * Values use the fixed-point physics representation from macros/physics.h.
  */
 typedef struct {
-  /** @brief Minimum vertical velocity for the spawned object. */
+  /** @brief Minimum vertical velocity for the spawned object, in fixed-point units. */
   int min_vy;
 
-  /** @brief Maximum vertical velocity for the spawned object. */
+  /** @brief Maximum vertical velocity for the spawned object, in fixed-point units. */
   int max_vy;
 
-  /** @brief Gravity applied to the spawned object. */
+  /** @brief Gravity applied to the spawned object, in fixed-point units per tick. */
   int gravity;
 
-  /** @brief Minimum horizontal velocity for the spawned object. */
+  /** @brief Minimum horizontal velocity for the spawned object, in fixed-point units. */
   int min_vx;
 
-  /** @brief Maximum horizontal velocity for the spawned object. */
+  /** @brief Maximum horizontal velocity for the spawned object, in fixed-point units. */
   int max_vx;
 } motion_profile_t;
 
@@ -97,7 +102,7 @@ typedef enum {
   /** @brief Scheduler is actively processing wave events. */
   WAVE_STATUS_RUNNING,
 
-  /** @brief Scheduler reached the end of all requested waves. */
+  /** @brief Scheduler reached the end of a finite wave sequence. */
   WAVE_STATUS_FINISHED,
 
   /** @brief Scheduler encountered invalid input. */
@@ -105,22 +110,11 @@ typedef enum {
 } wave_status_t;
 
 /**
- * @brief Extra data used when a wave requests a boss encounter.
- */
-typedef struct {
-  /** @brief Number of ticks available to complete the boss sequence. */
-  uint32_t boss_countdown_ticks;
-
-  /** @brief Null-terminated key sequence required to defeat the boss. */
-  char boss_sequence[WAVE_MAX_BOSS_SEQUENCE + 1];
-} boss_data_t;
-
-/**
  * @brief Request emitted by the wave scheduler and consumed by gameplay.
  *
  * Gameplay is responsible for turning this request into actual objects. For
  * example, a WAVE_SPAWN_REGULAR request may become one or more sushi_t values,
- * while a WAVE_SPAWN_BOSS request may move gameplay into the boss state.
+ * while a WAVE_SPAWN_BOMB request may become one or more hazards.
  */
 typedef struct {
   /** @brief Kind of object or encounter requested. */
@@ -132,14 +126,8 @@ typedef struct {
   /** @brief Number of objects requested by this spawn. */
   uint8_t amount;
 
-  /** @brief Requested motion limits for the spawned objects. */
-  motion_profile_t motion;
-
   /** @brief Score awarded if the requested object is successfully cut. */
   uint32_t score_value;
-
-  /** @brief Boss-specific data, used only for WAVE_SPAWN_BOSS. */
-  boss_data_t boss;
 } wave_spawn_request_t;
 
 /**
@@ -202,11 +190,6 @@ typedef struct {
 } wave_runtime_t;
 
 /**
- * @brief Table containing the predefined wave pattern definitions.
- */
-extern const wave_t PREDEFINED_WAVES[WAVE_PATTERN_COUNT];
-
-/**
  * @brief Initialize a wave runtime.
  *
  * @param runtime Runtime object to initialize.
@@ -239,11 +222,12 @@ wave_status_t waves_update(wave_runtime_t *runtime, const wave_t *waves,
                            wave_spawn_request_t *out_request, bool *has_request);
 
 /**
- * @brief Check whether the scheduler has finished processing its waves.
+ * @brief Check whether the scheduler has finished processing a finite wave list.
  *
  * @param runtime Runtime object to inspect.
  *
- * @return true if runtime is finished, false otherwise.
+ * @return true if runtime is finished, false otherwise. The predefined gameplay
+ * wave sequence normally loops forever and should not reach this state.
  */
 bool waves_is_finished(const wave_runtime_t *runtime);
 
@@ -255,5 +239,23 @@ bool waves_is_finished(const wave_runtime_t *runtime);
  * @return Pointer to the predefined wave, or NULL if pattern is invalid.
  */
 const wave_t *waves_get_predefined(wave_pattern_t pattern);
+
+/**
+ * @brief Get the motion profile used by a difficulty.
+ *
+ * @param difficulty Difficulty to inspect.
+ *
+ * @return Pointer to a static motion profile. Invalid values fall back to easy.
+ */
+const motion_profile_t *waves_get_difficulty_motion(difficulty_t difficulty);
+
+/**
+ * @brief Apply difficulty spawn pacing to a copied wave sequence.
+ *
+ * @param waves Mutable wave sequence to adjust.
+ * @param wave_count Number of entries in waves.
+ * @param difficulty Difficulty whose spawn rate should be applied.
+ */
+void waves_apply_difficulty(wave_t *waves, uint8_t wave_count, difficulty_t difficulty);
 
 #endif /* __WAVES_H */
