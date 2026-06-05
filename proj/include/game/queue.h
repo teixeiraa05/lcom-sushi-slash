@@ -10,10 +10,7 @@
  * @brief Fixed-size circular queue of byte-sized values.
  */
 typedef struct {
-    /** @brief Circular storage for queued values. */
-    uint8_t data[MAX_QUEUE_SIZE];
-
-    /** @brief Index of the next value to pop. */
+    char data[MAX_QUEUE_SIZE];
     int front;
 
     /** @brief Index where the next pushed value will be written. */
@@ -53,7 +50,7 @@ bool queue_is_full(const Queue* q);
  * @param value Value to enqueue.
  * @return true on success, false if the queue is full or invalid.
  */
-bool queue_push(Queue* q, uint8_t value);
+bool queue_push(Queue* q, char value);
 
 /**
  * @brief Pop the value at the front of the queue.
@@ -62,7 +59,7 @@ bool queue_push(Queue* q, uint8_t value);
  * @param value Output storage for the popped value.
  * @return true on success, false if the queue is empty or invalid.
  */
-bool queue_pop(Queue* q, uint8_t* value);
+bool queue_pop(Queue* q, char* value);
 
 /**
  * @brief Read the value at the front of the queue without removing it.
@@ -71,7 +68,7 @@ bool queue_pop(Queue* q, uint8_t* value);
  * @param value Output storage for the front value.
  * @return true on success, false if the queue is empty or invalid.
  */
-bool queue_top(Queue* q, uint8_t* value);
+bool queue_top(Queue* q, char* value);
 
 /**
  * @brief Get the current number of values in the queue.
