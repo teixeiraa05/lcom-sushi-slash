@@ -39,7 +39,6 @@ static void gameplay_apply_difficulty(GameInfo *game, difficulty_t difficulty) {
     if (game == NULL) return;
 
     game->singleplayer.current_difficulty = difficulty;
-    waves_apply_difficulty(game->singleplayer.waves, WAVE_PATTERN_COUNT, difficulty);
 }
 
 static void gameplay_load_waves(GameInfo *game) {

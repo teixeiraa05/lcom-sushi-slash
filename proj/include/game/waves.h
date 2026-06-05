@@ -13,9 +13,6 @@
  * and turns them into concrete game objects.
  */
 
-/** @brief Repeat count value meaning that a wave should repeat forever. */
-#define WAVE_FOREVER 0
-
 /** @brief Sushi type value meaning that gameplay should choose the type. */
 #define WAVE_RANDOM_SUSHI_TYPE 0xFF
 
@@ -120,9 +117,6 @@ typedef enum {
   /** @brief Scheduler is actively processing wave events. */
   WAVE_STATUS_RUNNING,
 
-  /** @brief Scheduler reached the end of a finite wave sequence. */
-  WAVE_STATUS_FINISHED,
-
   /** @brief Scheduler encountered invalid input. */
   WAVE_STATUS_ERROR
 } wave_status_t;
@@ -175,11 +169,6 @@ typedef struct {
   /** @brief Number of entries in events. */
   uint8_t event_count;
 
-  /** @brief Number of times to repeat the wave, or WAVE_FOREVER. */
-  uint8_t repeat_count;
-
-  /** @brief Delay before the next wave starts after this one finishes. */
-  uint32_t next_wave_delay_ticks;
 } wave_t;
 
 /**
@@ -191,9 +180,6 @@ typedef struct {
 
   /** @brief Index of the next event to emit within the current wave. */
   uint8_t current_event;
-
-  /** @brief Current repetition count for the active wave. */
-  uint8_t current_repeat;
 
   /** @brief Tick used as the anchor for the current event delay. */
   uint32_t wave_start_tick;
@@ -235,16 +221,6 @@ wave_status_t waves_update(wave_runtime_t *runtime, const wave_t *waves,
                            wave_spawn_request_t *out_request, bool *has_request);
 
 /**
- * @brief Check whether the scheduler has finished processing a finite wave list.
- *
- * @param runtime Runtime object to inspect.
- *
- * @return true if runtime is finished, false otherwise. The predefined gameplay
- * wave sequence normally loops forever and should not reach this state.
- */
-bool waves_is_finished(const wave_runtime_t *runtime);
-
-/**
  * @brief Get a predefined wave definition by pattern id.
  *
  * @param pattern Predefined pattern to retrieve.
@@ -261,14 +237,5 @@ const wave_t *waves_get_predefined(wave_pattern_t pattern);
  * @return Pointer to a static motion profile. Invalid values fall back to easy.
  */
 const motion_profile_t *waves_get_difficulty_motion(difficulty_t difficulty);
-
-/**
- * @brief Apply difficulty spawn pacing to a copied wave sequence.
- *
- * @param waves Mutable wave sequence to adjust.
- * @param wave_count Number of entries in waves.
- * @param difficulty Difficulty whose spawn rate should be applied.
- */
-void waves_apply_difficulty(wave_t *waves, uint8_t wave_count, difficulty_t difficulty);
 
 #endif /* __WAVES_H */
