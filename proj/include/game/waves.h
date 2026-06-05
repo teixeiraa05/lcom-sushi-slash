@@ -21,7 +21,9 @@
  */
 typedef enum difficulty {
   EASY,
-  NORMAL,
+  EASY_MID,
+  MID,
+  MID_HARD,
   HARD
 } difficulty_t;
 
@@ -52,8 +54,26 @@ typedef enum {
   /** @brief A wave whose items are separated by short delays. */
   WAVE_PATTERN_STAGGERED,
 
+  /** @brief A quick four-step stream of single sushi pieces. */
+  WAVE_PATTERN_PUMP4,
+
+  /** @brief A split rhythm that alternates single and paired sushi. */
+  WAVE_PATTERN_SPLIT,
+
   /** @brief A staggered wave that includes a bomb. */
   WAVE_PATTERN_STAGGERED_BOMB,
+
+  /** @brief A quick four-step stream with one bomb mixed in. */
+  WAVE_PATTERN_PUMP_BOMB,
+
+  /** @brief A one-bomb feint followed by sushi pressure. */
+  WAVE_PATTERN_FEINT,
+
+  /** @brief A bridge wave between easy and normal pressure. */
+  WAVE_PATTERN_EASY_MID,
+
+  /** @brief A burst bridge wave between easy and normal pressure. */
+  WAVE_PATTERN_EASY_MID_BURST,
 
   /** @brief A wave mixing different spawn kinds, such as sushi and bombs. */
   WAVE_PATTERN_MIXED,
@@ -61,8 +81,23 @@ typedef enum {
   /** @brief A stronger mixed wave with simultaneous sushi and bombs. */
   WAVE_PATTERN_MIXED_BOMB,
 
+  /** @brief A quick mixed wave with alternating sushi and bombs. */
+  WAVE_PATTERN_QUICK_MIX,
+
+  /** @brief A double burst wave separated by a short pause. */
+  WAVE_PATTERN_DOUBLE_BURST,
+
+  /** @brief A bridge wave between normal and hard pressure. */
+  WAVE_PATTERN_MID_HARD,
+
+  /** @brief A burst bridge wave between normal and hard pressure. */
+  WAVE_PATTERN_MID_HARD_BURST,
+
   /** @brief A hard mixed wave with heavier bomb pressure. */
   WAVE_PATTERN_HARD_MIX,
+
+  /** @brief A hard quick chain with several close-spaced events. */
+  WAVE_PATTERN_HARD_CHAIN,
 
   /** @brief Number of predefined wave patterns. */
   WAVE_PATTERN_COUNT

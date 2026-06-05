@@ -31,7 +31,9 @@ static void gameplay_remove_fragment(GameInfo *game, uint8_t index) {
 
 static difficulty_t gameplay_difficulty_for_score(uint32_t score) {
     if (score >= GAME_HARD_SCORE) return HARD;
-    if (score >= GAME_NORMAL_SCORE) return NORMAL;
+    if (score >= GAME_MID_HARD_SCORE) return MID_HARD;
+    if (score >= GAME_MID_SCORE) return MID;
+    if (score >= GAME_EASY_MID_SCORE) return EASY_MID;
     return EASY;
 }
 
