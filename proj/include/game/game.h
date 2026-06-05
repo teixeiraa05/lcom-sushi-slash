@@ -24,24 +24,47 @@
 /** @brief Maximum number of active cut fragments on screen. */
 #define MAX_ACTIVE_FRAGMENTS 16
 
-/** @brief Score threshold at which normal difficulty starts. */
-#define GAME_NORMAL_SCORE 15
+/** @brief Score threshold at which easy-mid difficulty starts. */
+#define GAME_EASY_MID_SCORE 15
+
+/** @brief Score threshold at which mid difficulty starts. */
+#define GAME_MID_SCORE 30
+
+/** @brief Score threshold at which mid-hard difficulty starts. */
+#define GAME_MID_HARD_SCORE 45
 
 /** @brief Score threshold at which hard difficulty starts. */
-#define GAME_HARD_SCORE 50
+#define GAME_HARD_SCORE 100
 
 /**
  * @brief High-level state of the application.
  */
 typedef enum {
+  /** @brief Main menu is active. */
   MENU,
+
+  /** @brief Singleplayer gameplay is active. */
   GAME,
+
+  /** @brief Singleplayer mode selection/state marker. */
   SINGLEPLAYER,
+
+  /** @brief Multiplayer mode selection/state marker. */
   MULTIPLAYER,
+
+  /** @brief Gameplay is paused. */
   PAUSED,
+
+  /** @brief Game is waiting for another event or player. */
   WAITING,
+
+  /** @brief Boss encounter is active. */
   BOSS,
+
+  /** @brief Game-over screen is active. */
   GAME_OVER,
+
+  /** @brief Application should exit. */
   EXIT
 } GameState;
 
@@ -49,11 +72,22 @@ typedef enum {
  * @brief Device categories used by the game.
  */
 typedef enum {
+  /** @brief Keyboard input device. */
   KEYBOARD,
+
+  /** @brief Mouse input device. */
   MOUSE,
+
+  /** @brief Periodic timer device. */
   TIMER,
+
+  /** @brief Real-time clock device. */
   RTC, 
+
+  /** @brief Graphics card/device. */
   GRAPHICS,
+
+  /** @brief Serial port device. */
   SERIALPORT
 } Device;
 
@@ -102,25 +136,47 @@ typedef struct {
     /** @brief Singleplayer gameplay runtime data. */
     gameplay_data_t singleplayer;
 
+    /** @brief State-specific data for menus, multiplayer, and boss fights. */
     union {
+        /** @brief Main menu runtime state. */
         menu_t menu;
 
+        /** @brief Pause menu runtime state. */
         pause_menu_t pause_menu;
         
+        /** @brief Game-over screen runtime state. */
         game_over_t game_over;
 
+        /** @brief Multiplayer runtime state. */
         struct {
+          /** @brief Active multiplayer sushi and bomb items. */
           sushi_t active_sushi[MAX_ACTIVE_SUSHI];
+
+          /** @brief Active multiplayer cut fragments. */
           sushi_fragment_t active_fragments[MAX_ACTIVE_FRAGMENTS];
+
+          /** @brief Number of active multiplayer sushi entries. */
           uint8_t num_active_sushi;
+
+          /** @brief Number of active multiplayer fragment entries. */
           uint8_t num_active_fragments;
+
+          /** @brief Current score for player 1. */
           uint32_t player1_score;
+
+          /** @brief Current score for player 2. */
           uint32_t player2_score;
         } multiplayer;
 
+        /** @brief Boss fight runtime state. */
         struct {
+          /** @brief Active boss encounter data. */
           boss_t boss;
+
+          /** @brief Active fragments created during the boss fight. */
           sushi_fragment_t active_fragments[MAX_ACTIVE_FRAGMENTS];
+
+          /** @brief Number of active boss-fight fragments. */
           uint8_t num_active_fragments;
         } boss_fight;
     } data;

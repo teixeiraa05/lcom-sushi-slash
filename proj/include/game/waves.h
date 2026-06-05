@@ -13,9 +13,6 @@
  * and turns them into concrete game objects.
  */
 
-/** @brief Repeat count value meaning that a wave should repeat forever. */
-#define WAVE_FOREVER 0
-
 /** @brief Sushi type value meaning that gameplay should choose the type. */
 #define WAVE_RANDOM_SUSHI_TYPE 0xFF
 
@@ -23,8 +20,19 @@
  * @brief Runtime difficulty used for gameplay wave pacing and motion.
  */
 typedef enum difficulty {
+  /** @brief Introductory difficulty with slower, simpler waves. */
   EASY,
-  NORMAL,
+
+  /** @brief Bridge difficulty between easy and mid. */
+  EASY_MID,
+
+  /** @brief Standard difficulty. */
+  MID,
+
+  /** @brief Bridge difficulty between mid and hard. */
+  MID_HARD,
+
+  /** @brief Highest standard difficulty. */
   HARD
 } difficulty_t;
 
@@ -36,18 +44,69 @@ typedef enum difficulty {
  * waves_update().
  */
 typedef enum {
+  /** @brief Intro wave: three sushi-only events, starting with one piece. */
+  WAVE_PATTERN_INTRO,
+
   /** @brief A small wave that asks gameplay to spawn one item. */
   WAVE_PATTERN_SINGLE,
+
+  /** @brief A small wave that asks gameplay to spawn one bomb. */
+  WAVE_PATTERN_BOMB,
 
   /** @brief A compact wave that asks gameplay to spawn multiple items together.
    */
   WAVE_PATTERN_BURST,
 
+  /** @brief A compact wave mixing a small sushi burst with one bomb. */
+  WAVE_PATTERN_BURST_BOMB,
+
   /** @brief A wave whose items are separated by short delays. */
   WAVE_PATTERN_STAGGERED,
 
+  /** @brief A quick four-step stream of single sushi pieces. */
+  WAVE_PATTERN_PUMP4,
+
+  /** @brief A split rhythm that alternates single and paired sushi. */
+  WAVE_PATTERN_SPLIT,
+
+  /** @brief A staggered wave that includes a bomb. */
+  WAVE_PATTERN_STAGGERED_BOMB,
+
+  /** @brief A quick four-step stream with one bomb mixed in. */
+  WAVE_PATTERN_PUMP_BOMB,
+
+  /** @brief A one-bomb feint followed by sushi pressure. */
+  WAVE_PATTERN_FEINT,
+
+  /** @brief A bridge wave between easy and normal pressure. */
+  WAVE_PATTERN_EASY_MID,
+
+  /** @brief A burst bridge wave between easy and normal pressure. */
+  WAVE_PATTERN_EASY_MID_BURST,
+
   /** @brief A wave mixing different spawn kinds, such as sushi and bombs. */
   WAVE_PATTERN_MIXED,
+
+  /** @brief A stronger mixed wave with simultaneous sushi and bombs. */
+  WAVE_PATTERN_MIXED_BOMB,
+
+  /** @brief A quick mixed wave with alternating sushi and bombs. */
+  WAVE_PATTERN_QUICK_MIX,
+
+  /** @brief A double burst wave separated by a short pause. */
+  WAVE_PATTERN_DOUBLE_BURST,
+
+  /** @brief A bridge wave between normal and hard pressure. */
+  WAVE_PATTERN_MID_HARD,
+
+  /** @brief A burst bridge wave between normal and hard pressure. */
+  WAVE_PATTERN_MID_HARD_BURST,
+
+  /** @brief A hard mixed wave with heavier bomb pressure. */
+  WAVE_PATTERN_HARD_MIX,
+
+  /** @brief A hard quick chain with several close-spaced events. */
+  WAVE_PATTERN_HARD_CHAIN,
 
   /** @brief Number of predefined wave patterns. */
   WAVE_PATTERN_COUNT
@@ -102,9 +161,6 @@ typedef enum {
   /** @brief Scheduler is actively processing wave events. */
   WAVE_STATUS_RUNNING,
 
-  /** @brief Scheduler reached the end of a finite wave sequence. */
-  WAVE_STATUS_FINISHED,
-
   /** @brief Scheduler encountered invalid input. */
   WAVE_STATUS_ERROR
 } wave_status_t;
@@ -133,9 +189,8 @@ typedef struct {
 /**
  * @brief Timed spawn request inside a wave.
  *
- * delay_ticks is measured from the start of the current wave repetition. When
- * the delay has elapsed, waves_update() copies request into its output
- * parameter.
+ * delay_ticks is relative to the previous event. For the first event in a
+ * wave, it is relative to the wave start.
  */
 typedef struct {
   /** @brief Tick delay before this event should be emitted. */
@@ -158,11 +213,6 @@ typedef struct {
   /** @brief Number of entries in events. */
   uint8_t event_count;
 
-  /** @brief Number of times to repeat the wave, or WAVE_FOREVER. */
-  uint8_t repeat_count;
-
-  /** @brief Delay before the next wave starts after this one finishes. */
-  uint32_t next_wave_delay_ticks;
 } wave_t;
 
 /**
@@ -175,10 +225,7 @@ typedef struct {
   /** @brief Index of the next event to emit within the current wave. */
   uint8_t current_event;
 
-  /** @brief Current repetition count for the active wave. */
-  uint8_t current_repeat;
-
-  /** @brief Tick when the current wave repetition started. */
+  /** @brief Tick used as the anchor for the current event delay. */
   uint32_t wave_start_tick;
 
   /** @brief Earliest tick at which the next wave may start. */
@@ -205,6 +252,7 @@ void waves_init(wave_runtime_t *runtime, uint32_t current_tick);
  * @param runtime Mutable scheduler state.
  * @param waves Array of wave definitions to process.
  * @param wave_count Number of entries in waves.
+ * @param difficulty Current gameplay difficulty used for random selection.
  * @param current_tick Current timer tick.
  * @param out_request Output parameter filled with the due spawn request.
  * @param has_request Output parameter set to true if a request is due, false otherwise.
@@ -212,18 +260,9 @@ void waves_init(wave_runtime_t *runtime, uint32_t current_tick);
  * @return Scheduler status indicating the result of the update.
  */
 wave_status_t waves_update(wave_runtime_t *runtime, const wave_t *waves,
-                           uint8_t wave_count, uint32_t current_tick,
+                           uint8_t wave_count, difficulty_t difficulty,
+                           uint32_t current_tick,
                            wave_spawn_request_t *out_request, bool *has_request);
-
-/**
- * @brief Check whether the scheduler has finished processing a finite wave list.
- *
- * @param runtime Runtime object to inspect.
- *
- * @return true if runtime is finished, false otherwise. The predefined gameplay
- * wave sequence normally loops forever and should not reach this state.
- */
-bool waves_is_finished(const wave_runtime_t *runtime);
 
 /**
  * @brief Get a predefined wave definition by pattern id.
@@ -242,14 +281,5 @@ const wave_t *waves_get_predefined(wave_pattern_t pattern);
  * @return Pointer to a static motion profile. Invalid values fall back to easy.
  */
 const motion_profile_t *waves_get_difficulty_motion(difficulty_t difficulty);
-
-/**
- * @brief Apply difficulty spawn pacing to a copied wave sequence.
- *
- * @param waves Mutable wave sequence to adjust.
- * @param wave_count Number of entries in waves.
- * @param difficulty Difficulty whose spawn rate should be applied.
- */
-void waves_apply_difficulty(wave_t *waves, uint8_t wave_count, difficulty_t difficulty);
 
 #endif /* __WAVES_H */
