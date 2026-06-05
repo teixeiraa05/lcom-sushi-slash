@@ -265,7 +265,6 @@ static void game_loop_menu_ih(game_loop_ctx_t *ctx, game_loop_event_t event) {
                 ctx->running = false;
                 break;
             case MENU_ACTION_ENTER_SEED:
-            case MENU_ACTION_SHOW_INSTRUCTIONS:
             case MENU_ACTION_NONE:
             default:
                 break;

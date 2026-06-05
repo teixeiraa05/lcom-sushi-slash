@@ -22,9 +22,6 @@ typedef enum {
   /** @brief Set gameplay seed. */
   MENU_OPTION_SEED,
 
-  /** @brief Show instructions. */
-  MENU_OPTION_INSTRUCTIONS,
-
   /** @brief Exit the application. */
   MENU_OPTION_EXIT
 } MenuOption;
@@ -41,9 +38,6 @@ typedef enum {
 
   /** @brief Transition to enter seed. */
   MENU_ACTION_ENTER_SEED,
-
-  /** @brief Transition to instructions. */
-  MENU_ACTION_SHOW_INSTRUCTIONS,
 
   /** @brief Exit the application. */
   MENU_ACTION_EXIT

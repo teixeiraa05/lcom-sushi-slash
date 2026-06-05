@@ -3,6 +3,8 @@
 #include "../../include/macros/menu.h"
 #include "../../include/ui/ui.h"
 
+#define MENU_BUTTON_COUNT 3
+
 typedef struct {
     MenuOption option;
     button_t button;
@@ -45,13 +47,11 @@ static MenuButtonSpec menu_button_at(uint8_t index) {
     static const MenuOption options[] = {
         MENU_OPTION_SINGLEPLAYER,
         MENU_OPTION_SEED,
-        MENU_OPTION_INSTRUCTIONS,
         MENU_OPTION_EXIT
     };
     static const char *labels[] = {
         "singleplayer",
         "seed",
-        "instructions",
         "exit"
     };
 
@@ -64,7 +64,7 @@ static MenuButtonSpec menu_button_at(uint8_t index) {
 }
 
 MenuOption ui_menu_hit_test(int x, int y) {
-    for (uint8_t i = 0; i < 4; i++) {
+    for (uint8_t i = 0; i < MENU_BUTTON_COUNT; i++) {
         MenuButtonSpec spec = menu_button_at(i);
         if (ui_button_contains(&spec.button, x, y)) {
             return spec.option;
@@ -80,7 +80,7 @@ int ui_menu_draw(const menu_t *menu, const Assets *assets, const StatusBarInfo *
     if (ui_draw_sprite(&assets->name_sprite, 50, 100) != 0) return 1;
     anim_draw(&assets->mascot_anim, MENU_MASCOT_X, MENU_MASCOT_Y);
 
-    for (uint8_t i = 0; i < 4; i++) {
+    for (uint8_t i = 0; i < MENU_BUTTON_COUNT; i++) {
         MenuButtonSpec spec = menu_button_at(i);
         spec.button.hovered = spec.option == menu->hovered_option;
 

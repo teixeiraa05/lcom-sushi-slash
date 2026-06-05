@@ -40,9 +40,6 @@ MenuAction menu_update(menu_t *menu, MenuOption hovered_option, bool clicked) {
         case MENU_OPTION_SEED:
             menu->entering_seed = !menu->entering_seed;
             return MENU_ACTION_ENTER_SEED;
-        case MENU_OPTION_INSTRUCTIONS:
-            menu->entering_seed = false;
-            return MENU_ACTION_SHOW_INSTRUCTIONS;
         case MENU_OPTION_EXIT:
             menu->entering_seed = false;
             return MENU_ACTION_EXIT;
