@@ -5,6 +5,7 @@
 
 #include "../include/game/game.h"
 #include "../include/macros/mouse.h"
+#include "../include/ui/slash_combo_popup.h"
 #include "../include/ui/ui.h"
 
 // 1. Sushi management
@@ -263,7 +264,7 @@ void gameplay_draw(const GameInfo *game, const Assets *assets) {
         }
     }
 
-    slash_combo_draw(&game->singleplayer.slash_combo, assets);
+    ui_combo_popup_draw(&game->singleplayer.slash_combo, assets);
 }
 
 // 4. Cutting

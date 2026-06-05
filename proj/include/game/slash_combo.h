@@ -2,7 +2,6 @@
 #define __SLASH_COMBO_H
 
 #include <stdint.h>
-#include "../init.h"
 
 /**
  * @file slash_combo.h
@@ -17,9 +16,6 @@
 
 /** @brief Duration of the combo popup, in gameplay ticks. */
 #define SLASH_COMBO_POPUP_TICKS 60
-
-/** @brief Blue color used for the combo popup text. */
-#define SLASH_COMBO_POPUP_COLOR 0x3399FF
 
 /**
  * @brief Runtime state for one quick-slash combo burst.
@@ -91,13 +87,5 @@ uint32_t slash_combo_register_cut(slash_combo_t *combo,
  * @return Bonus points awarded when an expired combo is resolved.
  */
 uint32_t slash_combo_update(slash_combo_t *combo, uint32_t current_tick);
-
-/**
- * @brief Draw the active combo popup, if visible.
- *
- * @param combo Combo state to draw.
- * @param assets Shared assets containing the game font.
- */
-void slash_combo_draw(const slash_combo_t *combo, const Assets *assets);
 
 #endif /* __SLASH_COMBO_H */
