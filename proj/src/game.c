@@ -2,7 +2,6 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../lab2/timer.h"
 
 #include "../include/game/game.h"
 #include "../include/game/game_rand.h"
@@ -288,7 +287,7 @@ void gameplay_start(GameInfo *game) {
     if (game->data.menu.seed_val > 0) {
         game->singleplayer.current_seed = game->data.menu.seed_val;
     } else {
-        game->singleplayer.current_seed = (uint32_t)get_int_counter();
+        game->singleplayer.current_seed = game_seed_from_rtc();
     }
     gameplay_set_sushi_seed(game, game->singleplayer.current_seed);
     gameplay_set_boss_seed(game, game->singleplayer.current_seed);
