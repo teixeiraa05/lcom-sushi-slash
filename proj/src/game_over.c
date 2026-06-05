@@ -22,6 +22,8 @@ GameOverAction game_over_update(game_over_t *game_over, GameOverOption hovered_o
     switch (hovered_option) {
         case GAME_OVER_OPTION_MAIN_MENU:
             return GAME_OVER_ACTION_MAIN_MENU;
+        case GAME_OVER_OPTION_RESTART_SAME_SEED:
+            return GAME_OVER_ACTION_RESTART_SAME_SEED;
         case GAME_OVER_OPTION_NONE:
         default:
             return GAME_OVER_ACTION_NONE;

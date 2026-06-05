@@ -43,12 +43,20 @@ static int draw_button_with_label(const button_t *button, const Font *font) {
                         button_text_y(button, font));
 }
 
-static GameOverButtonSpec game_over_button(void) {
+static GameOverButtonSpec game_over_button_at(uint8_t index) {
     GameOverButtonSpec spec;
-    spec.option = GAME_OVER_OPTION_MAIN_MENU;
-    spec.button = make_game_over_button(GAME_OVER_BUTTON_X,
-                                        GAME_OVER_BUTTON_Y,
-                                        "main menu");
+    if (index == 0) {
+        spec.option = GAME_OVER_OPTION_RESTART_SAME_SEED;
+        spec.button = make_game_over_button(GAME_OVER_BUTTON_LEFT_X,
+                                            GAME_OVER_BUTTON_Y,
+                                            "restart same seed");
+    }
+    else {
+        spec.option = GAME_OVER_OPTION_MAIN_MENU;
+        spec.button = make_game_over_button(GAME_OVER_BUTTON_RIGHT_X,
+                                            GAME_OVER_BUTTON_Y,
+                                            "main menu");
+    }
     return spec;
 }
 
@@ -87,9 +95,11 @@ static int draw_game_over_stats(const game_over_t *game_over, const Font *font) 
 }
 
 GameOverOption ui_game_over_hit_test(int x, int y) {
-    GameOverButtonSpec spec = game_over_button();
-    if (ui_button_contains(&spec.button, x, y)) {
-        return spec.option;
+    for (uint8_t i = 0; i < 2; i++) {
+        GameOverButtonSpec spec = game_over_button_at(i);
+        if (ui_button_contains(&spec.button, x, y)) {
+            return spec.option;
+        }
     }
     return GAME_OVER_OPTION_NONE;
 }
@@ -122,8 +132,14 @@ int ui_game_over_draw(const game_over_t *game_over, const Assets *assets) {
 
     anim_draw(&assets->mascot_lose_anim, GAME_OVER_MASCOT_X, GAME_OVER_MASCOT_Y);
 
-    GameOverButtonSpec spec = game_over_button();
-    spec.button.hovered = spec.option == game_over->hovered_option;
+    for (uint8_t i = 0; i < 2; i++) {
+        GameOverButtonSpec spec = game_over_button_at(i);
+        spec.button.hovered = spec.option == game_over->hovered_option;
 
-    return draw_button_with_label(&spec.button, &assets->game_font);
+        if (draw_button_with_label(&spec.button, &assets->game_font) != 0) {
+            return 1;
+        }
+    }
+
+    return 0;
 }

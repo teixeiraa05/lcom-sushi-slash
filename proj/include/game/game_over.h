@@ -17,7 +17,10 @@ typedef enum {
   GAME_OVER_OPTION_NONE,
 
   /** @brief Return to the main menu. */
-  GAME_OVER_OPTION_MAIN_MENU
+  GAME_OVER_OPTION_MAIN_MENU,
+
+  /** @brief Restart gameplay with the same session seed. */
+  GAME_OVER_OPTION_RESTART_SAME_SEED
 } GameOverOption;
 
 /**
@@ -28,7 +31,10 @@ typedef enum {
   GAME_OVER_ACTION_NONE,
 
   /** @brief Return to the main menu. */
-  GAME_OVER_ACTION_MAIN_MENU
+  GAME_OVER_ACTION_MAIN_MENU,
+
+  /** @brief Restart gameplay with the same session seed. */
+  GAME_OVER_ACTION_RESTART_SAME_SEED
 } GameOverAction;
 
 /**

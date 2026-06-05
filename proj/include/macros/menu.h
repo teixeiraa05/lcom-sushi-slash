@@ -122,13 +122,19 @@
 #define GAME_OVER_MASCOT_Y 350
 
 /** @brief Game-over button width in pixels. */
-#define GAME_OVER_BUTTON_W 260
+#define GAME_OVER_BUTTON_W 300
 
 /** @brief Game-over button height in pixels. */
 #define GAME_OVER_BUTTON_H 52
 
-/** @brief Game-over button left coordinate. */
-#define GAME_OVER_BUTTON_X CENTER_X(GAME_OVER_BUTTON_W)
+/** @brief Horizontal gap between game-over buttons. */
+#define GAME_OVER_BUTTON_GAP 24
+
+/** @brief Game-over left button left coordinate. */
+#define GAME_OVER_BUTTON_LEFT_X CENTER_X(GAME_OVER_BUTTON_W * 2 + GAME_OVER_BUTTON_GAP)
+
+/** @brief Game-over right button left coordinate. */
+#define GAME_OVER_BUTTON_RIGHT_X (GAME_OVER_BUTTON_LEFT_X + GAME_OVER_BUTTON_W + GAME_OVER_BUTTON_GAP)
 
 /** @brief Game-over button top coordinate. */
 #define GAME_OVER_BUTTON_Y 520

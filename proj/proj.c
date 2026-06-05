@@ -1,4 +1,5 @@
 #include <lcom/lcf.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "../lab5/video_gr.h"
@@ -330,7 +331,27 @@ int (proj_main_loop)(int argc, char *argv[]) {
                                 GameOverAction action = game_over_update(&game.data.game_over, hovered, clicked);
 
                                 switch (action) {
+                                    case GAME_OVER_ACTION_RESTART_SAME_SEED: {
+                                        uint32_t restart_seed = game.data.game_over.seed;
+
+                                        gameplay_clear(&game);
+                                        menu_init(&game.data.menu);
+                                        game.data.menu.seed_val = restart_seed;
+                                        snprintf(game.data.menu.seed_str,
+                                                 sizeof(game.data.menu.seed_str),
+                                                 "%u",
+                                                 (unsigned)restart_seed);
+                                        gameplay_start(&game);
+                                        gameplay_active = true;
+                                        last_sushi_spawn_tick = get_int_counter();
+                                        session_timer_reset(&session_timer, last_sushi_spawn_tick);
+                                        session_timer_start(&session_timer, last_sushi_spawn_tick);
+                                        game.state = GAME;
+                                        break;
+                                    }
                                     case GAME_OVER_ACTION_MAIN_MENU:
+                                        gameplay_clear(&game);
+                                        gameplay_active = false;
                                         game.state = MENU;
                                         menu_init(&game.data.menu);
                                         break;
