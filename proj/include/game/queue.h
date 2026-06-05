@@ -10,7 +10,10 @@
  * @brief Fixed-size circular queue of byte-sized values.
  */
 typedef struct {
+    /** @brief Stored queue values. */
     char data[MAX_QUEUE_SIZE];
+
+    /** @brief Index of the next value to pop. */
     int front;
 
     /** @brief Index where the next pushed value will be written. */

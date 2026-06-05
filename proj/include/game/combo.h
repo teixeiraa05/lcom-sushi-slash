@@ -37,11 +37,33 @@ typedef struct combo {
     
 } combo_t;
 
+/**
+ * @brief Initialize a combo prompt from an explicit key sequence.
+ *
+ * @param sequence Null-terminated sequence of required key characters.
+ * @param x Initial horizontal coordinate for the current-key prompt.
+ * @param y Initial vertical coordinate for the current-key prompt.
+ * @return Initialized combo prompt.
+ */
 combo_t combo_init(const char* sequence, uint16_t x, uint16_t y);
 
+/**
+ * @brief Create a random uppercase-key combo prompt.
+ *
+ * @param length Number of letters to generate.
+ * @param x Initial horizontal coordinate for the current-key prompt.
+ * @param y Initial vertical coordinate for the current-key prompt.
+ * @param prng_seed Pointer to the PRNG seed state.
+ * @return Initialized random combo prompt.
+ */
 combo_t create_random_combo(uint8_t length, uint16_t x, uint16_t y, uint32_t *prng_seed);
 
-// Function to convert a character to its keyboard XPM image
+/**
+ * @brief Get the keyboard-key XPM image for a character.
+ *
+ * @param c Character to convert.
+ * @return XPM image for the key, or NULL if unsupported.
+ */
 xpm_map_t char_to_keyboard_xpm(char c);
 
 /**

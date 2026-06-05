@@ -159,8 +159,10 @@ typedef struct {
     /** @brief Active seed used for random generation. */
     uint32_t current_seed;
 
-    /** @brief Determinstic PRNG seeds for sushi and boss generation. */
+    /** @brief Deterministic PRNG seed for sushi and wave generation. */
     uint32_t sushi_prng_seed;
+
+    /** @brief Deterministic PRNG seed for boss key and position generation. */
     uint32_t boss_prng_seed;
 } gameplay_data_t;
 

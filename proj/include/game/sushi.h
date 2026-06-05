@@ -105,16 +105,29 @@ sushi_t create_sushi(int x, int y, int vx, int vy, int gravity, sprite_t* xpm, i
 sushi_t create_bomb(int x, int y, int vx, int vy, int gravity, sprite_t* xpm);
 
 /**
+ * @brief Create a boss sushi item with explicit position, motion, sprite, and score.
+ *
+ * @param x Initial horizontal position in pixels.
+ * @param y Initial vertical position in pixels.
+ * @param vx Initial horizontal velocity in pixels per tick.
+ * @param vy Initial vertical velocity in pixels per tick.
+ * @param gravity Fixed-point gravity applied every tick.
+ * @param xpm Owned sprite used to draw the boss sushi.
+ * @param score_value Score awarded when the boss sushi is defeated.
+ *
+ * @return Initialized boss sushi item.
+ */
+sushi_t create_sushi_boss(int x, int y, int vx, int vy, int gravity, sprite_t* xpm, int score_value);
+
+/**
  * @brief Create a random regular sushi piece using the current difficulty motion.
  *
  * @param speed Launch speed in pixels per tick.
  * @param gravity Fixed-point gravity applied every tick.
+ * @param prng_seed Pointer to the PRNG seed state.
  *
  * @return Initialized regular sushi item, or an item with a NULL sprite on failure.
  */
-
-sushi_t create_sushi_boss(int x, int y, int vx, int vy, int gravity, sprite_t* xpm, int score_value);
-
 sushi_t create_random_sushi(int speed, int gravity, uint32_t *prng_seed);
 
 /**

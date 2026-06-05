@@ -257,6 +257,7 @@ void waves_init(wave_runtime_t *runtime, uint32_t current_tick);
  * @param wave_count Number of entries in waves.
  * @param difficulty Current gameplay difficulty used for random selection.
  * @param current_tick Current timer tick.
+ * @param prng_seed Pointer to the PRNG seed state used for wave selection.
  * @param out_request Output parameter filled with the due spawn request.
  * @param has_request Output parameter set to true if a request is due, false otherwise.
  * 

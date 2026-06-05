@@ -8,11 +8,17 @@
 
 /** @brief Number of fixed-point units that represent one pixel. */
 #define PHYSICS_SCALE 1000
+
+/** @brief Smaller fixed-point scale used for slow-motion motion calculations. */
 #define SLOWMO_PHYSICS_SCALE 50
 
 /** @brief Convert a whole-pixel value to fixed-point units. */
 #define PHYSICS_FROM_PIXELS(value) ((value) * PHYSICS_SCALE)
+
+/** @brief Convert a whole-pixel value to slow-motion fixed-point units. */
 #define SLOWMO_PHYSICS_FROM_PIXELS(value) ((value) * SLOWMO_PHYSICS_SCALE)
+
+/** @brief Convert a thousandths value into the fixed-point representation. */
 #define PHYSICS_FROM_THOUSANDTHS(value) (value)
 
 /** @brief Convert fixed-point units to whole pixels. */

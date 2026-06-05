@@ -43,17 +43,24 @@ typedef enum {
   MENU_ACTION_EXIT
 } MenuAction;
 
+/** @brief Maximum number of decimal digits accepted for a uint32 seed. */
+#define MENU_SEED_MAX_DIGITS 10
+
 /**
  * @brief Mutable state for the main menu.
  */
-#define MENU_SEED_MAX_DIGITS 10
-
 typedef struct {
   /** @brief Option currently hovered by the input cursor. */
   MenuOption hovered_option;
-  bool entering_seed;            /* Whether the user is currently typing a seed */
-  char seed_str[MENU_SEED_MAX_DIGITS + 1]; /* Text buffer storing the typed uint32 seed */
-  uint32_t seed_val;             /* The parsed numeric value of the seed (0 if none) */
+
+  /** @brief Whether the user is currently typing a manual seed. */
+  bool entering_seed;
+
+  /** @brief Text buffer storing the typed uint32 seed digits. */
+  char seed_str[MENU_SEED_MAX_DIGITS + 1];
+
+  /** @brief Parsed numeric seed value, or 0 when no seed is set. */
+  uint32_t seed_val;
 } menu_t;
 
 /**
