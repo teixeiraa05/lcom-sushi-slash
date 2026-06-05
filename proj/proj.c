@@ -130,13 +130,17 @@ int (proj_main_loop)(int argc, char *argv[]) {
                             pause_menu_init(&game.data.pause_menu);
                         }
                         else if (keyboard_is_scancode_make()) {
-                            // Converter scancode para char ASCII
                             char key_pressed = keyboard_scancode_to_ascii();
                             
-                            if (key_pressed != 0) {  // Se for um char válido
-                                if (game.state == BOSS) {  // Se estivermos em um boss fight
-                                    boss_verify_combo(&game.data.boss_fight.boss, key_pressed);
-                                    
+                            if (key_pressed != 0) {
+                                if (game.state == GAME && gameplay_boss_active(&game)) {
+                                    gameplay_handle_boss_key(&game,
+                                                             key_pressed,
+                                                             session_timer_ticks(&session_timer));
+                                    if (game.state == GAME_OVER) {
+                                        assets.mascot_lose_anim.cur_frame = 0;
+                                        assets.mascot_lose_anim.last_tick = get_int_counter();
+                                    }
                                 }
                             }
                         }
@@ -206,7 +210,7 @@ int (proj_main_loop)(int argc, char *argv[]) {
                                 }
                                 else {
                                     ui_draw_background(&assets.background_sprite);
-                                    gameplay_draw(&game, &assets);
+                                    gameplay_draw(&game, &assets, session_timer_ticks(&session_timer));
                                     hud_draw(&assets.game_font,
                                              game.score,
                                              game.lives,
@@ -278,14 +282,12 @@ int (proj_main_loop)(int argc, char *argv[]) {
                             }
                             else if (game.state == GAME) {
                                 gameplay_handle_cut(&game, &mouse_state, session_timer_ticks(&session_timer));
-                                if (game.state != GAME) {
+                                if (game.state == GAME_OVER) {
                                     int current_tick = get_int_counter();
                                     session_timer_pause(&session_timer, current_tick);
                                     gameplay_active = false;
-                                    if (game.state == GAME_OVER) {
-                                        assets.mascot_lose_anim.cur_frame = 0;
-                                        assets.mascot_lose_anim.last_tick = current_tick;
-                                    }
+                                    assets.mascot_lose_anim.cur_frame = 0;
+                                    assets.mascot_lose_anim.last_tick = current_tick;
                                 }
                             }
                             else if (game.state == PAUSED) {

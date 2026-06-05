@@ -5,10 +5,14 @@
 
 #include "../include/game/game.h"
 #include "../include/macros/mouse.h"
+#include "../include/ui/boss_draw.h"
 #include "../include/ui/slash_combo_popup.h"
 #include "../include/ui/ui.h"
 
 #define GAMEPLAY_TICKS_PER_SECOND 60
+
+static void gameplay_finish_boss(GameInfo *game, boss_status_t status, uint32_t current_tick);
+static void gameplay_update_active_boss(GameInfo *game, uint32_t current_tick);
 
 // 1. Sushi management
 
@@ -28,6 +32,54 @@ static void gameplay_remove_fragment(GameInfo *game, uint8_t index) {
         game->singleplayer.active_fragments[i] = game->singleplayer.active_fragments[i + 1];
     }
     game->singleplayer.num_active_fragments--;
+}
+
+static uint8_t gameplay_boss_sequence_length(uint32_t boss_count) {
+    uint32_t length = GAME_BOSS_FIRST_SEQUENCE_LENGTH +
+                      boss_count * GAME_BOSS_SEQUENCE_STEP;
+
+    return length > MAX_QUEUE_SIZE ? MAX_QUEUE_SIZE : (uint8_t)length;
+}
+
+static void gameplay_start_boss(GameInfo *game, uint32_t current_tick) {
+    if (game == NULL || game->singleplayer.boss_active) return;
+
+    for (uint8_t i = 0; i < game->singleplayer.num_active_sushi; i++) {
+        sushi_destroy(&game->singleplayer.active_sushi[i]);
+    }
+    game->singleplayer.num_active_sushi = 0;
+
+    for (uint8_t i = 0; i < game->singleplayer.num_active_fragments; i++) {
+        sushi_fragment_destroy(&game->singleplayer.active_fragments[i]);
+    }
+    game->singleplayer.num_active_fragments = 0;
+
+    uint8_t sequence_length = gameplay_boss_sequence_length(game->singleplayer.boss_count);
+    uint32_t per_key_ticks = BOSS_TOTAL_TICKS / sequence_length;
+    if (per_key_ticks < 240) {
+        per_key_ticks = 240;
+    }
+    combo_t combo = create_random_combo(sequence_length, CENTER_X(64), 300);
+    if (combo.total_letters == 0) {
+        combo_destroy(&combo);
+        return;
+    }
+
+    game->singleplayer.active_boss = boss_init(combo,
+                                               current_tick,
+                                               BOSS_TOTAL_TICKS,
+                                               per_key_ticks);
+    game->singleplayer.boss_active = true;
+    game->singleplayer.boss_count++;
+    game->singleplayer.next_boss_score += GAME_BOSS_SCORE_STEP;
+}
+
+static void gameplay_check_boss_spawn(GameInfo *game, uint32_t current_tick) {
+    if (game == NULL || game->state != GAME || game->singleplayer.boss_active) return;
+
+    if (game->score >= game->singleplayer.next_boss_score) {
+        gameplay_start_boss(game, current_tick);
+    }
 }
 
 // 2. Wave and difficulty handling
@@ -139,6 +191,11 @@ static bool sushi_missed_lower_bound(const sushi_t *sushi) {
 void gameplay_clear(GameInfo *game) {
     if (game == NULL) return;
 
+    if (game->singleplayer.boss_active) {
+        boss_destroy(&game->singleplayer.active_boss);
+        game->singleplayer.boss_active = false;
+    }
+
     for (uint8_t i = 0; i < game->singleplayer.num_active_sushi; i++) {
         sushi_destroy(&game->singleplayer.active_sushi[i]);
     }
@@ -150,6 +207,8 @@ void gameplay_clear(GameInfo *game) {
     game->singleplayer.num_active_sushi = 0;
     game->singleplayer.num_active_fragments = 0;
     slash_combo_reset(&game->singleplayer.slash_combo);
+    game->singleplayer.pending_boss_score_popup = 0;
+    game->singleplayer.boss_score_popup_ticks = 0;
 }
 
 static game_over_stats_t gameplay_final_stats(const GameInfo *game, uint32_t elapsed_ticks) {
@@ -199,6 +258,7 @@ void gameplay_start(GameInfo *game) {
     memset(&game->singleplayer, 0, sizeof(game->singleplayer));
     gameplay_load_waves(game);
     waves_init(&game->singleplayer.wave_runtime, 0);
+    game->singleplayer.next_boss_score = GAME_BOSS_FIRST_SCORE;
     game->score = 0;
     game->lives = LIVES;
 }
@@ -209,24 +269,38 @@ void gameplay_update(GameInfo *game, int current_tick, int *last_spawn_tick) {
     gameplay_update_difficulty(game);
     game->score += slash_combo_update(&game->singleplayer.slash_combo,
                                       (uint32_t)current_tick);
-
-    wave_spawn_request_t request;
-    bool has_request;
-    wave_status_t wave_status;
-    do {
-        wave_status = waves_update(&game->singleplayer.wave_runtime,
-                                   game->singleplayer.waves,
-                                   WAVE_PATTERN_COUNT,
-                                   game->singleplayer.current_difficulty,
-                                   (uint32_t)current_tick,
-                                   &request,
-                                   &has_request);
-        if (has_request) {
-            gameplay_handle_wave_spawn(game, &request);
-            *last_spawn_tick = current_tick;
-        }
+    if (game->singleplayer.boss_score_popup_ticks > 0) {
+        game->singleplayer.boss_score_popup_ticks--;
     }
-    while (has_request && wave_status == WAVE_STATUS_RUNNING);
+    gameplay_check_boss_spawn(game, (uint32_t)current_tick);
+
+    if (game->singleplayer.boss_active) {
+        waves_pause_tick(&game->singleplayer.wave_runtime);
+        if (last_spawn_tick != NULL) {
+            (*last_spawn_tick)++;
+        }
+    } else {
+        wave_spawn_request_t request;
+        bool has_request;
+        wave_status_t wave_status;
+        do {
+            wave_status = waves_update(&game->singleplayer.wave_runtime,
+                                       game->singleplayer.waves,
+                                       WAVE_PATTERN_COUNT,
+                                       game->singleplayer.current_difficulty,
+                                       (uint32_t)current_tick,
+                                       &request,
+                                       &has_request);
+            if (has_request) {
+                gameplay_handle_wave_spawn(game, &request);
+                *last_spawn_tick = current_tick;
+            }
+        }
+        while (has_request && wave_status == WAVE_STATUS_RUNNING);
+    }
+
+    gameplay_update_active_boss(game, (uint32_t)current_tick);
+    if (game->state != GAME) return;
 
     uint8_t i = 0;
     while (i < game->singleplayer.num_active_sushi) {
@@ -258,7 +332,7 @@ void gameplay_update(GameInfo *game, int current_tick, int *last_spawn_tick) {
     }
 }
 
-void gameplay_draw(const GameInfo *game, const Assets *assets) {
+void gameplay_draw(const GameInfo *game, const Assets *assets, uint32_t current_tick) {
     if (game == NULL) return;
 
     for (uint8_t i = 0; i < game->singleplayer.num_active_sushi; i++) {
@@ -280,6 +354,13 @@ void gameplay_draw(const GameInfo *game, const Assets *assets) {
     }
 
     ui_combo_popup_draw(&game->singleplayer.slash_combo, assets);
+    ui_boss_draw(&game->singleplayer.active_boss,
+                 game->singleplayer.boss_active,
+                 assets,
+                 current_tick);
+    ui_boss_reward_popup_draw(game->singleplayer.pending_boss_score_popup,
+                              game->singleplayer.boss_score_popup_ticks,
+                              assets);
 }
 
 // 4. Cutting
@@ -349,9 +430,67 @@ void gameplay_handle_cut(GameInfo *game, MouseGameState *mouse_state, uint32_t c
             game->singleplayer.active_fragments[game->singleplayer.num_active_fragments++] = left_fragment;
             game->singleplayer.active_fragments[game->singleplayer.num_active_fragments++] = right_fragment;
             gameplay_remove_sushi(game, i);
+            gameplay_check_boss_spawn(game, current_tick);
         }
         else {
             i++;
         }
     }
+}
+
+static void gameplay_finish_boss(GameInfo *game, boss_status_t status, uint32_t current_tick) {
+    if (game == NULL || !game->singleplayer.boss_active) return;
+
+    uint32_t sequence_length = game->singleplayer.active_boss.combo.total_letters;
+    boss_destroy(&game->singleplayer.active_boss);
+    game->singleplayer.boss_active = false;
+
+    if (status == BOSS_STATUS_SUCCESS) {
+        uint32_t reward = sequence_length * BOSS_POINTS_PER_KEY;
+        game->score += reward;
+        game->singleplayer.pending_boss_score_popup = reward;
+        game->singleplayer.boss_score_popup_ticks = GAME_BOSS_REWARD_POPUP_TICKS;
+        gameplay_check_boss_spawn(game, current_tick);
+        return;
+    }
+
+    if (game->lives > 0) {
+        game->lives--;
+    }
+
+    if (game->lives == 0) {
+        gameplay_end_game(game, current_tick);
+    }
+}
+
+static void gameplay_update_active_boss(GameInfo *game, uint32_t current_tick) {
+    if (game == NULL || !game->singleplayer.boss_active) return;
+
+    boss_status_t status = boss_update(&game->singleplayer.active_boss, current_tick);
+    if (status != BOSS_STATUS_ACTIVE) {
+        gameplay_finish_boss(game, status, current_tick);
+    }
+}
+
+void gameplay_handle_boss_key(GameInfo *game, char input, uint32_t current_tick) {
+    if (game == NULL || !game->singleplayer.boss_active) return;
+
+    if (boss_has_timed_out(&game->singleplayer.active_boss, current_tick)) {
+        gameplay_finish_boss(game, BOSS_STATUS_FAILURE, current_tick);
+        return;
+    }
+
+    boss_input_result_t result = boss_verify_combo(&game->singleplayer.active_boss,
+                                                   input,
+                                                   current_tick);
+    if (result == BOSS_INPUT_WRONG) {
+        boss_reset_sequence(&game->singleplayer.active_boss, current_tick);
+    }
+    else if (result == BOSS_INPUT_COMPLETE) {
+        gameplay_finish_boss(game, BOSS_STATUS_SUCCESS, current_tick);
+    }
+}
+
+bool gameplay_boss_active(const GameInfo *game) {
+    return game != NULL && game->singleplayer.boss_active;
 }
