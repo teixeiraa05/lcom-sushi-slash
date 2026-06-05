@@ -1,6 +1,7 @@
 #ifndef __SUSHI_H
 #define __SUSHI_H
 
+#include <stdbool.h>
 #include <stdlib.h>
 #include "../macros/global.h"
 #include "../macros/physics.h"
@@ -164,23 +165,18 @@ typedef struct {
 } sushi_fragment_t;
 
 /**
- * @brief Process a slash segment against a sushi-style item.
+ * @brief Check whether a slash segment intersects a sushi-style item.
  *
- * Regular sushi is cut into fragments. Bombs report a successful hit without
- * creating fragments so gameplay can trigger the hazard behavior.
- *
- * @param sushi Item to test and cut.
+ * @param sushi Item to test.
  * @param cut_x0 Slash start horizontal position in pixels.
  * @param cut_y0 Slash start vertical position in pixels.
  * @param cut_x1 Slash end horizontal position in pixels.
  * @param cut_y1 Slash end vertical position in pixels.
  * @param radius Padding around the item bounds, in pixels.
- * @param left_fragment Output fragment for the left half.
- * @param right_fragment Output fragment for the right half.
  *
- * @return 0 if the item was hit, non-zero otherwise.
+ * @return true if the segment intersects the item bounds, false otherwise.
  */
-int find_cut_sushi_segment_area(sushi_t* sushi, int cut_x0, int cut_y0, int cut_x1, int cut_y1, int radius, sushi_fragment_t* left_fragment, sushi_fragment_t* right_fragment);
+bool sushi_segment_intersects(const sushi_t* sushi, int cut_x0, int cut_y0, int cut_x1, int cut_y1, int radius);
 
 /**
  * @brief Split a regular sushi piece into left and right fragments.

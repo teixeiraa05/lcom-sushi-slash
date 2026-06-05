@@ -253,15 +253,10 @@ static bool segment_intersects_sushi_bounds(const sushi_t* sushi, int x0, int y0
            segments_intersect(x0, y0, x1, y1, left, bottom, left, top);
 }
 
-int find_cut_sushi_segment_area(sushi_t* sushi, int cut_x0, int cut_y0, int cut_x1, int cut_y1, int radius, sushi_fragment_t* left_fragment, sushi_fragment_t* right_fragment) {
-    if (sushi == NULL || sushi->xpm == NULL) return 1;
+bool sushi_segment_intersects(const sushi_t* sushi, int cut_x0, int cut_y0, int cut_x1, int cut_y1, int radius) {
+    if (sushi == NULL || sushi->xpm == NULL) return false;
 
-    if (segment_intersects_sushi_bounds(sushi, cut_x0, cut_y0, cut_x1, cut_y1, radius)) {
-          if (sushi->kind == SUSHI_BOMB) return 0;
-          return cut_sushi(sushi, left_fragment, right_fragment);
-    }
-
-    return 1;
+    return segment_intersects_sushi_bounds(sushi, cut_x0, cut_y0, cut_x1, cut_y1, radius);
 }
 
 int cut_sushi(sushi_t* sushi, sushi_fragment_t* left_fragment, sushi_fragment_t* right_fragment) {
