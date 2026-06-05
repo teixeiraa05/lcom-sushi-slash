@@ -8,11 +8,11 @@
 
 /** @brief Number of fixed-point units that represent one pixel. */
 #define PHYSICS_SCALE 1000
+#define SLOWMO_PHYSICS_SCALE 50
 
 /** @brief Convert a whole-pixel value to fixed-point units. */
 #define PHYSICS_FROM_PIXELS(value) ((value) * PHYSICS_SCALE)
-
-/** @brief Interpret a thousandths value as fixed-point units. */
+#define SLOWMO_PHYSICS_FROM_PIXELS(value) ((value) * SLOWMO_PHYSICS_SCALE)
 #define PHYSICS_FROM_THOUSANDTHS(value) (value)
 
 /** @brief Convert fixed-point units to whole pixels. */
