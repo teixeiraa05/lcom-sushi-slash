@@ -36,18 +36,36 @@ typedef enum difficulty {
  * waves_update().
  */
 typedef enum {
+  /** @brief Intro wave: three sushi-only events, starting with one piece. */
+  WAVE_PATTERN_INTRO,
+
   /** @brief A small wave that asks gameplay to spawn one item. */
   WAVE_PATTERN_SINGLE,
+
+  /** @brief A small wave that asks gameplay to spawn one bomb. */
+  WAVE_PATTERN_BOMB,
 
   /** @brief A compact wave that asks gameplay to spawn multiple items together.
    */
   WAVE_PATTERN_BURST,
 
+  /** @brief A compact wave mixing a small sushi burst with one bomb. */
+  WAVE_PATTERN_BURST_BOMB,
+
   /** @brief A wave whose items are separated by short delays. */
   WAVE_PATTERN_STAGGERED,
 
+  /** @brief A staggered wave that includes a bomb. */
+  WAVE_PATTERN_STAGGERED_BOMB,
+
   /** @brief A wave mixing different spawn kinds, such as sushi and bombs. */
   WAVE_PATTERN_MIXED,
+
+  /** @brief A stronger mixed wave with simultaneous sushi and bombs. */
+  WAVE_PATTERN_MIXED_BOMB,
+
+  /** @brief A hard mixed wave with heavier bomb pressure. */
+  WAVE_PATTERN_HARD_MIX,
 
   /** @brief Number of predefined wave patterns. */
   WAVE_PATTERN_COUNT
@@ -133,9 +151,8 @@ typedef struct {
 /**
  * @brief Timed spawn request inside a wave.
  *
- * delay_ticks is measured from the start of the current wave repetition. When
- * the delay has elapsed, waves_update() copies request into its output
- * parameter.
+ * delay_ticks is relative to the previous event. For the first event in a
+ * wave, it is relative to the wave start.
  */
 typedef struct {
   /** @brief Tick delay before this event should be emitted. */
@@ -178,7 +195,7 @@ typedef struct {
   /** @brief Current repetition count for the active wave. */
   uint8_t current_repeat;
 
-  /** @brief Tick when the current wave repetition started. */
+  /** @brief Tick used as the anchor for the current event delay. */
   uint32_t wave_start_tick;
 
   /** @brief Earliest tick at which the next wave may start. */
@@ -205,6 +222,7 @@ void waves_init(wave_runtime_t *runtime, uint32_t current_tick);
  * @param runtime Mutable scheduler state.
  * @param waves Array of wave definitions to process.
  * @param wave_count Number of entries in waves.
+ * @param difficulty Current gameplay difficulty used for random selection.
  * @param current_tick Current timer tick.
  * @param out_request Output parameter filled with the due spawn request.
  * @param has_request Output parameter set to true if a request is due, false otherwise.
@@ -212,7 +230,8 @@ void waves_init(wave_runtime_t *runtime, uint32_t current_tick);
  * @return Scheduler status indicating the result of the update.
  */
 wave_status_t waves_update(wave_runtime_t *runtime, const wave_t *waves,
-                           uint8_t wave_count, uint32_t current_tick,
+                           uint8_t wave_count, difficulty_t difficulty,
+                           uint32_t current_tick,
                            wave_spawn_request_t *out_request, bool *has_request);
 
 /**
