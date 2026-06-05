@@ -5,12 +5,26 @@
 #include "queue.h"
 #include <lcom/lcf.h>
 
+/**
+ * @file combo.h
+ * @brief Declares boss combo prompt runtime data.
+ */
+
+/**
+ * @brief Key-sequence prompt used by boss encounters.
+ */
 typedef struct combo {
-    Queue combo; // A queue of the required moves for the combo
+    /** @brief Queue of required key inputs for the combo. */
+    Queue combo;
 
-    sprite_t current_letter; // The current letter to be displayed on the screen
+    /** @brief Sprite for the current letter displayed on screen. */
+    sprite_t current_letter;
 
-    uint16_t x, y; // Where letters appear on the screen
+    /** @brief Horizontal coordinate where letters appear on screen. */
+    uint16_t x;
+
+    /** @brief Vertical coordinate where letters appear on screen. */
+    uint16_t y;
     
     uint8_t total_letters; // Total number of letters in the combo
     uint8_t completed; // Number of letters already completed

@@ -1,13 +1,24 @@
 #ifndef _MACROS_PHYSICS_H_
 #define _MACROS_PHYSICS_H_
 
+/**
+ * @file physics.h
+ * @brief Defines fixed-point physics conversion helpers.
+ */
+
+/** @brief Number of fixed-point units that represent one pixel. */
 #define PHYSICS_SCALE 1000
 #define SLOWMO_PHYSICS_SCALE 50
 
+/** @brief Convert a whole-pixel value to fixed-point units. */
 #define PHYSICS_FROM_PIXELS(value) ((value) * PHYSICS_SCALE)
 #define SLOWMO_PHYSICS_FROM_PIXELS(value) ((value) * SLOWMO_PHYSICS_SCALE)
 #define PHYSICS_FROM_THOUSANDTHS(value) (value)
+
+/** @brief Convert fixed-point units to whole pixels. */
 #define PHYSICS_TO_PIXELS(value) ((value) / PHYSICS_SCALE)
+
+/** @brief Build a fixed-point value from whole pixels and thousandths. */
 #define PHYSICS_VALUE(integer, thousandths) \
   ((integer) * PHYSICS_SCALE + (thousandths))
 

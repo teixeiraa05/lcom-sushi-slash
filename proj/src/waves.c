@@ -2,23 +2,30 @@
 #include "../include/macros/physics.h"
 
 #include <stddef.h>
+#include <stdlib.h>
 
 #define ARRAY_COUNT(array) (sizeof(array) / sizeof((array)[0]))
 
 #define WAVE_MIN_SPEED_EASY 22
-#define WAVE_MAX_SPEED_EASY 24 
-#define WAVE_MIN_SPEED_NORMAL 24
-#define WAVE_MAX_SPEED_NORMAL 26
+#define WAVE_MAX_SPEED_EASY 24
+#define WAVE_MIN_SPEED_EASY_MID 23
+#define WAVE_MAX_SPEED_EASY_MID 25
+#define WAVE_MIN_SPEED_MID 24
+#define WAVE_MAX_SPEED_MID 26
+#define WAVE_MIN_SPEED_MID_HARD 25
+#define WAVE_MAX_SPEED_MID_HARD 28
 #define WAVE_MIN_SPEED_HARD 26
 #define WAVE_MAX_SPEED_HARD 29
 
 #define WAVE_GRAVITY_EASY PHYSICS_FROM_THOUSANDTHS(500)
-#define WAVE_GRAVITY_NORMAL PHYSICS_FROM_THOUSANDTHS(620)
+#define WAVE_GRAVITY_EASY_MID PHYSICS_FROM_THOUSANDTHS(560)
+#define WAVE_GRAVITY_MID PHYSICS_FROM_THOUSANDTHS(620)
+#define WAVE_GRAVITY_MID_HARD PHYSICS_FROM_THOUSANDTHS(700)
 #define WAVE_GRAVITY_HARD PHYSICS_FROM_THOUSANDTHS(780)
 
-#define WAVE_DELAY_EASY_PERCENT 200
-#define WAVE_DELAY_NORMAL_PERCENT 150
-#define WAVE_DELAY_HARD_PERCENT 100
+#define WAVE_FIRST_DELAY_TICKS 120
+#define WAVE_GAP_MIN_TICKS 60
+#define WAVE_GAP_MAX_TICKS 180
 
 #define WAVE_MOTION_PROFILE(min_speed, max_speed, gravity_value)               \
   {                                                                            \
@@ -42,7 +49,6 @@
 
 typedef struct {
   motion_profile_t motion;
-  uint16_t spawn_delay_percent;
 } wave_difficulty_profile_t;
 
 static const wave_difficulty_profile_t DIFFICULTY_PROFILES[] = {
@@ -50,78 +56,350 @@ static const wave_difficulty_profile_t DIFFICULTY_PROFILES[] = {
     .motion = WAVE_MOTION_PROFILE(WAVE_MIN_SPEED_EASY,
                                   WAVE_MAX_SPEED_EASY,
                                   WAVE_GRAVITY_EASY),
-    .spawn_delay_percent = WAVE_DELAY_EASY_PERCENT,
   },
-  [NORMAL] = {
-    .motion = WAVE_MOTION_PROFILE(WAVE_MIN_SPEED_NORMAL,
-                                  WAVE_MAX_SPEED_NORMAL,
-                                  WAVE_GRAVITY_NORMAL),
-    .spawn_delay_percent = WAVE_DELAY_NORMAL_PERCENT,
+  [EASY_MID] = {
+    .motion = WAVE_MOTION_PROFILE(WAVE_MIN_SPEED_EASY_MID,
+                                  WAVE_MAX_SPEED_EASY_MID,
+                                  WAVE_GRAVITY_EASY_MID),
+  },
+  [MID] = {
+    .motion = WAVE_MOTION_PROFILE(WAVE_MIN_SPEED_MID,
+                                  WAVE_MAX_SPEED_MID,
+                                  WAVE_GRAVITY_MID),
+  },
+  [MID_HARD] = {
+    .motion = WAVE_MOTION_PROFILE(WAVE_MIN_SPEED_MID_HARD,
+                                  WAVE_MAX_SPEED_MID_HARD,
+                                  WAVE_GRAVITY_MID_HARD),
   },
   [HARD] = {
     .motion = WAVE_MOTION_PROFILE(WAVE_MIN_SPEED_HARD,
                                   WAVE_MAX_SPEED_HARD,
                                   WAVE_GRAVITY_HARD),
-    .spawn_delay_percent = WAVE_DELAY_HARD_PERCENT,
   },
+};
+
+static const wave_event_t INTRO_EVENTS[] = {
+  WAVE_EVENT(0, WAVE_SPAWN_REGULAR, 1, 1),
+  WAVE_EVENT(60, WAVE_SPAWN_REGULAR, 1, 1),
+  WAVE_EVENT(60, WAVE_SPAWN_REGULAR, 2, 1),
 };
 
 static const wave_event_t SINGLE_EVENTS[] = {
   WAVE_EVENT(0, WAVE_SPAWN_REGULAR, 1, 1),
 };
 
+static const wave_event_t BOMB_EVENTS[] = {
+  WAVE_EVENT(0, WAVE_SPAWN_BOMB, 1, 0),
+};
+
 static const wave_event_t BURST_EVENTS[] = {
   WAVE_EVENT(0, WAVE_SPAWN_REGULAR, 3, 1),
 };
 
+static const wave_event_t BURST_BOMB_EVENTS[] = {
+  WAVE_EVENT(0, WAVE_SPAWN_REGULAR, 2, 1),
+  WAVE_EVENT(0, WAVE_SPAWN_BOMB, 1, 0),
+};
+
 static const wave_event_t STAGGERED_EVENTS[] = {
   WAVE_EVENT(0, WAVE_SPAWN_REGULAR, 1, 1),
-  WAVE_EVENT(30, WAVE_SPAWN_REGULAR, 1, 1),
+  WAVE_EVENT(60, WAVE_SPAWN_REGULAR, 1, 1),
   WAVE_EVENT(60, WAVE_SPAWN_REGULAR, 1, 1),
 };
 
+static const wave_event_t PUMP4_EVENTS[] = {
+  WAVE_EVENT(0, WAVE_SPAWN_REGULAR, 1, 1),
+  WAVE_EVENT(15, WAVE_SPAWN_REGULAR, 1, 1),
+  WAVE_EVENT(15, WAVE_SPAWN_REGULAR, 1, 1),
+  WAVE_EVENT(15, WAVE_SPAWN_REGULAR, 1, 1),
+};
+
+static const wave_event_t SPLIT_EVENTS[] = {
+  WAVE_EVENT(0, WAVE_SPAWN_REGULAR, 2, 1),
+  WAVE_EVENT(45, WAVE_SPAWN_REGULAR, 1, 1),
+  WAVE_EVENT(45, WAVE_SPAWN_REGULAR, 2, 1),
+};
+
+static const wave_event_t STAGGERED_BOMB_EVENTS[] = {
+  WAVE_EVENT(0, WAVE_SPAWN_REGULAR, 1, 1),
+  WAVE_EVENT(60, WAVE_SPAWN_BOMB, 1, 0),
+  WAVE_EVENT(60, WAVE_SPAWN_REGULAR, 1, 1),
+};
+
+static const wave_event_t PUMP_BOMB_EVENTS[] = {
+  WAVE_EVENT(0, WAVE_SPAWN_REGULAR, 1, 1),
+  WAVE_EVENT(15, WAVE_SPAWN_REGULAR, 1, 1),
+  WAVE_EVENT(15, WAVE_SPAWN_BOMB, 1, 0),
+  WAVE_EVENT(15, WAVE_SPAWN_REGULAR, 1, 1),
+};
+
+static const wave_event_t FEINT_EVENTS[] = {
+  WAVE_EVENT(0, WAVE_SPAWN_BOMB, 1, 0),
+  WAVE_EVENT(30, WAVE_SPAWN_REGULAR, 1, 1),
+  WAVE_EVENT(15, WAVE_SPAWN_REGULAR, 1, 1),
+  WAVE_EVENT(60, WAVE_SPAWN_REGULAR, 2, 1),
+};
+
+static const wave_event_t EASY_MID_EVENTS[] = {
+  WAVE_EVENT(0, WAVE_SPAWN_REGULAR, 1, 1),
+  WAVE_EVENT(60, WAVE_SPAWN_REGULAR, 2, 1),
+  WAVE_EVENT(60, WAVE_SPAWN_BOMB, 1, 0),
+  WAVE_EVENT(60, WAVE_SPAWN_REGULAR, 2, 1),
+};
+
+static const wave_event_t EASY_MID_BURST_EVENTS[] = {
+  WAVE_EVENT(0, WAVE_SPAWN_REGULAR, 2, 1),
+  WAVE_EVENT(60, WAVE_SPAWN_BOMB, 1, 0),
+  WAVE_EVENT(60, WAVE_SPAWN_REGULAR, 3, 1),
+};
+
 static const wave_event_t MIXED_EVENTS[] = {
-  WAVE_EVENT(0, WAVE_SPAWN_REGULAR, 3, 1),
-  WAVE_EVENT(20, WAVE_SPAWN_BOMB, 2, 0),
+  WAVE_EVENT(0, WAVE_SPAWN_REGULAR, 2, 1),
+  WAVE_EVENT(60, WAVE_SPAWN_BOMB, 1, 0),
+  WAVE_EVENT(60, WAVE_SPAWN_REGULAR, 2, 1),
+};
+
+static const wave_event_t MIXED_BOMB_EVENTS[] = {
+  WAVE_EVENT(0, WAVE_SPAWN_REGULAR, 1, 1),
+  WAVE_EVENT(0, WAVE_SPAWN_BOMB, 2, 0),
+  WAVE_EVENT(60, WAVE_SPAWN_REGULAR, 2, 1),
+};
+
+static const wave_event_t QUICK_MIX_EVENTS[] = {
+  WAVE_EVENT(0, WAVE_SPAWN_REGULAR, 1, 1),
+  WAVE_EVENT(15, WAVE_SPAWN_BOMB, 1, 0),
+  WAVE_EVENT(15, WAVE_SPAWN_REGULAR, 1, 1),
+  WAVE_EVENT(15, WAVE_SPAWN_REGULAR, 1, 1),
+  WAVE_EVENT(30, WAVE_SPAWN_BOMB, 1, 0),
+};
+
+static const wave_event_t DOUBLE_BURST_EVENTS[] = {
+  WAVE_EVENT(0, WAVE_SPAWN_REGULAR, 2, 1),
+  WAVE_EVENT(0, WAVE_SPAWN_BOMB, 1, 0),
+  WAVE_EVENT(45, WAVE_SPAWN_REGULAR, 2, 1),
+  WAVE_EVENT(0, WAVE_SPAWN_BOMB, 1, 0),
+};
+
+static const wave_event_t MID_HARD_EVENTS[] = {
+  WAVE_EVENT(0, WAVE_SPAWN_REGULAR, 2, 1),
+  WAVE_EVENT(60, WAVE_SPAWN_BOMB, 1, 0),
+  WAVE_EVENT(60, WAVE_SPAWN_REGULAR, 1, 1),
+  WAVE_EVENT(0, WAVE_SPAWN_BOMB, 1, 0),
+  WAVE_EVENT(60, WAVE_SPAWN_REGULAR, 2, 1),
+};
+
+static const wave_event_t MID_HARD_BURST_EVENTS[] = {
+  WAVE_EVENT(0, WAVE_SPAWN_REGULAR, 2, 1),
+  WAVE_EVENT(0, WAVE_SPAWN_BOMB, 1, 0),
+  WAVE_EVENT(60, WAVE_SPAWN_REGULAR, 2, 1),
+  WAVE_EVENT(0, WAVE_SPAWN_BOMB, 1, 0),
+};
+
+static const wave_event_t HARD_MIX_EVENTS[] = {
+  WAVE_EVENT(0, WAVE_SPAWN_BOMB, 2, 0),
+  WAVE_EVENT(0, WAVE_SPAWN_REGULAR, 1, 1),
+  WAVE_EVENT(60, WAVE_SPAWN_REGULAR, 2, 1),
+  WAVE_EVENT(60, WAVE_SPAWN_BOMB, 1, 0),
+};
+
+static const wave_event_t HARD_CHAIN_EVENTS[] = {
+  WAVE_EVENT(0, WAVE_SPAWN_REGULAR, 1, 1),
+  WAVE_EVENT(15, WAVE_SPAWN_BOMB, 1, 0),
+  WAVE_EVENT(15, WAVE_SPAWN_REGULAR, 1, 1),
+  WAVE_EVENT(15, WAVE_SPAWN_BOMB, 1, 0),
+  WAVE_EVENT(15, WAVE_SPAWN_REGULAR, 2, 1),
 };
 
 static const wave_t PREDEFINED_WAVES[WAVE_PATTERN_COUNT] = {
+  [WAVE_PATTERN_INTRO] = {
+    .pattern = WAVE_PATTERN_INTRO,
+    .events = INTRO_EVENTS,
+    .event_count = ARRAY_COUNT(INTRO_EVENTS),
+  },
   [WAVE_PATTERN_SINGLE] = {
     .pattern = WAVE_PATTERN_SINGLE,
     .events = SINGLE_EVENTS,
     .event_count = ARRAY_COUNT(SINGLE_EVENTS),
-    .repeat_count = 1,
-    .next_wave_delay_ticks = 60,
+  },
+  [WAVE_PATTERN_BOMB] = {
+    .pattern = WAVE_PATTERN_BOMB,
+    .events = BOMB_EVENTS,
+    .event_count = ARRAY_COUNT(BOMB_EVENTS),
   },
   [WAVE_PATTERN_BURST] = {
     .pattern = WAVE_PATTERN_BURST,
     .events = BURST_EVENTS,
     .event_count = ARRAY_COUNT(BURST_EVENTS),
-    .repeat_count = 1,
-    .next_wave_delay_ticks = 80,
+  },
+  [WAVE_PATTERN_BURST_BOMB] = {
+    .pattern = WAVE_PATTERN_BURST_BOMB,
+    .events = BURST_BOMB_EVENTS,
+    .event_count = ARRAY_COUNT(BURST_BOMB_EVENTS),
   },
   [WAVE_PATTERN_STAGGERED] = {
     .pattern = WAVE_PATTERN_STAGGERED,
     .events = STAGGERED_EVENTS,
     .event_count = ARRAY_COUNT(STAGGERED_EVENTS),
-    .repeat_count = 1,
-    .next_wave_delay_ticks = 80,
+  },
+  [WAVE_PATTERN_PUMP4] = {
+    .pattern = WAVE_PATTERN_PUMP4,
+    .events = PUMP4_EVENTS,
+    .event_count = ARRAY_COUNT(PUMP4_EVENTS),
+  },
+  [WAVE_PATTERN_SPLIT] = {
+    .pattern = WAVE_PATTERN_SPLIT,
+    .events = SPLIT_EVENTS,
+    .event_count = ARRAY_COUNT(SPLIT_EVENTS),
+  },
+  [WAVE_PATTERN_STAGGERED_BOMB] = {
+    .pattern = WAVE_PATTERN_STAGGERED_BOMB,
+    .events = STAGGERED_BOMB_EVENTS,
+    .event_count = ARRAY_COUNT(STAGGERED_BOMB_EVENTS),
+  },
+  [WAVE_PATTERN_PUMP_BOMB] = {
+    .pattern = WAVE_PATTERN_PUMP_BOMB,
+    .events = PUMP_BOMB_EVENTS,
+    .event_count = ARRAY_COUNT(PUMP_BOMB_EVENTS),
+  },
+  [WAVE_PATTERN_FEINT] = {
+    .pattern = WAVE_PATTERN_FEINT,
+    .events = FEINT_EVENTS,
+    .event_count = ARRAY_COUNT(FEINT_EVENTS),
+  },
+  [WAVE_PATTERN_EASY_MID] = {
+    .pattern = WAVE_PATTERN_EASY_MID,
+    .events = EASY_MID_EVENTS,
+    .event_count = ARRAY_COUNT(EASY_MID_EVENTS),
+  },
+  [WAVE_PATTERN_EASY_MID_BURST] = {
+    .pattern = WAVE_PATTERN_EASY_MID_BURST,
+    .events = EASY_MID_BURST_EVENTS,
+    .event_count = ARRAY_COUNT(EASY_MID_BURST_EVENTS),
   },
   [WAVE_PATTERN_MIXED] = {
     .pattern = WAVE_PATTERN_MIXED,
     .events = MIXED_EVENTS,
     .event_count = ARRAY_COUNT(MIXED_EVENTS),
-    .repeat_count = 1,
-    .next_wave_delay_ticks = 100,
+  },
+  [WAVE_PATTERN_MIXED_BOMB] = {
+    .pattern = WAVE_PATTERN_MIXED_BOMB,
+    .events = MIXED_BOMB_EVENTS,
+    .event_count = ARRAY_COUNT(MIXED_BOMB_EVENTS),
+  },
+  [WAVE_PATTERN_QUICK_MIX] = {
+    .pattern = WAVE_PATTERN_QUICK_MIX,
+    .events = QUICK_MIX_EVENTS,
+    .event_count = ARRAY_COUNT(QUICK_MIX_EVENTS),
+  },
+  [WAVE_PATTERN_DOUBLE_BURST] = {
+    .pattern = WAVE_PATTERN_DOUBLE_BURST,
+    .events = DOUBLE_BURST_EVENTS,
+    .event_count = ARRAY_COUNT(DOUBLE_BURST_EVENTS),
+  },
+  [WAVE_PATTERN_MID_HARD] = {
+    .pattern = WAVE_PATTERN_MID_HARD,
+    .events = MID_HARD_EVENTS,
+    .event_count = ARRAY_COUNT(MID_HARD_EVENTS),
+  },
+  [WAVE_PATTERN_MID_HARD_BURST] = {
+    .pattern = WAVE_PATTERN_MID_HARD_BURST,
+    .events = MID_HARD_BURST_EVENTS,
+    .event_count = ARRAY_COUNT(MID_HARD_BURST_EVENTS),
+  },
+  [WAVE_PATTERN_HARD_MIX] = {
+    .pattern = WAVE_PATTERN_HARD_MIX,
+    .events = HARD_MIX_EVENTS,
+    .event_count = ARRAY_COUNT(HARD_MIX_EVENTS),
+  },
+  [WAVE_PATTERN_HARD_CHAIN] = {
+    .pattern = WAVE_PATTERN_HARD_CHAIN,
+    .events = HARD_CHAIN_EVENTS,
+    .event_count = ARRAY_COUNT(HARD_CHAIN_EVENTS),
   },
 };
 
-static bool wave_repeat_finished(const wave_t *wave, const wave_runtime_t *runtime) {
-  return wave->repeat_count != WAVE_FOREVER &&
-         runtime->current_repeat + 1 >= wave->repeat_count;
-}
+static const uint8_t EASY_POOL[] = {
+  WAVE_PATTERN_SINGLE,
+  WAVE_PATTERN_BOMB,
+  WAVE_PATTERN_BURST,
+  WAVE_PATTERN_BURST_BOMB,
+  WAVE_PATTERN_STAGGERED,
+  WAVE_PATTERN_PUMP4,
+  WAVE_PATTERN_SPLIT,
+  WAVE_PATTERN_STAGGERED_BOMB,
+};
 
-static const wave_difficulty_profile_t *waves_get_difficulty_profile(difficulty_t difficulty) {
+static const uint8_t EASY_MID_POOL[] = {
+  WAVE_PATTERN_SINGLE,
+  WAVE_PATTERN_BOMB,
+  WAVE_PATTERN_BURST,
+  WAVE_PATTERN_BURST_BOMB,
+  WAVE_PATTERN_STAGGERED,
+  WAVE_PATTERN_PUMP4,
+  WAVE_PATTERN_SPLIT,
+  WAVE_PATTERN_STAGGERED_BOMB,
+  WAVE_PATTERN_PUMP_BOMB,
+  WAVE_PATTERN_FEINT,
+  WAVE_PATTERN_EASY_MID,
+  WAVE_PATTERN_EASY_MID_BURST,
+};
+
+static const uint8_t MID_POOL[] = {
+  WAVE_PATTERN_SINGLE,
+  WAVE_PATTERN_BOMB,
+  WAVE_PATTERN_BURST,
+  WAVE_PATTERN_BURST_BOMB,
+  WAVE_PATTERN_STAGGERED,
+  WAVE_PATTERN_PUMP4,
+  WAVE_PATTERN_SPLIT,
+  WAVE_PATTERN_STAGGERED_BOMB,
+  WAVE_PATTERN_PUMP_BOMB,
+  WAVE_PATTERN_FEINT,
+  WAVE_PATTERN_EASY_MID,
+  WAVE_PATTERN_EASY_MID_BURST,
+  WAVE_PATTERN_MIXED,
+  WAVE_PATTERN_MIXED_BOMB,
+  WAVE_PATTERN_QUICK_MIX,
+};
+
+static const uint8_t MID_HARD_POOL[] = {
+  WAVE_PATTERN_BURST,
+  WAVE_PATTERN_BURST_BOMB,
+  WAVE_PATTERN_STAGGERED,
+  WAVE_PATTERN_PUMP4,
+  WAVE_PATTERN_SPLIT,
+  WAVE_PATTERN_STAGGERED_BOMB,
+  WAVE_PATTERN_PUMP_BOMB,
+  WAVE_PATTERN_FEINT,
+  WAVE_PATTERN_EASY_MID,
+  WAVE_PATTERN_EASY_MID_BURST,
+  WAVE_PATTERN_MIXED,
+  WAVE_PATTERN_MIXED_BOMB,
+  WAVE_PATTERN_QUICK_MIX,
+  WAVE_PATTERN_DOUBLE_BURST,
+  WAVE_PATTERN_MID_HARD,
+  WAVE_PATTERN_MID_HARD_BURST,
+};
+
+static const uint8_t HARD_POOL[] = {
+  WAVE_PATTERN_SINGLE,
+  WAVE_PATTERN_BURST,
+  WAVE_PATTERN_STAGGERED,
+  WAVE_PATTERN_PUMP4,
+  WAVE_PATTERN_SPLIT,
+  WAVE_PATTERN_STAGGERED_BOMB,
+  WAVE_PATTERN_MIXED,
+  WAVE_PATTERN_MIXED_BOMB,
+  WAVE_PATTERN_QUICK_MIX,
+  WAVE_PATTERN_DOUBLE_BURST,
+  WAVE_PATTERN_MID_HARD,
+  WAVE_PATTERN_MID_HARD_BURST,
+  WAVE_PATTERN_HARD_MIX,
+  WAVE_PATTERN_HARD_CHAIN,
+};
+
+static const wave_difficulty_profile_t *get_profile(difficulty_t difficulty) {
   if (difficulty < EASY || difficulty > HARD) {
     difficulty = EASY;
   }
@@ -129,45 +407,63 @@ static const wave_difficulty_profile_t *waves_get_difficulty_profile(difficulty_
   return &DIFFICULTY_PROFILES[difficulty];
 }
 
-static uint32_t waves_base_delay(const wave_t *wave) {
-  if (wave != NULL && wave->pattern < WAVE_PATTERN_COUNT) {
-    return PREDEFINED_WAVES[wave->pattern].next_wave_delay_ticks;
-  }
-
-  return wave == NULL ? 0 : wave->next_wave_delay_ticks;
+static uint32_t rand_gap(void) {
+  return WAVE_GAP_MIN_TICKS +
+         (uint32_t)(rand() % (WAVE_GAP_MAX_TICKS - WAVE_GAP_MIN_TICKS + 1));
 }
 
-static void waves_advance_to_next_wave(wave_runtime_t *runtime, const wave_t *wave,
-                                       uint8_t wave_count,
-                                       uint32_t current_tick) {
-  if (runtime->current_wave + 1 >= wave_count) {
-    runtime->current_wave = 0;
+static uint8_t pick_wave(difficulty_t difficulty, uint8_t wave_count) {
+  const uint8_t *pool = EASY_POOL;
+  uint8_t count = ARRAY_COUNT(EASY_POOL);
+
+  if (difficulty == EASY_MID) {
+    pool = EASY_MID_POOL;
+    count = ARRAY_COUNT(EASY_MID_POOL);
   }
-  else {
-    runtime->current_wave++;
+  else if (difficulty == MID) {
+    pool = MID_POOL;
+    count = ARRAY_COUNT(MID_POOL);
+  }
+  else if (difficulty == MID_HARD) {
+    pool = MID_HARD_POOL;
+    count = ARRAY_COUNT(MID_HARD_POOL);
+  }
+  else if (difficulty == HARD) {
+    pool = HARD_POOL;
+    count = ARRAY_COUNT(HARD_POOL);
   }
 
+  for (uint8_t i = 0; i < count; i++) {
+    uint8_t selected = pool[rand() % count];
+    if (selected < wave_count) return selected;
+  }
+
+  return WAVE_PATTERN_SINGLE < wave_count ? WAVE_PATTERN_SINGLE : 0;
+}
+
+static void next_wave(wave_runtime_t *runtime, difficulty_t difficulty,
+                      uint8_t wave_count, uint32_t current_tick) {
+  runtime->current_wave = pick_wave(difficulty, wave_count);
   runtime->current_event = 0;
-  runtime->current_repeat = 0;
-  runtime->next_wave_start_tick = current_tick + wave->next_wave_delay_ticks;
+  runtime->next_wave_start_tick = current_tick + rand_gap();
   runtime->wave_start_tick = runtime->next_wave_start_tick;
 }
 
 void waves_init(wave_runtime_t *runtime, uint32_t current_tick) {
   if (runtime == NULL) return;
 
-  runtime->current_wave = 0;
+  runtime->current_wave = WAVE_PATTERN_INTRO;
   runtime->current_event = 0;
-  runtime->current_repeat = 0;
-  runtime->wave_start_tick = current_tick;
-  runtime->next_wave_start_tick = current_tick;
+  runtime->wave_start_tick = current_tick + WAVE_FIRST_DELAY_TICKS;
+  runtime->next_wave_start_tick = runtime->wave_start_tick;
   runtime->status = WAVE_STATUS_IDLE;
 }
 
 
 
 wave_status_t waves_update(wave_runtime_t *runtime, const wave_t *waves,
-                           uint8_t wave_count, uint32_t current_tick,
+                           uint8_t wave_count, difficulty_t difficulty,
+                           uint32_t current_tick,
                            wave_spawn_request_t *out_request, bool *has_request) {
   if (has_request != NULL) *has_request = false;
 
@@ -177,14 +473,17 @@ wave_status_t waves_update(wave_runtime_t *runtime, const wave_t *waves,
     return WAVE_STATUS_ERROR;
   }
 
-  if (runtime->status == WAVE_STATUS_FINISHED ||
-      runtime->status == WAVE_STATUS_ERROR) {
+  if (runtime->status == WAVE_STATUS_ERROR) {
     return runtime->status;
   }
 
   runtime->status = WAVE_STATUS_RUNNING;
 
-  while (runtime->current_wave < wave_count) {
+  if (runtime->current_wave >= wave_count) {
+    runtime->current_wave = pick_wave(difficulty, wave_count);
+  }
+
+  while (true) {
     const wave_t *wave = &waves[runtime->current_wave];
 
     if (wave->event_count == 0 || wave->events == NULL) {
@@ -197,14 +496,7 @@ wave_status_t waves_update(wave_runtime_t *runtime, const wave_t *waves,
     }
 
     if (runtime->current_event >= wave->event_count) {
-      if (wave_repeat_finished(wave, runtime)) {
-        waves_advance_to_next_wave(runtime, wave, wave_count, current_tick);
-      }
-      else {
-        if (runtime->current_repeat < UINT8_MAX) runtime->current_repeat++;
-        runtime->current_event = 0;
-        runtime->wave_start_tick = current_tick;
-      }
+      next_wave(runtime, difficulty, wave_count, current_tick);
       continue;
     }
 
@@ -216,20 +508,11 @@ wave_status_t waves_update(wave_runtime_t *runtime, const wave_t *waves,
     *out_request = event->request;
     *has_request = true;
     runtime->current_event++;
+    runtime->wave_start_tick = current_tick;
     return runtime->status;
   }
 
-  runtime->current_wave = 0;
-  runtime->current_event = 0;
-  runtime->current_repeat = 0;
-  runtime->wave_start_tick = current_tick;
-  runtime->next_wave_start_tick = current_tick;
-  runtime->status = WAVE_STATUS_RUNNING;
   return runtime->status;
-}
-
-bool waves_is_finished(const wave_runtime_t *runtime) {
-  return runtime == NULL || runtime->status == WAVE_STATUS_FINISHED;
 }
 
 const wave_t *waves_get_predefined(wave_pattern_t pattern) {
@@ -239,18 +522,5 @@ const wave_t *waves_get_predefined(wave_pattern_t pattern) {
 }
 
 const motion_profile_t *waves_get_difficulty_motion(difficulty_t difficulty) {
-  return &waves_get_difficulty_profile(difficulty)->motion;
-}
-
-void waves_apply_difficulty(wave_t *waves, uint8_t wave_count, difficulty_t difficulty) {
-  if (waves == NULL) return;
-
-  const wave_difficulty_profile_t *profile = waves_get_difficulty_profile(difficulty);
-
-  for (uint8_t i = 0; i < wave_count; i++) {
-    uint32_t delay = waves_base_delay(&waves[i]);
-    delay = (delay * profile->spawn_delay_percent) / 100;
-    if (delay == 0) delay = 1;
-    waves[i].next_wave_delay_ticks = delay;
-  }
+  return &get_profile(difficulty)->motion;
 }
