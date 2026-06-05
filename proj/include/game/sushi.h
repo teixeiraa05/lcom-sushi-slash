@@ -105,6 +105,16 @@ sushi_t create_bomb(int x, int y, int vx, int vy, int gravity, sprite_t* xpm);
 sushi_t create_random_sushi(int speed, int gravity);
 
 /**
+ * @brief Create a random bomb using the current difficulty motion.
+ *
+ * @param speed Launch speed in pixels per tick.
+ * @param gravity Fixed-point gravity applied every tick.
+ *
+ * @return Initialized bomb item, or an item with a NULL sprite on failure.
+ */
+sushi_t create_random_bomb(int speed, int gravity);
+
+/**
  * @brief Advance a sushi-style item by one physics tick.
  *
  * @param sushi Item to update.
@@ -154,7 +164,10 @@ typedef struct {
 } sushi_fragment_t;
 
 /**
- * @brief Cut a sushi item if a slash segment intersects its padded bounds.
+ * @brief Process a slash segment against a sushi-style item.
+ *
+ * Regular sushi is cut into fragments. Bombs report a successful hit without
+ * creating fragments so gameplay can trigger the hazard behavior.
  *
  * @param sushi Item to test and cut.
  * @param cut_x0 Slash start horizontal position in pixels.
@@ -165,7 +178,7 @@ typedef struct {
  * @param left_fragment Output fragment for the left half.
  * @param right_fragment Output fragment for the right half.
  *
- * @return 0 if the sushi was cut, non-zero otherwise.
+ * @return 0 if the item was hit, non-zero otherwise.
  */
 int find_cut_sushi_segment_area(sushi_t* sushi, int cut_x0, int cut_y0, int cut_x1, int cut_y1, int radius, sushi_fragment_t* left_fragment, sushi_fragment_t* right_fragment);
 
