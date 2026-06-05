@@ -183,9 +183,9 @@ int (proj_main_loop)(int argc, char *argv[]) {
                                 }
                             }
                             else {
-                                gameplay_handle_cut(&game, &mouse_state);
+                                gameplay_handle_cut(&game, &mouse_state, session_timer_ticks(&session_timer));
                                 ui_draw_background(&assets.background_sprite);
-                                gameplay_draw(&game);
+                                gameplay_draw(&game, &assets);
                                 hud_draw(&assets.game_font,
                                          game.score,
                                          game.lives,
@@ -255,7 +255,7 @@ int (proj_main_loop)(int argc, char *argv[]) {
                                 }
                             }
                             else if (game.state == GAME) {
-                                gameplay_handle_cut(&game, &mouse_state);
+                                gameplay_handle_cut(&game, &mouse_state, session_timer_ticks(&session_timer));
                             }
                             else if (game.state == PAUSED) {
                                 PauseOption hovered = ui_pause_menu_hit_test(mouse_state.x, mouse_state.y);
