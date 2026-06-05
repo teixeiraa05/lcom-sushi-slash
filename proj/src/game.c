@@ -80,29 +80,49 @@ static void gameplay_get_difficulty_physics(const GameInfo *game, int *speed, in
     *gravity = motion->gravity;
 }
 
-static void gameplay_spawn_sushi(GameInfo *game, int speed, int gravity, int score_value) {
-    if (game == NULL || game->singleplayer.num_active_sushi >= MAX_ACTIVE_SUSHI) return;
+static void gameplay_add_item(GameInfo *game, sushi_t item) {
+    if (game == NULL || item.xpm == NULL) {
+        sushi_destroy(&item);
+        return;
+    }
 
-    sushi_t sushi = create_random_sushi(speed, gravity);
-    if (sushi.xpm == NULL) return;
+    if (game->singleplayer.num_active_sushi >= MAX_ACTIVE_SUSHI) {
+        sushi_destroy(&item);
+        return;
+    }
 
-    sushi.score_value = score_value;
-    game->singleplayer.active_sushi[game->singleplayer.num_active_sushi++] = sushi;
+    game->singleplayer.active_sushi[game->singleplayer.num_active_sushi++] = item;
+}
+
+static void gameplay_spawn_wave_item(GameInfo *game, const wave_spawn_request_t *request, int speed, int gravity) {
+    if (game == NULL || request == NULL) return;
+
+    switch (request->kind) {
+        case WAVE_SPAWN_REGULAR: {
+            sushi_t sushi = create_random_sushi(speed, gravity);
+            sushi.score_value = (int)request->score_value;
+            gameplay_add_item(game, sushi);
+            break;
+        }
+        case WAVE_SPAWN_BOMB:
+            gameplay_add_item(game, create_random_bomb(speed, gravity));
+            break;
+        default:
+            break;
+    }
 }
 
 static void gameplay_handle_wave_spawn(GameInfo *game, const wave_spawn_request_t *request) {
     if (game == NULL || request == NULL) return;
 
-    if (request->kind != WAVE_SPAWN_REGULAR) return;
-
     for (uint8_t i = 0; i < request->amount; i++) {
         int speed = 0;
         int gravity = 0;
         gameplay_get_difficulty_physics(game, &speed, &gravity);
-        gameplay_spawn_sushi(game, speed, gravity, (int)request->score_value);
+
+        gameplay_spawn_wave_item(game, request, speed, gravity);
     }
 }
-
 // 3. Gameplay state
 
 static bool sushi_missed_lower_bound(const sushi_t *sushi) {
@@ -127,21 +147,33 @@ void gameplay_clear(GameInfo *game) {
     game->singleplayer.num_active_fragments = 0;
 }
 
-static void gameplay_handle_missed_sushi(GameInfo *game, uint8_t index) {
+static void gameplay_end_game(GameInfo *game) {
+    if (game == NULL) return;
+
+    uint32_t final_score = game->score;
+    game->lives = 0;
+    gameplay_clear(game);
+    game->state = GAME_OVER;
+    game_over_init(&game->data.game_over, final_score);
+}
+
+static void gameplay_handle_missed_item(GameInfo *game, uint8_t index) {
     if (game == NULL || index >= game->singleplayer.num_active_sushi) return;
 
+    sushi_kind_t kind = game->singleplayer.active_sushi[index].kind;
     sushi_destroy(&game->singleplayer.active_sushi[index]);
     gameplay_remove_sushi(game, index);
+
+    if (kind == SUSHI_BOMB) {
+        return;
+    }
 
     if (game->lives > 0) {
         game->lives--;
     }
 
     if (game->lives == 0) {
-        uint32_t final_score = game->score;
-        gameplay_clear(game);
-        game->state = GAME_OVER;
-        game_over_init(&game->data.game_over, final_score);
+        gameplay_end_game(game);
     }
 }
 
@@ -182,7 +214,7 @@ void gameplay_update(GameInfo *game, int current_tick, int *last_spawn_tick) {
         update_sushi(&game->singleplayer.active_sushi[i]);
 
         if (sushi_missed_lower_bound(&game->singleplayer.active_sushi[i])) {
-            gameplay_handle_missed_sushi(game, i);
+            gameplay_handle_missed_item(game, i);
             if (game->state != GAME) return;
         }
         else if (game->singleplayer.active_sushi[i].xpm == NULL) {
@@ -248,19 +280,36 @@ void gameplay_handle_cut(GameInfo *game, MouseGameState *mouse_state) {
 
     uint8_t i = 0;
     while (i < game->singleplayer.num_active_sushi) {
-        if (game->singleplayer.num_active_fragments + 2 > MAX_ACTIVE_FRAGMENTS) return;
+        sushi_t *sushi = &game->singleplayer.active_sushi[i];
 
-        sushi_fragment_t left_fragment;
-        sushi_fragment_t right_fragment;
-        if (find_cut_sushi_segment_area(&game->singleplayer.active_sushi[i],
-                                        prev_cut_x,
-                                        prev_cut_y,
-                                        cut_x,
-                                        cut_y,
-                                        MOUSE_SLASH_HIT_RADIUS,
-                                        &left_fragment,
-                                        &right_fragment) == 0) {
-            game->score += game->singleplayer.active_sushi[i].score_value;
+        if (!sushi_segment_intersects(sushi,
+                                      prev_cut_x,
+                                      prev_cut_y,
+                                      cut_x,
+                                      cut_y,
+                                      MOUSE_SLASH_HIT_RADIUS)) {
+            i++;
+            continue;
+        }
+
+        if (sushi->kind == SUSHI_BOMB) {
+            gameplay_end_game(game);
+            return;
+        }
+
+        if (sushi->kind == SUSHI_REGULAR) {
+            if (game->singleplayer.num_active_fragments + 2 > MAX_ACTIVE_FRAGMENTS) {
+                return;
+            }
+
+            sushi_fragment_t left_fragment;
+            sushi_fragment_t right_fragment;
+            if (cut_sushi(sushi, &left_fragment, &right_fragment) != 0) {
+                i++;
+                continue;
+            }
+
+            game->score += sushi->score_value;
             game->singleplayer.active_fragments[game->singleplayer.num_active_fragments++] = left_fragment;
             game->singleplayer.active_fragments[game->singleplayer.num_active_fragments++] = right_fragment;
             gameplay_remove_sushi(game, i);

@@ -39,6 +39,8 @@
 #include "../assets/sushi_pieces/SushiRoll5_right.xpm"
 #include "../assets/sushi_pieces/SushiRoll6_right.xpm"
 
+#include "../assets/sushi_pieces/bomb.xpm"
+
 xpm_map_t sushi_xpms[11] = {
     // Placeholder XPMs for different sushi types
     (xpm_map_t)Nigiri1_xpm,
@@ -94,7 +96,14 @@ sushi_t create_sushi(int x, int y, int vx, int vy, int gravity, sprite_t* xpm, i
     sushi.xpm = xpm;
     sushi.score_value = score_value;
     sushi.type = 0;
+    sushi.kind = SUSHI_REGULAR;
     return sushi;
+}
+
+sushi_t create_bomb(int x, int y, int vx, int vy, int gravity, sprite_t* xpm) {
+    sushi_t bomb = create_sushi(x, y, vx, vy, gravity, xpm, 0);
+    bomb.kind = SUSHI_BOMB;
+    return bomb;
 }
 
 static int sushi_horizontal_velocity(int x, const sprite_t *sprite, int speed) {
@@ -132,6 +141,27 @@ sushi_t create_random_sushi(int speed, int gravity) {
     sushi.type = sushi_type;
 
     return sushi;
+}
+
+sushi_t create_random_bomb(int speed, int gravity) {
+    sprite_t *sprite = malloc(sizeof(sprite_t));
+    if (sprite == NULL) return create_bomb(0, 0, 0, 0, gravity, NULL);
+
+    if (sprite_load(sprite, (xpm_map_t)bomb_xpm)) {
+        free(sprite);
+        return create_bomb(0, 0, 0, 0, gravity, NULL);
+    }
+
+    int max_x = SCREEN_WIDTH - sprite->width;
+    if (max_x < 1) max_x = 1;
+    int x = rand() % max_x;
+
+    return create_bomb(x,
+                       SCREEN_HEIGHT + SUSHI_SPAWN_Y_OFFSET,
+                       sushi_horizontal_velocity(x, sprite, speed),
+                       -speed,
+                       gravity,
+                       sprite);
 }
 
 void update_sushi(sushi_t* sushi) {
@@ -223,39 +253,15 @@ static bool segment_intersects_sushi_bounds(const sushi_t* sushi, int x0, int y0
            segments_intersect(x0, y0, x1, y1, left, bottom, left, top);
 }
 
-int find_cut_sushi(sushi_t* sushi, int cut_x, int cut_y, sushi_fragment_t* left_fragment, sushi_fragment_t* right_fragment) {
-    if (sushi == NULL || sushi->xpm == NULL) return 1;
+bool sushi_segment_intersects(const sushi_t* sushi, int cut_x0, int cut_y0, int cut_x1, int cut_y1, int radius) {
+    if (sushi == NULL || sushi->xpm == NULL) return false;
 
-    // Check if the cut coordinates are within the sushi's bounding box
-    if (point_inside_sushi_bounds(sushi, cut_x, cut_y, 0)) {
-          return cut_sushi(sushi, left_fragment, right_fragment);
-    }
-
-    return 1;
-}
-
-int find_cut_sushi_area(sushi_t* sushi, int cut_x, int cut_y, int radius, sushi_fragment_t* left_fragment, sushi_fragment_t* right_fragment) {
-    if (sushi == NULL || sushi->xpm == NULL) return 1;
-
-    if (point_inside_sushi_bounds(sushi, cut_x, cut_y, radius)) {
-          return cut_sushi(sushi, left_fragment, right_fragment);
-    }
-
-    return 1;
-}
-
-int find_cut_sushi_segment_area(sushi_t* sushi, int cut_x0, int cut_y0, int cut_x1, int cut_y1, int radius, sushi_fragment_t* left_fragment, sushi_fragment_t* right_fragment) {
-    if (sushi == NULL || sushi->xpm == NULL) return 1;
-
-    if (segment_intersects_sushi_bounds(sushi, cut_x0, cut_y0, cut_x1, cut_y1, radius)) {
-          return cut_sushi(sushi, left_fragment, right_fragment);
-    }
-
-    return 1;
+    return segment_intersects_sushi_bounds(sushi, cut_x0, cut_y0, cut_x1, cut_y1, radius);
 }
 
 int cut_sushi(sushi_t* sushi, sushi_fragment_t* left_fragment, sushi_fragment_t* right_fragment) {
-    if (sushi == NULL || left_fragment == NULL || right_fragment == NULL || sushi->type >= 11) return 1;
+    if (sushi == NULL || left_fragment == NULL || right_fragment == NULL ||
+        sushi->kind != SUSHI_REGULAR || sushi->type >= 11) return 1;
 
     sprite_t *left_sprite = malloc(sizeof(sprite_t));
     sprite_t *right_sprite = malloc(sizeof(sprite_t));
