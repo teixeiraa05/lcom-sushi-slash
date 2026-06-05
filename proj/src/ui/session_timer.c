@@ -35,6 +35,12 @@ void session_timer_update(GameSessionTimer *timer, int current_tick) {
     timer->last_tick = current_tick;
 }
 
+uint32_t session_timer_ticks(const GameSessionTimer *timer) {
+    if (timer == NULL) return 0;
+
+    return timer->elapsed_ticks;
+}
+
 uint32_t session_timer_seconds(const GameSessionTimer *timer) {
     if (timer == NULL) return 0;
 

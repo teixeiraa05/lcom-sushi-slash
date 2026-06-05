@@ -5,7 +5,6 @@ void menu_init(menu_t *menu) {
     if (menu == NULL) return;
 
     menu->hovered_option = MENU_OPTION_NONE;
-    menu->selected_difficulty = EASY;
 }
 
 MenuAction menu_update(menu_t *menu, MenuOption hovered_option, bool clicked) {

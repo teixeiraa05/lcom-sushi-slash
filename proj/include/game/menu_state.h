@@ -2,7 +2,6 @@
 #define _MENU_STATE_H_
 
 #include <stdbool.h>
-#include "difficulty.h"
 
 typedef enum {
   MENU_OPTION_NONE,
@@ -22,7 +21,6 @@ typedef enum {
 
 typedef struct {
   MenuOption hovered_option;
-  difficulty_t selected_difficulty;
 } menu_t;
 
 void menu_init(menu_t *menu);

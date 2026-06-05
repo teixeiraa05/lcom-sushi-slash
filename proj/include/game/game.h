@@ -3,35 +3,19 @@
 
 #include "boss.h"
 #include "sushi.h"
-#include "difficulty.h"
 #include "menu_state.h"
 #include "pause_menu_state.h"
 #include "game_over.h"
 #include "sprite.h"
+#include "waves.h"
 #include "../../../lab4/mouse.h"
 
 #define LIVES 3
 #define MAX_ACTIVE_SUSHI 8
 #define MAX_ACTIVE_FRAGMENTS 16
-#define TEST_SUSHI_SPAWN_TICKS 80
 
-// Speed and gravity settings for different score thresholds
-#define GAME_SPEED_1 22
-#define GAME_SPEED_2 24
-#define GAME_SPEED_3 26
-#define GAME_SPEED_4 28
-#define GAME_SPEED_5 30
-
-#define GAME_GRAVITY_1 PHYSICS_FROM_THOUSANDTHS(500)
-#define GAME_GRAVITY_2 PHYSICS_FROM_THOUSANDTHS(550)
-#define GAME_GRAVITY_3 PHYSICS_FROM_THOUSANDTHS(620)
-#define GAME_GRAVITY_4 PHYSICS_FROM_THOUSANDTHS(700)
-#define GAME_GRAVITY_5 PHYSICS_FROM_THOUSANDTHS(790)
-
-#define GAME_SPEED_2_SCORE 15
-#define GAME_SPEED_3_SCORE 30
-#define GAME_SPEED_4_SCORE 50
-#define GAME_SPEED_5_SCORE 80
+#define GAME_NORMAL_SCORE 15
+#define GAME_HARD_SCORE 50
 
 typedef enum {
   MENU,
@@ -57,6 +41,9 @@ typedef enum {
 typedef struct {
     sushi_t active_sushi[MAX_ACTIVE_SUSHI];
     sushi_fragment_t active_fragments[MAX_ACTIVE_FRAGMENTS];
+    wave_t waves[WAVE_PATTERN_COUNT];
+    wave_runtime_t wave_runtime;
+    difficulty_t current_difficulty;
     uint8_t num_active_sushi;
     uint8_t num_active_fragments;
 } gameplay_data_t;
@@ -66,7 +53,6 @@ typedef struct {
     uint32_t score;
     uint8_t lives;
     sprite_t background;
-    difficulty_t difficulty;
     gameplay_data_t singleplayer;
 
     union {
