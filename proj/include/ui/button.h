@@ -4,13 +4,38 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+/**
+ * @file button.h
+ * @brief Declares the shared UI button data structure.
+ */
+
+/**
+ * @brief Rectangular text button used by menus.
+ */
 typedef struct {
-  uint16_t x, y; // Position of the button on the screen
-  uint16_t width, height; // Dimensions of the button
-  uint32_t color; // Color of the button 
-  uint32_t hover_color; // Color of the button when hovered
-  const char *label; // Text label of the button
-  bool hovered; // Whether the button is currently hovered
+  /** @brief Left coordinate of the button. */
+  uint16_t x;
+
+  /** @brief Top coordinate of the button. */
+  uint16_t y;
+
+  /** @brief Button width in pixels. */
+  uint16_t width;
+
+  /** @brief Button height in pixels. */
+  uint16_t height;
+
+  /** @brief Fill color used when the button is not hovered. */
+  uint32_t color;
+
+  /** @brief Fill color used when the button is hovered. */
+  uint32_t hover_color;
+
+  /** @brief Null-terminated text label drawn inside the button. */
+  const char *label;
+
+  /** @brief Whether the button is currently hovered. */
+  bool hovered;
 } button_t;
 
 #endif /* _BUTTON_H_ */

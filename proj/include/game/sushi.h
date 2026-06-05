@@ -44,11 +44,17 @@ typedef enum {
  * released by sushi_destroy().
  */
 typedef struct {
-  /** @brief Fixed-point horizontal and vertical position on the screen. */
-  int x, y;
+  /** @brief Fixed-point horizontal position on the screen. */
+  int x;
 
-  /** @brief Fixed-point horizontal and vertical velocity. */
-  int vx, vy;
+  /** @brief Fixed-point vertical position on the screen. */
+  int y;
+
+  /** @brief Fixed-point horizontal velocity. */
+  int vx;
+
+  /** @brief Fixed-point vertical velocity. */
+  int vy;
 
   /** @brief Fixed-point gravity applied every tick. */
   int gravity;
@@ -151,11 +157,17 @@ void sushi_destroy(sushi_t* sushi);
  * @brief Moving fragment created after a regular sushi piece is cut.
  */
 typedef struct {
-  /** @brief Fixed-point horizontal and vertical position on the screen. */
-  int x, y;
+  /** @brief Fixed-point horizontal position on the screen. */
+  int x;
 
-  /** @brief Fixed-point horizontal and vertical velocity. */
-  int vx, vy;
+  /** @brief Fixed-point vertical position on the screen. */
+  int y;
+
+  /** @brief Fixed-point horizontal velocity. */
+  int vx;
+
+  /** @brief Fixed-point vertical velocity. */
+  int vy;
 
   /** @brief Fixed-point gravity applied every tick. */
   int gravity;

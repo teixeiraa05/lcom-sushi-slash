@@ -20,10 +20,19 @@
  * @brief Runtime difficulty used for gameplay wave pacing and motion.
  */
 typedef enum difficulty {
+  /** @brief Introductory difficulty with slower, simpler waves. */
   EASY,
+
+  /** @brief Bridge difficulty between easy and mid. */
   EASY_MID,
+
+  /** @brief Standard difficulty. */
   MID,
+
+  /** @brief Bridge difficulty between mid and hard. */
   MID_HARD,
+
+  /** @brief Highest standard difficulty. */
   HARD
 } difficulty_t;
 

@@ -1,0 +1,60 @@
+/**
+ * @mainpage Sushi Slash
+ *
+ * @section overview Overview
+ *
+ * Sushi Slash is an LCOM action arcade game inspired by Fruit Ninja. Sushi
+ * pieces are launched across the screen and the player cuts them with fast
+ * mouse slashes before they fall away. The game tracks score, lives, elapsed
+ * session time, current real-world time, and progressively increases pressure
+ * through wave and difficulty scheduling.
+ *
+ * @section gameplay Core Gameplay
+ *
+ * - Regular sushi awards score when sliced and costs a life when missed.
+ * - Bombs are hazards: slicing one ends the current run.
+ * - Cut sushi pieces split into independent fragments with their own physics.
+ * - Waves control when sushi and hazards appear.
+ * - Difficulty scales from EASY to HARD as the player score increases.
+ *
+ * @section devices Device Responsibilities
+ *
+ * - Graphics Card: renders the background, sprites, fragments, menus, HUD, and
+ *   mouse slash effects.
+ * - Mouse: controls the cursor and creates slash gestures used for hit
+ *   detection.
+ * - Keyboard: handles menu navigation and future Boss Sushi key sequences.
+ * - Timer: drives the game loop, physics updates, animations, waves, and
+ *   session timing.
+ * - RTC: provides the real-world clock shown in the UI.
+ * - Serial Port: reserved for future multiplayer score or input exchange.
+ *
+ * @section architecture Project Structure
+ *
+ * The public API is organized under @c proj/include:
+ *
+ * - @c game/: gameplay state, sushi objects, waves, menus, boss/combo data,
+ *   sprites, and queues.
+ * - @c ui/: drawing helpers, screen-specific menu drawing, HUD/status bar,
+ *   mouse trail rendering, and the session timer.
+ * - @c macros/: shared constants for screen geometry, physics, menus, and
+ *   mouse slash tuning.
+ * - @c font.h and @c init.h: bitmap font and shared asset initialization APIs.
+ *
+ * @section flow Runtime Flow
+ *
+ * A normal run starts in the main menu. When singleplayer begins,
+ * gameplay_start() initializes the session data and wave runtime. Each timer
+ * tick calls gameplay_update() to advance waves, item physics, missed-item
+ * handling, fragments, and difficulty. Mouse input is processed through
+ * gameplay_handle_cut(), then gameplay_draw() and the UI helpers render the
+ * current frame.
+ *
+ * @section docs Documentation Guide
+ *
+ * Start with game.h for the main state machine and gameplay lifecycle, sushi.h
+ * for flying objects and cut fragments, waves.h for spawn scheduling, and ui.h
+ * for rendering helpers. Menu-specific state and drawing APIs live in
+ * menu_state.h, pause_menu_state.h, game_over.h, menu_draw.h,
+ * pause_menu_draw.h, and game_over_draw.h.
+ */
