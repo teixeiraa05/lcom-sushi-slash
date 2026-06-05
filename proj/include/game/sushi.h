@@ -109,8 +109,6 @@ sushi_t create_bomb(int x, int y, int vx, int vy, int gravity, sprite_t* xpm);
 
 sushi_t create_sushi_boss(int x, int y, int vx, int vy, int gravity, sprite_t* xpm, int score_value);
 
-sushi_t create_random_sushi_boss(int speed, int gravity);
-
 sushi_t create_random_sushi(int speed, int gravity);
 
 /**

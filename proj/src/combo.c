@@ -115,7 +115,7 @@ int combo_advance(combo_t* combo) {
         return 1; // Already complete
     }
     
-    uint8_t current;
+    char current;
     queue_pop(&combo->combo, &current);
     combo->completed++;
     
@@ -137,9 +137,9 @@ char combo_get_current(const combo_t* combo) {
         return 0;
     }
     
-    uint8_t current;
+    char current;
     if (queue_top((Queue*)&combo->combo, &current)) {
-        return (char)current;
+        return current;
     }
     return 0;
 }

@@ -113,10 +113,6 @@ sushi_t create_sushi_boss(int x, int y, int vx, int vy, int gravity, sprite_t* x
     return boss;
 }
 
-sushi_t create_random_sushi_boss(int speed, int gravity) {
-    
-}
-
 static int sushi_horizontal_velocity(int x, const sprite_t *sprite, int speed) {
     int sushi_center = x + sprite->width / 2;
     int screen_center = SCREEN_WIDTH / 2;
