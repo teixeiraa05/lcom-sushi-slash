@@ -129,6 +129,17 @@ int (proj_main_loop)(int argc, char *argv[]) {
                             game.state = PAUSED;
                             pause_menu_init(&game.data.pause_menu);
                         }
+                        else if (keyboard_is_scancode_make()) {
+                            // Converter scancode para char ASCII
+                            char key_pressed = keyboard_scancode_to_ascii();
+                            
+                            if (key_pressed != 0) {  // Se for um char válido
+                                if (game.state == BOSS) {  // Se estivermos em um boss fight
+                                    boss_verify_combo(&game.data.boss_fight.boss, key_pressed);
+                                    
+                                }
+                            }
+                        }
                     }
 
                     if (msg.m_notify.interrupts & timer_irq_set) { /* subscribed interrupt */
