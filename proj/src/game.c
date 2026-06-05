@@ -199,6 +199,7 @@ void gameplay_update(GameInfo *game, int current_tick, int *last_spawn_tick) {
         wave_status = waves_update(&game->singleplayer.wave_runtime,
                                    game->singleplayer.waves,
                                    WAVE_PATTERN_COUNT,
+                                   game->singleplayer.current_difficulty,
                                    (uint32_t)current_tick,
                                    &request,
                                    &has_request);
