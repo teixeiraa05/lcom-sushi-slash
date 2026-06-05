@@ -52,6 +52,37 @@ static GameOverButtonSpec game_over_button(void) {
     return spec;
 }
 
+static int draw_stat_line(const Font *font, const char *text, uint16_t y) {
+    uint16_t width = font_half_text_width(font, text);
+    return font_draw_half_text_color(font,
+                                     text,
+                                     CENTER_X(width),
+                                     y,
+                                     GAME_OVER_STATS_COLOR);
+}
+
+static int draw_game_over_stats(const game_over_t *game_over, const Font *font) {
+    char max_combo[32];
+    char sushi_cut[32];
+    char bombs_avoided[32];
+    char time_survived[32];
+    char sushi_missed[32];
+    uint32_t minutes = game_over->stats.time_survived_seconds / 60;
+    uint32_t seconds = game_over->stats.time_survived_seconds % 60;
+
+    snprintf(max_combo, sizeof(max_combo), "max combo %u", (unsigned)game_over->stats.max_combo);
+    snprintf(sushi_cut, sizeof(sushi_cut), "sushi cut %u", (unsigned)game_over->stats.sushi_cut);
+    snprintf(bombs_avoided, sizeof(bombs_avoided), "bombs avoided %u", (unsigned)game_over->stats.bombs_avoided);
+    snprintf(time_survived, sizeof(time_survived), "time survived %02u:%02u", (unsigned)minutes, (unsigned)seconds);
+    snprintf(sushi_missed, sizeof(sushi_missed), "sushi missed %u", (unsigned)game_over->stats.sushi_missed);
+
+    if (draw_stat_line(font, max_combo, GAME_OVER_STATS_Y) != 0) return 1;
+    if (draw_stat_line(font, sushi_cut, GAME_OVER_STATS_Y + GAME_OVER_STATS_GAP) != 0) return 1;
+    if (draw_stat_line(font, bombs_avoided, GAME_OVER_STATS_Y + GAME_OVER_STATS_GAP * 2) != 0) return 1;
+    if (draw_stat_line(font, time_survived, GAME_OVER_STATS_Y + GAME_OVER_STATS_GAP * 3) != 0) return 1;
+    return draw_stat_line(font, sushi_missed, GAME_OVER_STATS_Y + GAME_OVER_STATS_GAP * 4);
+}
+
 GameOverOption ui_game_over_hit_test(int x, int y) {
     GameOverButtonSpec spec = game_over_button();
     if (ui_button_contains(&spec.button, x, y)) {
@@ -64,7 +95,7 @@ int ui_game_over_draw(const game_over_t *game_over, const Assets *assets) {
     if (game_over == NULL || assets == NULL) return 1;
 
     char score_text[24];
-    snprintf(score_text, sizeof(score_text), "score %u", game_over->final_score);
+    snprintf(score_text, sizeof(score_text), "score %u", (unsigned)game_over->final_score);
 
     if (ui_draw_background(&assets->background_sprite) != 0) return 1;
 
@@ -83,6 +114,8 @@ int ui_game_over_draw(const game_over_t *game_over, const Assets *assets) {
                               GAME_OVER_SCORE_SCALE) != 0) {
         return 1;
     }
+
+    if (draw_game_over_stats(game_over, &assets->game_font) != 0) return 1;
 
     anim_draw(&assets->mascot_lose_anim, GAME_OVER_MASCOT_X, GAME_OVER_MASCOT_Y);
 

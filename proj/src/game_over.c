@@ -1,11 +1,14 @@
 #include "../include/game/game_over.h"
 #include <stdio.h>
 
-void game_over_init(game_over_t *game_over, uint32_t final_score) {
+void game_over_init(game_over_t *game_over,
+                    uint32_t final_score,
+                    game_over_stats_t stats) {
     if (game_over == NULL) return;
 
     game_over->hovered_option = GAME_OVER_OPTION_NONE;
     game_over->final_score = final_score;
+    game_over->stats = stats;
 }
 
 GameOverAction game_over_update(game_over_t *game_over, GameOverOption hovered_option, bool clicked) {

@@ -106,11 +106,20 @@
 /** @brief Game-over score top coordinate. */
 #define GAME_OVER_SCORE_Y 165
 
+/** @brief Game-over stats list top coordinate. */
+#define GAME_OVER_STATS_Y 220
+
+/** @brief Vertical gap between game-over stat lines. */
+#define GAME_OVER_STATS_GAP 22
+
+/** @brief Game-over stats text color. */
+#define GAME_OVER_STATS_COLOR 0xFFFFFF
+
 /** @brief Game-over mascot left coordinate. */
 #define GAME_OVER_MASCOT_X CENTER_X(128)
 
 /** @brief Game-over mascot top coordinate. */
-#define GAME_OVER_MASCOT_Y 235
+#define GAME_OVER_MASCOT_Y 350
 
 /** @brief Game-over button width in pixels. */
 #define GAME_OVER_BUTTON_W 260
@@ -122,6 +131,6 @@
 #define GAME_OVER_BUTTON_X CENTER_X(GAME_OVER_BUTTON_W)
 
 /** @brief Game-over button top coordinate. */
-#define GAME_OVER_BUTTON_Y 485
+#define GAME_OVER_BUTTON_Y 520
 
 #endif /* _MACROS_MENU_H_ */

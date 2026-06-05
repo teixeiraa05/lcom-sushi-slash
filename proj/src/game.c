@@ -8,6 +8,8 @@
 #include "../include/ui/slash_combo_popup.h"
 #include "../include/ui/ui.h"
 
+#define GAMEPLAY_TICKS_PER_SECOND 60
+
 // 1. Sushi management
 
 static void gameplay_remove_sushi(GameInfo *game, uint8_t index) {
@@ -150,34 +152,45 @@ void gameplay_clear(GameInfo *game) {
     slash_combo_reset(&game->singleplayer.slash_combo);
 }
 
-static void gameplay_end_game(GameInfo *game) {
+static game_over_stats_t gameplay_final_stats(const GameInfo *game, uint32_t elapsed_ticks) {
+    game_over_stats_t stats = {0, 0, 0, 0, 0};
+    if (game == NULL) return stats;
+
+    stats = game->singleplayer.stats;
+    stats.time_survived_seconds = elapsed_ticks / GAMEPLAY_TICKS_PER_SECOND;
+    return stats;
+}
+
+static void gameplay_end_game(GameInfo *game, uint32_t elapsed_ticks) {
     if (game == NULL) return;
 
     uint32_t final_score = game->score;
+    game_over_stats_t final_stats = gameplay_final_stats(game, elapsed_ticks);
     game->lives = 0;
     gameplay_clear(game);
     game->state = GAME_OVER;
-    game_over_init(&game->data.game_over, final_score);
+    game_over_init(&game->data.game_over, final_score, final_stats);
 }
 
-static void gameplay_handle_missed_item(GameInfo *game, uint8_t index) {
-    if (game == NULL || index >= game->singleplayer.num_active_sushi) return;
+static bool gameplay_handle_missed_item(GameInfo *game, uint8_t index) {
+    if (game == NULL || index >= game->singleplayer.num_active_sushi) return false;
 
     sushi_kind_t kind = game->singleplayer.active_sushi[index].kind;
     sushi_destroy(&game->singleplayer.active_sushi[index]);
     gameplay_remove_sushi(game, index);
 
     if (kind == SUSHI_BOMB) {
-        return;
+        game->singleplayer.stats.bombs_avoided++;
+        return false;
     }
+
+    game->singleplayer.stats.sushi_missed++;
 
     if (game->lives > 0) {
         game->lives--;
     }
 
-    if (game->lives == 0) {
-        gameplay_end_game(game);
-    }
+    return game->lives == 0;
 }
 
 void gameplay_start(GameInfo *game) {
@@ -220,8 +233,10 @@ void gameplay_update(GameInfo *game, int current_tick, int *last_spawn_tick) {
         update_sushi(&game->singleplayer.active_sushi[i]);
 
         if (sushi_missed_lower_bound(&game->singleplayer.active_sushi[i])) {
-            gameplay_handle_missed_item(game, i);
-            if (game->state != GAME) return;
+            if (gameplay_handle_missed_item(game, i)) {
+                gameplay_end_game(game, (uint32_t)current_tick);
+                return;
+            }
         }
         else if (game->singleplayer.active_sushi[i].xpm == NULL) {
             gameplay_remove_sushi(game, i);
@@ -301,7 +316,7 @@ void gameplay_handle_cut(GameInfo *game, MouseGameState *mouse_state, uint32_t c
         }
 
         if (sushi->kind == SUSHI_BOMB) {
-            gameplay_end_game(game);
+            gameplay_end_game(game, current_tick);
             return;
         }
 
@@ -327,6 +342,10 @@ void gameplay_handle_cut(GameInfo *game, MouseGameState *mouse_state, uint32_t c
                                                     score_value,
                                                     impact_x,
                                                     impact_y);
+            game->singleplayer.stats.sushi_cut++;
+            if (game->singleplayer.slash_combo.count > game->singleplayer.stats.max_combo) {
+                game->singleplayer.stats.max_combo = game->singleplayer.slash_combo.count;
+            }
             game->singleplayer.active_fragments[game->singleplayer.num_active_fragments++] = left_fragment;
             game->singleplayer.active_fragments[game->singleplayer.num_active_fragments++] = right_fragment;
             gameplay_remove_sushi(game, i);

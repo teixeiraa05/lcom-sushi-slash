@@ -120,6 +120,9 @@ typedef struct {
 
     /** @brief Quick-slash combo runtime state and popup data. */
     slash_combo_t slash_combo;
+
+    /** @brief Session statistics accumulated for the game-over screen. */
+    game_over_stats_t stats;
 } gameplay_data_t;
 
 /**

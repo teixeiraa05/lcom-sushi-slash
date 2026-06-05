@@ -32,6 +32,26 @@ typedef enum {
 } GameOverAction;
 
 /**
+ * @brief Final gameplay statistics shown on the game-over screen.
+ */
+typedef struct {
+  /** @brief Highest quick-slash combo reached during the session. */
+  uint32_t max_combo;
+
+  /** @brief Number of regular sushi successfully cut. */
+  uint32_t sushi_cut;
+
+  /** @brief Number of bombs that left the screen without being hit. */
+  uint32_t bombs_avoided;
+
+  /** @brief Whole seconds survived during the session. */
+  uint32_t time_survived_seconds;
+
+  /** @brief Number of regular sushi missed. */
+  uint32_t sushi_missed;
+} game_over_stats_t;
+
+/**
  * @brief Mutable state for the game-over screen.
  */
 typedef struct {
@@ -40,6 +60,9 @@ typedef struct {
 
   /** @brief Score shown on the game-over screen. */
   uint32_t final_score;
+
+  /** @brief Final session statistics shown below the score. */
+  game_over_stats_t stats;
 } game_over_t;
 
 /**
@@ -47,8 +70,11 @@ typedef struct {
  *
  * @param game_over Game-over state to initialize.
  * @param final_score Score to display.
+ * @param stats Final session statistics to display.
  */
-void game_over_init(game_over_t *game_over, uint32_t final_score);
+void game_over_init(game_over_t *game_over,
+                    uint32_t final_score,
+                    game_over_stats_t stats);
 
 /**
  * @brief Update game-over state from hover and click input.
