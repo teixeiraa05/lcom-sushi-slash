@@ -1,4 +1,5 @@
 #include "../include/game/boss.h"
+#include "../include/game/game_rand.h"
 #include <stdlib.h>
 #include <string.h>
 #include "../include/macros/global.h"
@@ -19,16 +20,18 @@ static void boss_randomize_key_position(boss_t *boss) {
     if (max_y < min_y) max_y = min_y;
 
     combo_set_position(&boss->combo,
-                       (uint16_t)(min_x + rand() % (max_x - min_x + 1)),
-                       (uint16_t)(min_y + rand() % (max_y - min_y + 1)));
+                       (uint16_t)(min_x + game_rand(&boss->prng_seed) % (max_x - min_x + 1)),
+                       (uint16_t)(min_y + game_rand(&boss->prng_seed) % (max_y - min_y + 1)));
 }
 
 boss_t boss_init(combo_t combo,
                  uint32_t start_tick,
                  uint32_t total_ticks,
-                 uint32_t per_key_ticks) {
+                 uint32_t per_key_ticks,
+                 uint32_t *prng_seed) {
     boss_t boss;
     memset(&boss, 0, sizeof(boss));
+    boss.prng_seed = *prng_seed;
 
     sprite_t *sprite = malloc(sizeof(sprite_t));
     if (sprite != NULL && sprite_load(sprite, (xpm_map_t)SushiRoll4_xpm) != 0) {
@@ -37,7 +40,7 @@ boss_t boss_init(combo_t combo,
     }
 
     uint16_t sprite_width = sprite == NULL ? 96 : sprite->width;
-    int side = rand() % 2;
+    int side = game_rand(&boss.prng_seed) % 2;
 
     int y0 = SCREEN_HEIGHT + SUSHI_SPAWN_Y_OFFSET;
     int x0 = side == 0 ? 100 : SCREEN_WIDTH - 100 - sprite_width;
@@ -68,6 +71,7 @@ boss_t boss_init(combo_t combo,
     boss.total_ticks = total_ticks;
     boss.per_key_ticks = per_key_ticks;
     boss_randomize_key_position(&boss);
+    *prng_seed = boss.prng_seed;
     
     return boss;
 }

@@ -2,6 +2,7 @@
 #define _MENU_STATE_H_
 
 #include <stdbool.h>
+#include <stdint.h>
 
 /**
  * @file menu_state.h
@@ -18,8 +19,8 @@ typedef enum {
   /** @brief Start singleplayer gameplay. */
   MENU_OPTION_SINGLEPLAYER,
 
-  /** @brief Start multiplayer gameplay. */
-  MENU_OPTION_MULTIPLAYER,
+  /** @brief Set gameplay seed. */
+  MENU_OPTION_SEED,
 
   /** @brief Show instructions. */
   MENU_OPTION_INSTRUCTIONS,
@@ -38,8 +39,8 @@ typedef enum {
   /** @brief Transition to singleplayer gameplay. */
   MENU_ACTION_START_SINGLEPLAYER,
 
-  /** @brief Transition to multiplayer gameplay. */
-  MENU_ACTION_START_MULTIPLAYER,
+  /** @brief Transition to enter seed. */
+  MENU_ACTION_ENTER_SEED,
 
   /** @brief Transition to instructions. */
   MENU_ACTION_SHOW_INSTRUCTIONS,
@@ -54,6 +55,9 @@ typedef enum {
 typedef struct {
   /** @brief Option currently hovered by the input cursor. */
   MenuOption hovered_option;
+  bool entering_seed;            /* Whether the user is currently typing a seed */
+  char seed_str[10];             /* Text buffer storing the digits typed (max 9 digits) */
+  uint32_t seed_val;             /* The parsed numeric value of the seed (0 if none) */
 } menu_t;
 
 /**
@@ -72,5 +76,13 @@ void menu_init(menu_t *menu);
  * @return Action requested by the menu.
  */
 MenuAction menu_update(menu_t *menu, MenuOption hovered_option, bool clicked);
+
+/**
+ * @brief Handle a character keyboard input for numeric seed typing.
+ *
+ * @param menu Menu state to mutate.
+ * @param c Key character received.
+ */
+void menu_handle_key(menu_t *menu, char c);
 
 #endif /* _MENU_STATE_H_ */

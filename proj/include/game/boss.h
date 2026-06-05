@@ -70,6 +70,9 @@ typedef struct boss {
 
     /** @brief Ticks available for each individual key. */
     uint32_t per_key_ticks;
+
+    /** @brief PRNG seed state specifically for boss key/position generation. */
+    uint32_t prng_seed;
 } boss_t;
 
 /**
@@ -79,11 +82,13 @@ typedef struct boss {
  * @param start_tick Session tick at which the boss begins.
  * @param total_ticks Total time available for the boss sequence.
  * @param per_key_ticks Time available for each key in the sequence.
+ * @param prng_seed Pointer to the PRNG seed state.
  */
 boss_t boss_init(combo_t combo,
                  uint32_t start_tick,
                  uint32_t total_ticks,
-                 uint32_t per_key_ticks);
+                 uint32_t per_key_ticks,
+                 uint32_t *prng_seed);
 
 /**
  * @brief Verify one key input against the current boss sequence key.

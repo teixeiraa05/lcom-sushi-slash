@@ -2,6 +2,7 @@
 #include <stdbool.h>
 
 #include "../include/game/sushi.h"
+#include "../include/game/game_rand.h"
 
 #include "../assets/sushi_pieces/Nigiri1.xpm"
 #include "../assets/sushi_pieces/Nigiri2.xpm"
@@ -123,11 +124,11 @@ static int sushi_horizontal_velocity(int x, const sprite_t *sprite, int speed) {
     return direction * velocity;
 }
 
-sushi_t create_random_sushi(int speed, int gravity) {
+sushi_t create_random_sushi(int speed, int gravity, uint32_t *prng_seed) {
     sprite_t *sprite = malloc(sizeof(sprite_t));
     if (sprite == NULL) return create_sushi(0, 0, 0, 0, gravity, NULL, 0);
 
-    uint8_t sushi_type = rand() % 10;
+    uint8_t sushi_type = game_rand(prng_seed) % 10;
 
     if (sprite_load(sprite, sushi_xpms[sushi_type])) {
         free(sprite);
@@ -136,7 +137,7 @@ sushi_t create_random_sushi(int speed, int gravity) {
 
     int max_x = SCREEN_WIDTH - sprite->width;
     if (max_x < 1) max_x = 1;
-    int x = rand() % max_x;
+    int x = game_rand(prng_seed) % max_x;
 
     sushi_t sushi = create_sushi(x,
                                  SCREEN_HEIGHT + SUSHI_SPAWN_Y_OFFSET,
@@ -150,7 +151,7 @@ sushi_t create_random_sushi(int speed, int gravity) {
     return sushi;
 }
 
-sushi_t create_random_bomb(int speed, int gravity) {
+sushi_t create_random_bomb(int speed, int gravity, uint32_t *prng_seed) {
     sprite_t *sprite = malloc(sizeof(sprite_t));
     if (sprite == NULL) return create_bomb(0, 0, 0, 0, gravity, NULL);
 
@@ -161,7 +162,7 @@ sushi_t create_random_bomb(int speed, int gravity) {
 
     int max_x = SCREEN_WIDTH - sprite->width;
     if (max_x < 1) max_x = 1;
-    int x = rand() % max_x;
+    int x = game_rand(prng_seed) % max_x;
 
     return create_bomb(x,
                        SCREEN_HEIGHT + SUSHI_SPAWN_Y_OFFSET,

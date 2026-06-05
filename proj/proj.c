@@ -132,7 +132,21 @@ int (proj_main_loop)(int argc, char *argv[]) {
                         else if (keyboard_is_scancode_make()) {
                             char key_pressed = keyboard_scancode_to_ascii();
                             
-                            if (key_pressed != 0) {
+                            if (game.state == MENU && game.data.menu.entering_seed) {
+                                if (key_pressed >= '0' && key_pressed <= '9') {
+                                    menu_handle_key(&game.data.menu, key_pressed);
+                                }
+                                else if (scancode[0] == 0x0E) { // Backspace make code
+                                    menu_handle_key(&game.data.menu, '\b');
+                                }
+                                else if (scancode[0] == 0x1C) { // Enter make code
+                                    menu_handle_key(&game.data.menu, '\n');
+                                }
+                                else if (scancode[0] == 0x01) { // Esc make code
+                                    menu_handle_key(&game.data.menu, 27);
+                                }
+                            }
+                            else if (key_pressed != 0) {
                                 if (game.state == GAME && gameplay_boss_active(&game)) {
                                     gameplay_handle_boss_key(&game,
                                                              key_pressed,
@@ -257,14 +271,8 @@ int (proj_main_loop)(int argc, char *argv[]) {
                                         session_timer_start(&session_timer, last_sushi_spawn_tick);
                                         game.state = GAME;
                                         break;
-                                    case MENU_ACTION_START_MULTIPLAYER:
-                                        gameplay_start(&game);
-                                        gameplay_active = true;
-                                        last_sushi_spawn_tick = get_int_counter();
-                                        session_timer_reset(&session_timer, last_sushi_spawn_tick);
-                                        session_timer_start(&session_timer, last_sushi_spawn_tick);
-                                        game.state = GAME;
-                                        break;
+                                    case MENU_ACTION_ENTER_SEED:
+                                         break;
                                     case MENU_ACTION_SHOW_INSTRUCTIONS:
                                         break;
                                     case MENU_ACTION_EXIT:

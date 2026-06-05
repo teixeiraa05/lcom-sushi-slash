@@ -2,12 +2,30 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+#include "../lab2/timer.h"
 
 #include "../include/game/game.h"
+#include "../include/game/game_rand.h"
 #include "../include/macros/mouse.h"
 #include "../include/ui/boss_draw.h"
 #include "../include/ui/slash_combo_popup.h"
 #include "../include/ui/ui.h"
+
+uint32_t gameplay_get_sushi_seed(const GameInfo *game) {
+    return game ? game->singleplayer.sushi_prng_seed : 0;
+}
+
+void gameplay_set_sushi_seed(GameInfo *game, uint32_t seed) {
+    if (game) game->singleplayer.sushi_prng_seed = seed;
+}
+
+uint32_t gameplay_get_boss_seed(const GameInfo *game) {
+    return game ? game->singleplayer.boss_prng_seed : 0;
+}
+
+void gameplay_set_boss_seed(GameInfo *game, uint32_t seed) {
+    if (game) game->singleplayer.boss_prng_seed = seed;
+}
 
 #define GAMEPLAY_TICKS_PER_SECOND 60
 
@@ -59,7 +77,8 @@ static void gameplay_start_boss(GameInfo *game, uint32_t current_tick) {
     if (per_key_ticks < 240) {
         per_key_ticks = 240;
     }
-    combo_t combo = create_random_combo(sequence_length, CENTER_X(64), 300);
+    uint32_t seed = gameplay_get_boss_seed(game);
+    combo_t combo = create_random_combo(sequence_length, CENTER_X(64), 300, &seed);
     if (combo.total_letters == 0) {
         combo_destroy(&combo);
         return;
@@ -68,7 +87,9 @@ static void gameplay_start_boss(GameInfo *game, uint32_t current_tick) {
     game->singleplayer.active_boss = boss_init(combo,
                                                current_tick,
                                                BOSS_TOTAL_TICKS,
-                                               per_key_ticks);
+                                               per_key_ticks,
+                                               &seed);
+    gameplay_set_boss_seed(game, seed);
     game->singleplayer.boss_active = true;
     game->singleplayer.boss_count++;
     game->singleplayer.next_boss_score += GAME_BOSS_SCORE_STEP;
@@ -120,7 +141,7 @@ static void gameplay_update_difficulty(GameInfo *game) {
     }
 }
 
-static void gameplay_get_difficulty_physics(const GameInfo *game, int *speed, int *gravity) {
+static void gameplay_get_difficulty_physics(GameInfo *game, int *speed, int *gravity) {
     if (speed == NULL || gravity == NULL) return;
 
     difficulty_t difficulty = game == NULL ? EASY : game->singleplayer.current_difficulty;
@@ -132,7 +153,9 @@ static void gameplay_get_difficulty_physics(const GameInfo *game, int *speed, in
         max_speed = min_speed;
     }
 
-    *speed = min_speed + rand() % (max_speed - min_speed + 1);
+    uint32_t seed = gameplay_get_sushi_seed(game);
+    *speed = min_speed + game_rand(&seed) % (max_speed - min_speed + 1);
+    gameplay_set_sushi_seed(game, seed);
     *gravity = motion->gravity;
 }
 
@@ -153,19 +176,23 @@ static void gameplay_add_item(GameInfo *game, sushi_t item) {
 static void gameplay_spawn_wave_item(GameInfo *game, const wave_spawn_request_t *request, int speed, int gravity) {
     if (game == NULL || request == NULL) return;
 
+    uint32_t seed = gameplay_get_sushi_seed(game);
+
     switch (request->kind) {
         case WAVE_SPAWN_REGULAR: {
-            sushi_t sushi = create_random_sushi(speed, gravity);
+            sushi_t sushi = create_random_sushi(speed, gravity, &seed);
             sushi.score_value = (int)request->score_value;
             gameplay_add_item(game, sushi);
             break;
         }
         case WAVE_SPAWN_BOMB:
-            gameplay_add_item(game, create_random_bomb(speed, gravity));
+            gameplay_add_item(game, create_random_bomb(speed, gravity, &seed));
             break;
         default:
             break;
     }
+
+    gameplay_set_sushi_seed(game, seed);
 }
 
 static void gameplay_handle_wave_spawn(GameInfo *game, const wave_spawn_request_t *request) {
@@ -225,10 +252,11 @@ static void gameplay_end_game(GameInfo *game, uint32_t elapsed_ticks) {
 
     uint32_t final_score = game->score;
     game_over_stats_t final_stats = gameplay_final_stats(game, elapsed_ticks);
+    uint32_t active_seed = game->singleplayer.current_seed;
     game->lives = 0;
     gameplay_clear(game);
     game->state = GAME_OVER;
-    game_over_init(&game->data.game_over, final_score, final_stats);
+    game_over_init(&game->data.game_over, final_score, final_stats, active_seed);
 }
 
 static bool gameplay_handle_missed_item(GameInfo *game, uint8_t index) {
@@ -256,6 +284,16 @@ void gameplay_start(GameInfo *game) {
     if (game == NULL) return;
 
     memset(&game->singleplayer, 0, sizeof(game->singleplayer));
+
+    if (game->data.menu.seed_val > 0) {
+        game->singleplayer.current_seed = game->data.menu.seed_val;
+    } else {
+        game->singleplayer.current_seed = (uint32_t)get_int_counter();
+    }
+    gameplay_set_sushi_seed(game, game->singleplayer.current_seed);
+    gameplay_set_boss_seed(game, game->singleplayer.current_seed);
+    srand(game->singleplayer.current_seed);
+
     gameplay_load_waves(game);
     waves_init(&game->singleplayer.wave_runtime, 0);
     game->singleplayer.next_boss_score = GAME_BOSS_FIRST_SCORE;
@@ -283,12 +321,14 @@ void gameplay_update(GameInfo *game, int current_tick, int *last_spawn_tick) {
         wave_spawn_request_t request;
         bool has_request;
         wave_status_t wave_status;
+        uint32_t s_seed = gameplay_get_sushi_seed(game);
         do {
             wave_status = waves_update(&game->singleplayer.wave_runtime,
                                        game->singleplayer.waves,
                                        WAVE_PATTERN_COUNT,
                                        game->singleplayer.current_difficulty,
                                        (uint32_t)current_tick,
+                                       &s_seed,
                                        &request,
                                        &has_request);
             if (has_request) {
@@ -297,6 +337,7 @@ void gameplay_update(GameInfo *game, int current_tick, int *last_spawn_tick) {
             }
         }
         while (has_request && wave_status == WAVE_STATUS_RUNNING);
+        gameplay_set_sushi_seed(game, s_seed);
     }
 
     gameplay_update_active_boss(game, (uint32_t)current_tick);

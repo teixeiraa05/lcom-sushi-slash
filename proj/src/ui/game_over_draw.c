@@ -67,6 +67,7 @@ static int draw_game_over_stats(const game_over_t *game_over, const Font *font) 
     char bombs_avoided[32];
     char time_survived[32];
     char sushi_missed[32];
+    char seed_text[32];
     uint32_t minutes = game_over->stats.time_survived_seconds / 60;
     uint32_t seconds = game_over->stats.time_survived_seconds % 60;
 
@@ -75,12 +76,14 @@ static int draw_game_over_stats(const game_over_t *game_over, const Font *font) 
     snprintf(bombs_avoided, sizeof(bombs_avoided), "bombs avoided %u", (unsigned)game_over->stats.bombs_avoided);
     snprintf(time_survived, sizeof(time_survived), "time survived %02u:%02u", (unsigned)minutes, (unsigned)seconds);
     snprintf(sushi_missed, sizeof(sushi_missed), "sushi missed %u", (unsigned)game_over->stats.sushi_missed);
+    snprintf(seed_text, sizeof(seed_text), "seed %u", (unsigned)game_over->seed);
 
     if (draw_stat_line(font, max_combo, GAME_OVER_STATS_Y) != 0) return 1;
     if (draw_stat_line(font, sushi_cut, GAME_OVER_STATS_Y + GAME_OVER_STATS_GAP) != 0) return 1;
     if (draw_stat_line(font, bombs_avoided, GAME_OVER_STATS_Y + GAME_OVER_STATS_GAP * 2) != 0) return 1;
     if (draw_stat_line(font, time_survived, GAME_OVER_STATS_Y + GAME_OVER_STATS_GAP * 3) != 0) return 1;
-    return draw_stat_line(font, sushi_missed, GAME_OVER_STATS_Y + GAME_OVER_STATS_GAP * 4);
+    if (draw_stat_line(font, sushi_missed, GAME_OVER_STATS_Y + GAME_OVER_STATS_GAP * 4) != 0) return 1;
+    return draw_stat_line(font, seed_text, GAME_OVER_STATS_Y + GAME_OVER_STATS_GAP * 5);
 }
 
 GameOverOption ui_game_over_hit_test(int x, int y) {

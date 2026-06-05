@@ -265,6 +265,7 @@ void waves_init(wave_runtime_t *runtime, uint32_t current_tick);
 wave_status_t waves_update(wave_runtime_t *runtime, const wave_t *waves,
                            uint8_t wave_count, difficulty_t difficulty,
                            uint32_t current_tick,
+                           uint32_t *prng_seed,
                            wave_spawn_request_t *out_request, bool *has_request);
 
 /**
