@@ -218,13 +218,6 @@ typedef struct {
 } GameInfo;
 
 /**
- * @brief Run the main game loop.
- *
- * @return 0 on successful exit, non-zero on failure.
- */
-int game_loop();
-
-/**
  * @brief Destroy active gameplay objects and reset active object counts.
  *
  * @param game Game state to clear.

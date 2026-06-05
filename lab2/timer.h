@@ -4,6 +4,9 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+int(timer_subscribe_int)(uint8_t *bit_no);
+int(timer_unsubscribe_int)();
+
 int get_int_counter();
 int set_int_counter(int new_value);
 
