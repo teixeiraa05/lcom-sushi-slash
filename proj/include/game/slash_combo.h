@@ -12,7 +12,7 @@
 #define SLASH_COMBO_MIN_CUTS 3
 
 /** @brief Maximum ticks between cuts that still count toward one combo. */
-#define SLASH_COMBO_WINDOW_TICKS 30
+#define SLASH_COMBO_WINDOW_TICKS 25
 
 /** @brief Duration of the combo popup, in gameplay ticks. */
 #define SLASH_COMBO_POPUP_TICKS 60
