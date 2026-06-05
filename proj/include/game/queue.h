@@ -50,7 +50,7 @@ bool queue_is_full(const Queue* q);
  * @param value Value to enqueue.
  * @return true on success, false if the queue is full or invalid.
  */
-bool queue_push(Queue* q, uint8_t value);
+bool queue_push(Queue* q, char value);
 
 /**
  * @brief Pop the value at the front of the queue.
@@ -59,7 +59,7 @@ bool queue_push(Queue* q, uint8_t value);
  * @param value Output storage for the popped value.
  * @return true on success, false if the queue is empty or invalid.
  */
-bool queue_pop(Queue* q, uint8_t* value);
+bool queue_pop(Queue* q, char* value);
 
 /**
  * @brief Read the value at the front of the queue without removing it.
@@ -68,7 +68,7 @@ bool queue_pop(Queue* q, uint8_t* value);
  * @param value Output storage for the front value.
  * @return true on success, false if the queue is empty or invalid.
  */
-bool queue_top(Queue* q, uint8_t* value);
+bool queue_top(Queue* q, char* value);
 
 /**
  * @brief Get the current number of values in the queue.
@@ -76,9 +76,6 @@ bool queue_top(Queue* q, uint8_t* value);
  * @param q Queue to inspect.
  * @return Queue size, or 0 for an invalid queue.
  */
-bool queue_push(Queue* q, char value);
-bool queue_pop(Queue* q, char* value);
-bool queue_top(Queue* q, char* value);
 int queue_size(const Queue* q);
 
 #endif // __QUEUE_H
