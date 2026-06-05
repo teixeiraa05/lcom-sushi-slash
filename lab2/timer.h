@@ -10,21 +10,6 @@
  */
 
 /**
- * @brief Subscribe to timer interrupts.
- *
- * @param bit_no Output hook bit number used to build the IRQ mask.
- * @return 0 on success, non-zero on failure.
- */
-int(timer_subscribe_int)(uint8_t *bit_no);
-
-/**
- * @brief Unsubscribe from timer interrupts.
- *
- * @return 0 on success, non-zero on failure.
- */
-int(timer_unsubscribe_int)();
-
-/**
  * @brief Get the current project timer interrupt counter.
  *
  * @return Number of timer interrupts handled by the project timer handler.
