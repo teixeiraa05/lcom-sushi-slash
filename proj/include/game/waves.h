@@ -197,13 +197,7 @@ typedef struct {
  */
 void waves_init(wave_runtime_t *runtime, uint32_t current_tick);
 
-/**
- * @brief Reset a wave runtime to its initial state.
- *
- * @param runtime Runtime object to reset.
- * @param current_tick Current timer tick.
- */
-void waves_reset(wave_runtime_t *runtime, uint32_t current_tick);
+
 
 /**
  * @brief Advance the wave scheduler and return a due spawn request.

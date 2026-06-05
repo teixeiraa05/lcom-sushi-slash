@@ -164,9 +164,7 @@ void waves_init(wave_runtime_t *runtime, uint32_t current_tick) {
   runtime->status = WAVE_STATUS_IDLE;
 }
 
-void waves_reset(wave_runtime_t *runtime, uint32_t current_tick) {
-  waves_init(runtime, current_tick);
-}
+
 
 wave_status_t waves_update(wave_runtime_t *runtime, const wave_t *waves,
                            uint8_t wave_count, uint32_t current_tick,

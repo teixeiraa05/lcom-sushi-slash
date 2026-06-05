@@ -172,7 +172,7 @@ int (proj_main_loop)(int argc, char *argv[]) {
                                 session_timer_start(&session_timer, current_tick);
                             }
                             session_timer_update(&session_timer, current_tick);
-                            gameplay_update(&game, current_tick, &last_sushi_spawn_tick);
+                            gameplay_update(&game, (int)session_timer_ticks(&session_timer), &last_sushi_spawn_tick);
                             if (game.state != GAME) {
                                 session_timer_pause(&session_timer, current_tick);
                                 gameplay_active = false;
