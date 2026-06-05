@@ -60,6 +60,9 @@ typedef enum {
   /** @brief A compact wave that asks gameplay to spawn four sushi together. */
   WAVE_PATTERN_QUAD_BURST,
 
+  /** @brief A compact wave that asks gameplay to spawn five sushi together. */
+  WAVE_PATTERN_FIVE_BURST,
+
   /** @brief A compact wave mixing a small sushi burst with one bomb. */
   WAVE_PATTERN_BURST_BOMB,
 
