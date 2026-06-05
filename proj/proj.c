@@ -135,7 +135,7 @@ int (proj_main_loop)(int argc, char *argv[]) {
                             
                             if (key_pressed != 0) {  // Se for um char válido
                                 if (game.state == BOSS) {  // Se estivermos em um boss fight
-                                    int result = boss_verify_combo(&game.data.boss_fight.boss, key_pressed);
+                                    boss_verify_combo(&game.data.boss_fight.boss, key_pressed);
                                     
                                 }
                             }
