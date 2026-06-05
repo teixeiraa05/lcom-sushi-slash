@@ -3,12 +3,14 @@
 
 void game_over_init(game_over_t *game_over,
                     uint32_t final_score,
-                    game_over_stats_t stats) {
+                    game_over_stats_t stats,
+                    uint32_t seed) {
     if (game_over == NULL) return;
 
     game_over->hovered_option = GAME_OVER_OPTION_NONE;
     game_over->final_score = final_score;
     game_over->stats = stats;
+    game_over->seed = seed;
 }
 
 GameOverAction game_over_update(game_over_t *game_over, GameOverOption hovered_option, bool clicked) {

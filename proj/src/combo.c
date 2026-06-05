@@ -1,4 +1,5 @@
 #include "../include/game/combo.h"
+#include "../include/game/game_rand.h"
 #include <stdlib.h>
 #include <string.h>
 #include "../assets/keyboard/KeyA.xpm"
@@ -114,7 +115,7 @@ combo_t combo_init(const char* sequence, uint16_t x, uint16_t y) {
     return combo;
 }
 
-combo_t create_random_combo(uint8_t length, uint16_t x, uint16_t y) {
+combo_t create_random_combo(uint8_t length, uint16_t x, uint16_t y, uint32_t *prng_seed) {
     combo_t combo;
     memset(&combo, 0, sizeof(combo));
 
@@ -124,7 +125,7 @@ combo_t create_random_combo(uint8_t length, uint16_t x, uint16_t y) {
     }
 
     for (uint8_t i = 0; i < length; i++) {
-        sequence[i] = 'A' + (rand() % 26); // Random uppercase letter
+        sequence[i] = 'A' + (game_rand(prng_seed) % 26); // Random uppercase letter
     }
     sequence[length] = '\0'; // Null-terminate the string
     

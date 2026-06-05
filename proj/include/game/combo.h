@@ -39,7 +39,7 @@ typedef struct combo {
 
 combo_t combo_init(const char* sequence, uint16_t x, uint16_t y);
 
-combo_t create_random_combo(uint8_t length, uint16_t x, uint16_t y);
+combo_t create_random_combo(uint8_t length, uint16_t x, uint16_t y, uint32_t *prng_seed);
 
 // Function to convert a character to its keyboard XPM image
 xpm_map_t char_to_keyboard_xpm(char c);

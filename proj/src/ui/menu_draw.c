@@ -44,13 +44,13 @@ static int draw_button_with_label(const button_t *button, const Font *font) {
 static MenuButtonSpec menu_button_at(uint8_t index) {
     static const MenuOption options[] = {
         MENU_OPTION_SINGLEPLAYER,
-        MENU_OPTION_MULTIPLAYER,
+        MENU_OPTION_SEED,
         MENU_OPTION_INSTRUCTIONS,
         MENU_OPTION_EXIT
     };
     static const char *labels[] = {
         "singleplayer",
-        "multiplayer",
+        "seed",
         "instructions",
         "exit"
     };
@@ -83,6 +83,18 @@ int ui_menu_draw(const menu_t *menu, const Assets *assets, const StatusBarInfo *
     for (uint8_t i = 0; i < 4; i++) {
         MenuButtonSpec spec = menu_button_at(i);
         spec.button.hovered = spec.option == menu->hovered_option;
+
+        char dynamic_label[32];
+        if (spec.option == MENU_OPTION_SEED) {
+            if (menu->entering_seed) {
+                snprintf(dynamic_label, sizeof(dynamic_label), "seed %s", menu->seed_str);
+            } else if (menu->seed_val > 0) {
+                snprintf(dynamic_label, sizeof(dynamic_label), "seed %u", (unsigned)menu->seed_val);
+            } else {
+                snprintf(dynamic_label, sizeof(dynamic_label), "set seed");
+            }
+            spec.button.label = dynamic_label;
+        }
 
         if (draw_button_with_label(&spec.button, &assets->game_font) != 0) {
             return 1;

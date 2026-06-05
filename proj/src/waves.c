@@ -1,4 +1,5 @@
 #include "../include/game/waves.h"
+#include "../include/game/game_rand.h"
 #include "../include/macros/physics.h"
 
 #include <stddef.h>
@@ -433,12 +434,12 @@ static const wave_difficulty_profile_t *get_profile(difficulty_t difficulty) {
   return &DIFFICULTY_PROFILES[difficulty];
 }
 
-static uint32_t rand_gap(void) {
+static uint32_t rand_gap(uint32_t *prng_seed) {
   return WAVE_GAP_MIN_TICKS +
-         (uint32_t)(rand() % (WAVE_GAP_MAX_TICKS - WAVE_GAP_MIN_TICKS + 1));
+         (uint32_t)(game_rand(prng_seed) % (WAVE_GAP_MAX_TICKS - WAVE_GAP_MIN_TICKS + 1));
 }
 
-static uint8_t pick_wave(difficulty_t difficulty, uint8_t wave_count) {
+static uint8_t pick_wave(difficulty_t difficulty, uint8_t wave_count, uint32_t *prng_seed) {
   const uint8_t *pool = EASY_POOL;
   uint8_t count = ARRAY_COUNT(EASY_POOL);
 
@@ -460,7 +461,7 @@ static uint8_t pick_wave(difficulty_t difficulty, uint8_t wave_count) {
   }
 
   for (uint8_t i = 0; i < count; i++) {
-    uint8_t selected = pool[rand() % count];
+    uint8_t selected = pool[game_rand(prng_seed) % count];
     if (selected < wave_count) return selected;
   }
 
@@ -468,10 +469,10 @@ static uint8_t pick_wave(difficulty_t difficulty, uint8_t wave_count) {
 }
 
 static void next_wave(wave_runtime_t *runtime, difficulty_t difficulty,
-                      uint8_t wave_count, uint32_t current_tick) {
-  runtime->current_wave = pick_wave(difficulty, wave_count);
+                      uint8_t wave_count, uint32_t current_tick, uint32_t *prng_seed) {
+  runtime->current_wave = pick_wave(difficulty, wave_count, prng_seed);
   runtime->current_event = 0;
-  runtime->next_wave_start_tick = current_tick + rand_gap();
+  runtime->next_wave_start_tick = current_tick + rand_gap(prng_seed);
   runtime->wave_start_tick = runtime->next_wave_start_tick;
 }
 
@@ -485,11 +486,10 @@ void waves_init(wave_runtime_t *runtime, uint32_t current_tick) {
   runtime->status = WAVE_STATUS_IDLE;
 }
 
-
-
 wave_status_t waves_update(wave_runtime_t *runtime, const wave_t *waves,
                            uint8_t wave_count, difficulty_t difficulty,
                            uint32_t current_tick,
+                           uint32_t *prng_seed,
                            wave_spawn_request_t *out_request, bool *has_request) {
   if (has_request != NULL) *has_request = false;
 
@@ -506,7 +506,7 @@ wave_status_t waves_update(wave_runtime_t *runtime, const wave_t *waves,
   runtime->status = WAVE_STATUS_RUNNING;
 
   if (runtime->current_wave >= wave_count) {
-    runtime->current_wave = pick_wave(difficulty, wave_count);
+    runtime->current_wave = pick_wave(difficulty, wave_count, prng_seed);
   }
 
   while (true) {
@@ -522,7 +522,7 @@ wave_status_t waves_update(wave_runtime_t *runtime, const wave_t *waves,
     }
 
     if (runtime->current_event >= wave->event_count) {
-      next_wave(runtime, difficulty, wave_count, current_tick);
+      next_wave(runtime, difficulty, wave_count, current_tick, prng_seed);
       continue;
     }
 

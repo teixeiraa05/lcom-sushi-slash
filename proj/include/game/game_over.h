@@ -63,6 +63,9 @@ typedef struct {
 
   /** @brief Final session statistics shown below the score. */
   game_over_stats_t stats;
+
+  /** @brief The seed used to start the gameplay session. */
+  uint32_t seed;
 } game_over_t;
 
 /**
@@ -71,10 +74,12 @@ typedef struct {
  * @param game_over Game-over state to initialize.
  * @param final_score Score to display.
  * @param stats Final session statistics to display.
+ * @param seed The seed used for the gameplay session.
  */
 void game_over_init(game_over_t *game_over,
                     uint32_t final_score,
-                    game_over_stats_t stats);
+                    game_over_stats_t stats,
+                    uint32_t seed);
 
 /**
  * @brief Update game-over state from hover and click input.

@@ -155,6 +155,13 @@ typedef struct {
 
     /** @brief Remaining ticks for the boss reward popup. */
     uint8_t boss_score_popup_ticks;
+
+    /** @brief Active seed used for random generation. */
+    uint32_t current_seed;
+
+    /** @brief Determinstic PRNG seeds for sushi and boss generation. */
+    uint32_t sushi_prng_seed;
+    uint32_t boss_prng_seed;
 } gameplay_data_t;
 
 /**
@@ -280,5 +287,33 @@ void gameplay_handle_boss_key(GameInfo *game, char input, uint32_t current_tick)
  * @return true if a boss wave is active, false otherwise.
  */
 bool gameplay_boss_active(const GameInfo *game);
+
+/**
+ * @brief Get the current sushi PRNG seed.
+ * @param game Game state to inspect.
+ * @return The sushi PRNG seed value.
+ */
+uint32_t gameplay_get_sushi_seed(const GameInfo *game);
+
+/**
+ * @brief Set the sushi PRNG seed.
+ * @param game Game state to mutate.
+ * @param seed The new seed value.
+ */
+void gameplay_set_sushi_seed(GameInfo *game, uint32_t seed);
+
+/**
+ * @brief Get the current boss PRNG seed.
+ * @param game Game state to inspect.
+ * @return The boss PRNG seed value.
+ */
+uint32_t gameplay_get_boss_seed(const GameInfo *game);
+
+/**
+ * @brief Set the boss PRNG seed.
+ * @param game Game state to mutate.
+ * @param seed The new seed value.
+ */
+void gameplay_set_boss_seed(GameInfo *game, uint32_t seed);
 
 #endif /* __GAME_H */

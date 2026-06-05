@@ -115,17 +115,18 @@ sushi_t create_bomb(int x, int y, int vx, int vy, int gravity, sprite_t* xpm);
 
 sushi_t create_sushi_boss(int x, int y, int vx, int vy, int gravity, sprite_t* xpm, int score_value);
 
-sushi_t create_random_sushi(int speed, int gravity);
+sushi_t create_random_sushi(int speed, int gravity, uint32_t *prng_seed);
 
 /**
  * @brief Create a random bomb using the current difficulty motion.
  *
  * @param speed Launch speed in pixels per tick.
  * @param gravity Fixed-point gravity applied every tick.
+ * @param prng_seed Pointer to the PRNG seed state.
  *
  * @return Initialized bomb item, or an item with a NULL sprite on failure.
  */
-sushi_t create_random_bomb(int speed, int gravity);
+sushi_t create_random_bomb(int speed, int gravity, uint32_t *prng_seed);
 
 /**
  * @brief Advance a sushi-style item by one physics tick.
