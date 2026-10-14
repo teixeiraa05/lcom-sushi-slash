@@ -1,6 +1,7 @@
 #include <lcom/lcf.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 
 #include "../../lab1/rtc.h"
 #include "../../lab2/timer.h"
@@ -49,7 +50,7 @@ typedef struct {
 
     uint32_t current_fps;
     uint32_t frames_since_fps_update;
-    int last_fps_tick;
+    struct timespec last_fps_time;
     int last_rtc_tick;
 
     rtc_date status_date;
@@ -70,7 +71,7 @@ static void game_loop_enter_game(game_loop_ctx_t *ctx);
 static void game_loop_enter_game_same_seed(game_loop_ctx_t *ctx, uint32_t seed);
 static void game_loop_enter_menu(game_loop_ctx_t *ctx);
 static void game_loop_enter_game_over(game_loop_ctx_t *ctx, int current_tick);
-static void game_loop_update_fps(game_loop_ctx_t *ctx, int current_tick);
+static void game_loop_update_fps(game_loop_ctx_t *ctx);
 static void game_loop_update_status_clock(game_loop_ctx_t *ctx, int current_tick);
 static void game_loop_draw_cursor(game_loop_ctx_t *ctx);
 static StatusBarInfo game_loop_status(const game_loop_ctx_t *ctx);
@@ -101,11 +102,11 @@ int game_loop(void) {
                 if (msg.m_notify.interrupts & ctx.kbc_irq_set) {
                     game_loop_handle_keyboard_irq(&ctx);
                 }
-                if (msg.m_notify.interrupts & ctx.timer_irq_set) {
-                    game_loop_handle_timer_irq(&ctx);
-                }
                 if (msg.m_notify.interrupts & ctx.mouse_irq_set) {
                     game_loop_handle_mouse_irq(&ctx);
+                }
+                if (ctx.running && (msg.m_notify.interrupts & ctx.timer_irq_set)) {
+                    game_loop_handle_timer_irq(&ctx);
                 }
                 break;
             default:
@@ -151,10 +152,11 @@ static int game_loop_init(game_loop_ctx_t *ctx) {
 
     current_tick = get_int_counter();
     session_timer_reset(&ctx->session_timer, current_tick);
-    ctx->last_fps_tick = current_tick;
     ctx->last_rtc_tick = current_tick;
     rtc_read_date(&ctx->status_date);
     rtc_read_time(&ctx->status_time);
+
+    if (clock_gettime(CLOCK_MONOTONIC, &ctx->last_fps_time) != 0) return 1;
 
     return 0;
 }
@@ -184,7 +186,9 @@ static int game_loop_cleanup(game_loop_ctx_t *ctx) {
 static void game_loop_handle_keyboard_irq(game_loop_ctx_t *ctx) {
     keyboard_ih();
     ctx->scancode_ready = keyboard_get_scancode(ctx->scancode);
-    game_loop_general_ih(ctx, GAME_LOOP_EVENT_KEYBOARD);
+    if (ctx->scancode_ready) {
+        game_loop_general_ih(ctx, GAME_LOOP_EVENT_KEYBOARD);
+    }
 }
 
 static void game_loop_handle_mouse_irq(game_loop_ctx_t *ctx) {
@@ -274,14 +278,13 @@ static void game_loop_menu_ih(game_loop_ctx_t *ctx, game_loop_event_t event) {
         int current_tick = get_int_counter();
         StatusBarInfo status;
 
-        game_loop_update_fps(ctx, current_tick);
         game_loop_update_status_clock(ctx, current_tick);
         anim_update(&ctx->assets.mascot_anim, current_tick);
         video_clear_page();
         status = game_loop_status(ctx);
         ui_menu_draw(&ctx->game.data.menu, &ctx->assets, &status);
         game_loop_draw_cursor(ctx);
-        video_swap_pages();
+        if (video_swap_pages() == 0) game_loop_update_fps(ctx);
     }
 }
 
@@ -319,7 +322,6 @@ static void game_loop_game_ih(game_loop_ctx_t *ctx, game_loop_event_t event) {
     else if (event == GAME_LOOP_EVENT_TIMER) {
         int current_tick = get_int_counter();
 
-        game_loop_update_fps(ctx, current_tick);
         video_clear_page();
 
         if (!ctx->gameplay_active) {
@@ -348,7 +350,7 @@ static void game_loop_game_ih(game_loop_ctx_t *ctx, game_loop_event_t event) {
         }
 
         game_loop_draw_cursor(ctx);
-        video_swap_pages();
+        if (video_swap_pages() == 0) game_loop_update_fps(ctx);
     }
 }
 
@@ -385,7 +387,6 @@ static void game_loop_pause_ih(game_loop_ctx_t *ctx, game_loop_event_t event) {
         int current_tick = get_int_counter();
         StatusBarInfo status;
 
-        game_loop_update_fps(ctx, current_tick);
         game_loop_update_status_clock(ctx, current_tick);
         anim_update(&ctx->assets.mascot_anim, current_tick);
         video_clear_page();
@@ -393,7 +394,7 @@ static void game_loop_pause_ih(game_loop_ctx_t *ctx, game_loop_event_t event) {
         ui_draw_background(&ctx->assets.background_sprite);
         ui_pause_menu_draw(&ctx->game.data.pause_menu, &ctx->assets, &status);
         game_loop_draw_cursor(ctx);
-        video_swap_pages();
+        if (video_swap_pages() == 0) game_loop_update_fps(ctx);
     }
 }
 
@@ -420,13 +421,11 @@ static void game_loop_game_over_ih(game_loop_ctx_t *ctx, game_loop_event_t event
     }
     else if (event == GAME_LOOP_EVENT_TIMER) {
         int current_tick = get_int_counter();
-
-        game_loop_update_fps(ctx, current_tick);
         anim_update(&ctx->assets.mascot_lose_anim, current_tick);
         video_clear_page();
         ui_game_over_draw(&ctx->game.data.game_over, &ctx->assets);
         game_loop_draw_cursor(ctx);
-        video_swap_pages();
+        if (video_swap_pages() == 0) game_loop_update_fps(ctx);
     }
 }
 
@@ -464,14 +463,19 @@ static void game_loop_enter_game_over(game_loop_ctx_t *ctx, int current_tick) {
     ctx->assets.mascot_lose_anim.last_tick = current_tick;
 }
 
-static void game_loop_update_fps(game_loop_ctx_t *ctx, int current_tick) {
+static void game_loop_update_fps(game_loop_ctx_t *ctx) {
+    struct timespec now;
     ctx->frames_since_fps_update++;
-    if (current_tick - ctx->last_fps_tick < 60) return;
+    if (clock_gettime(CLOCK_MONOTONIC, &now) != 0) return;
 
-    ctx->current_fps = (ctx->frames_since_fps_update * 60) /
-                       (uint32_t)(current_tick - ctx->last_fps_tick);
+    int64_t elapsed_ns = ((int64_t)now.tv_sec - ctx->last_fps_time.tv_sec) *
+                         INT64_C(1000000000) + now.tv_nsec - ctx->last_fps_time.tv_nsec;
+    if (elapsed_ns < INT64_C(1000000000)) return;
+
+    ctx->current_fps = (uint32_t)(((uint64_t)ctx->frames_since_fps_update *
+                                 UINT64_C(1000000000)) / (uint64_t)elapsed_ns);
     ctx->frames_since_fps_update = 0;
-    ctx->last_fps_tick = current_tick;
+    ctx->last_fps_time = now;
 }
 
 static void game_loop_update_status_clock(game_loop_ctx_t *ctx, int current_tick) {

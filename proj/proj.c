@@ -9,9 +9,10 @@ int main(int argc, char *argv[]) {
     // sets the language of LCF messages (can be either EN-US or PT-PT)
     lcf_set_language("EN-US");
 
-    // enables to log function invocations that are being "wrapped" by LCF
-    // [comment this out if you don't want/need it]
+#ifdef DEBUG_LOG
+    // Call tracing is opt-in because it adds overhead to interrupt handling.
     lcf_trace_calls("/home/lcom/labs/proj/trace.txt");
+#endif
 
     // enables to save the output of printf function calls on a file
     // [comment this out if you don't want/need it]

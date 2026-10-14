@@ -45,7 +45,10 @@ int mouse_read_byte(uint8_t *byte) {
 
   if ((status & OBF) && (status & MOUSE_DATA)) {
     if (util_sys_inb(KBC_OUT_BUF, byte)) return 1;
-    if (status & (PARITY_ERR | TIMEOUT_ERR)) return 1;
+    if (status & (PARITY_ERR | TIMEOUT_ERR)) {
+      byte_count = 0; // A discarded byte invalidates the partial packet.
+      return 1;
+    }
     return 0;
   }
 
@@ -90,6 +93,7 @@ int (mouse_disable_data_report)(void) {
 
 
 int (mouse_packet_is_ready)() {
+  if (mouse_error) return 0;
   if (byte_count == 0) {
     if (!(data & ALWAYS_1)) return 0; // actually skip unsynced bytes
     packet_bytes[0] = data;
@@ -159,6 +163,9 @@ int mouse_init(MouseGameState *state, int screen_width, int screen_height, uint8
     state->prev_x = state->x;
     state->prev_y = state->y;
 
+    mouse_error = false;
+    byte_count = 0;
+
     // Subscribe to mouse interrupts
     if (mouse_subscribe_int(bit_no)) {
         printf("[mouse] Failed to subscribe to mouse interrupts\n");
@@ -199,8 +206,9 @@ bool mouse_proj_ih(MouseGameState *state, int screen_width, int screen_height) {
         return false;
     }
 
-    // Call low-level handler to read byte and compile packet
-    mouse_ih(); // This updates the static packet 'p' when a full packet is ready
+    // Read one byte; only feed successful reads to the packet assembler.
+    mouse_ih();
+    if (mouse_has_error()) return false;
 
     // Check if a full packet was parsed
     if (mouse_packet_is_ready()) {

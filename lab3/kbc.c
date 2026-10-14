@@ -38,6 +38,7 @@ int(kbc_unsubscribe_int)() {
 
 void (kbc_ih)() {
   uint8_t sr; 
+  kbc_error = true;
 
   /* Read the status register */
   if (util_sys_inb(KBC_STAT_REG, &sr)) {
@@ -45,16 +46,16 @@ void (kbc_ih)() {
     return;
   }
 
-  /* Check for errors, read the scancode even when we have errors, to discard it */
-  if (sr & (PARITY_ERR | TIMEOUT_ERR)) {
-    kbc_error = true;
-  }
+  /* Leave mouse bytes in the shared buffer for the mouse handler. */
+  if (!(sr & OBF) || (sr & MOUSE_DATA)) return;
 
   /* Read the scancode from the output buffer */  
   if (util_sys_inb(KBC_OUT_BUF, &scancode)) {
     kbc_error = true;
     return;
   }
+  /* Bad keyboard bytes have been consumed but must not become scancodes. */
+  kbc_error = (sr & (PARITY_ERR | TIMEOUT_ERR)) != 0;
 }
 
 // ------------ GETTERS ------------
@@ -167,7 +168,7 @@ int keyboard_cleanup(void) {
 }
 
 void keyboard_ih(void) {
-
+  ready = false;
   kbc_ih();
 
   if(kbc_has_error()) {

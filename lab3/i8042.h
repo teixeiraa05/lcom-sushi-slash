@@ -11,6 +11,7 @@
 
 #define PARITY_ERR BIT(7)
 #define TIMEOUT_ERR BIT(6)
+#define MOUSE_DATA BIT(5)
 
 #define ESC_BREAK_CODE 0x81
 

@@ -129,7 +129,7 @@ Open `proj/docs/html/index.html` in a browser. Run Doxygen from `proj/docs/` bec
 
 ## Development and verification
 
-The Makefiles enable strict compiler warnings through LCOM's build rules and add `-pedantic`. Uncomment `CFLAGS += -DDEBUG_LOG` in [`proj/Makefile`](proj/Makefile) to enable the project's conditional debug logging. LCF tracing and captured output are configured in `proj/proj.c` as `trace.txt` and `output.txt`; generated logs and build artifacts are ignored by Git.
+The Makefiles enable strict compiler warnings through LCOM's build rules and add `-pedantic`. Uncomment `CFLAGS += -DDEBUG_LOG` in [`proj/Makefile`](proj/Makefile) to enable the project's conditional debug logging and LCF call tracing (`trace.txt`). Call tracing is disabled by default to reduce interrupt-handling overhead. Captured output remains configured in `proj/proj.c` as `output.txt`; generated logs and build artifacts are ignored by Git. The menu FPS counter measures successful page flips against elapsed monotonic time, independently of handled timer notifications.
 
 There is no automated test suite in the repository. After building in MINIX, useful manual checks are:
 
